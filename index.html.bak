@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cairo Audio Production Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --graphite: #141416;
+    --paper: #f3efe6;
+    --brass: #b08d57;
+    --brass-dim: rgba(176, 141, 87, 0.35);
+    --brass-soft: rgba(176, 141, 87, 0.15);
+    --off-white: #e8e4dc;
+    --near-black: #1a1917;
+    --muted: rgba(232, 228, 220, 0.55);
+    --muted-dark: rgba(26, 25, 23, 0.55);
+    --panel-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --max: 1180px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--graphite);
+    color: var(--off-white);
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+  /* ── Shell ── */
+  .app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: var(--max);
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ── Chapter rail ── */
+  .rail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 2.5rem 1rem;
+    border-bottom: 1px solid rgba(176, 141, 87, 0.18);
+    flex-shrink: 0;
+    z-index: 20;
+  }
+
+  .rail-brand {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brass);
+    font-weight: 500;
+  }
+
+  .chapters {
+    display: flex;
+    gap: 0.15rem;
+  }
+
+  .chapter {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.55rem 1.1rem;
+    color: var(--muted);
+    transition: color 0.5s var(--ease), background 0.5s var(--ease);
+    border-radius: 2px;
+    position: relative;
+  }
+
+  .chapter:hover { color: var(--off-white); }
+
+  .chapter.active {
+    color: var(--paper);
+  }
+
+  .chapter .num {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: var(--brass);
+    opacity: 0.7;
+  }
+
+  .chapter.active .num { opacity: 1; }
+
+  .chapter .label {
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .chapter.active::after {
+    content: "";
+    position: absolute;
+    left: 1.1rem;
+    right: 1.1rem;
+    bottom: 0;
+    height: 1px;
+    background: var(--brass);
+    transform-origin: left;
+    animation: underlineIn 0.6s var(--ease) forwards;
+  }
+
+  @keyframes underlineIn {
+    from { transform: scaleX(0); opacity: 0; }
+    to { transform: scaleX(1); opacity: 1; }
+  }
+
+  /* ── Screens ── */
+  .stage {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+    display: flex;
+    overflow: hidden;
+  }
+
+  .screen.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  /* ═══════════════ PROLOGUE ═══════════════ */
+  .prologue {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 0;
+  }
+
+  .tonal {
+    position: relative;
+    background:
+      radial-gradient(ellipse 80% 60% at 30% 70%, rgba(176,141,87,0.22) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 75% 25%, rgba(176,141,87,0.12) 0%, transparent 50%),
+      linear-gradient(165deg, #1c1b1e 0%, #0e0e10 45%, #1a1714 100%);
+    overflow: hidden;
+  }
+
+  .tonal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        -18deg,
+        transparent,
+        transparent 48px,
+        rgba(176,141,87,0.03) 48px,
+        rgba(176,141,87,0.03) 49px
+      );
+  }
+
+  .tonal-mark {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 2.5rem;
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 7rem;
+    line-height: 0.85;
+    color: rgba(176,141,87,0.12);
+    letter-spacing: -0.02em;
+    user-select: none;
+    font-weight: 400;
+  }
+
+  .tonal-ring {
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    border: 1px solid rgba(176,141,87,0.18);
+    border-radius: 50%;
+    top: 18%;
+    left: 22%;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+
+  .tonal-ring::after {
+    content: "";
+    position: absolute;
+    inset: 28px;
+    border: 1px solid rgba(176,141,87,0.1);
+    border-radius: 50%;
+  }
+
+  @keyframes drift {
+    from { transform: translate(0, 0) rotate(0deg); }
+    to { transform: translate(18px, -12px) rotate(8deg); }
+  }
+
+  .prologue-copy {
+    padding: 3.5rem 3.25rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--graphite);
+  }
+
+  .eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--brass);
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+  }
+
+  .title {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(2.4rem, 4.2vw, 3.35rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--paper);
+    margin-bottom: 0.35rem;
+  }
+
+  .chapter-tag {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-style: italic;
+    font-size: 1.35rem;
+    color: var(--brass);
+    margin-bottom: 1.75rem;
+    font-weight: 400;
+  }
+
+  .lede {
+    color: var(--muted);
+    max-width: 34ch;
+    font-size: 0.98rem;
+    margin-bottom: 2.25rem;
+    font-weight: 300;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 2.75rem;
+  }
+
+  .chip {
+    border: 1px solid var(--brass-dim);
+    color: var(--off-white);
+    padding: 0.45rem 0.95rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    border-radius: 100px;
+    background: var(--brass-soft);
+    transition: border-color 0.4s var(--ease), background 0.4s var(--ease);
+  }
+
+  .chip:hover { border-color: var(--brass); background: rgba(176,141,87,0.22); }
+
+  .btn-begin {
+    align-self: flex-start;
+    border: 1px solid var(--brass);
+    color: var(--brass);
+    padding: 0.85rem 2.2rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 400;
+    transition: background 0.5s var(--ease), color 0.5s var(--ease), transform 0.4s var(--ease);
+    border-radius: 1px;
+  }
+
+  .btn-begin:hover {
+    background: var(--brass);
+    color: var(--graphite);
+    transform: translateY(-1px);
+  }
+
+  .btn-begin:active { transform: translateY(0); }
+
+  /* ═══════════════ SUITE ═══════════════ */
+  .suite {
+    background: var(--graphite);
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+  }
+
+  .suite-main {
+    padding: 2.25rem 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .suite-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    gap: 1.5rem;
+  }
+
+  .suite-header .title { font-size: clamp(1.9rem, 3vw, 2.5rem); margin-bottom: 0; }
+
+  .toggle {
+    display: flex;
+    border: 1px solid var(--brass-dim);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .toggle button {
+    padding: 0.55rem 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: all 0.4s var(--ease);
+    white-space: nowrap;
+  }
+
+  .toggle button.active {
+    background: var(--brass);
+    color: var(--graphite);
+  }
+
+  .toggle button:not(.active):hover { color: var(--off-white); background: var(--brass-soft); }
+
+  .plan-wrap {
+    flex: 1;
+    background: var(--paper);
+    border-radius: 2px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    box-shadow: var(--panel-shadow);
+    position: relative;
+  }
+
+  .plan-note {
+    font-size: 0.72rem;
+    color: var(--muted-dark);
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+    min-height: 1.2em;
+    transition: opacity 0.4s var(--ease);
+  }
+
+  .plan-svg {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+  }
+
+  .room {
+    cursor: pointer;
+    transition: fill 0.45s var(--ease), stroke 0.45s var(--ease);
+  }
+
+  .room rect, .room path {
+    fill: #ebe6db;
+    stroke: #c4bba8;
+    stroke-width: 1.5;
+    transition: fill 0.45s var(--ease), stroke 0.45s var(--ease), filter 0.45s var(--ease);
+  }
+
+  .room:hover rect, .room:hover path {
+    fill: #e4d9c4;
+    stroke: var(--brass);
+  }
+
+  .room.selected rect, .room.selected path {
+    fill: #ddd2b8;
+    stroke: var(--brass);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  .room text {
+    font-family: "DM Sans", sans-serif;
+    font-size: 11px;
+    fill: var(--near-black);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
+    font-weight: 400;
+  }
+
+  .room .sub {
+    font-size: 9px;
+    fill: var(--muted-dark);
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+
+  .side-panel {
+    background: var(--paper);
+    color: var(--near-black);
+    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(20,20,22,0.08);
+    overflow-y: auto;
+  }
+
+  .side-empty {
+    color: var(--muted-dark);
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    margin-top: 2rem;
+    line-height: 1.4;
+  }
+
+  .side-panel .eyebrow { color: var(--brass); margin-bottom: 0.75rem; }
+
+  .side-name {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    color: var(--near-black);
+  }
+
+  .meta-grid {
+    display: grid;
+    gap: 1.1rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid rgba(26,25,23,0.12);
+  }
+
+  .meta-item label {
+    display: block;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted-dark);
+    margin-bottom: 0.25rem;
+  }
+
+  .meta-item span {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 1.25rem;
+    color: var(--near-black);
+  }
+
+  .why-text {
+    font-size: 0.92rem;
+    color: rgba(26,25,23,0.72);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* ═══════════════ ISOLATION ═══════════════ */
+  .isolation {
+    background: var(--graphite);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 2.5rem 2rem;
+  }
+
+  .iso-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .iso-header .title { font-size: clamp(1.9rem, 3vw, 2.5rem); margin-bottom: 0.35rem; }
+
+  .iso-lede {
+    color: var(--muted);
+    max-width: 52ch;
+    font-size: 0.92rem;
+  }
+
+  .iso-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1.5rem;
+    min-height: 0;
+  }
+
+  .plates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+
+  .plate {
+    text-align: left;
+    padding: 0.85rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    transition: all 0.45s var(--ease);
+    display: flex;
+    gap: 0.85rem;
+    align-items: baseline;
+  }
+
+  .plate:hover {
+    background: rgba(243,239,230,0.04);
+    border-color: rgba(176,141,87,0.2);
+  }
+
+  .plate.active {
+    background: var(--paper);
+    color: var(--near-black);
+    border-color: var(--paper);
+  }
+
+  .plate .roman {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.95rem;
+    color: var(--brass);
+    min-width: 1.4rem;
+    letter-spacing: 0.05em;
+  }
+
+  .plate.active .roman { color: var(--brass); }
+
+  .plate .pname {
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    font-weight: 400;
+  }
+
+  .iso-canvas {
+    background: var(--paper);
+    border-radius: 2px;
+    padding: 2rem 2.25rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--panel-shadow);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .iso-canvas-title {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 1.65rem;
+    color: var(--near-black);
+    margin-bottom: 0.35rem;
+    font-weight: 500;
+  }
+
+  .iso-caption {
+    font-size: 0.9rem;
+    color: rgba(26,25,23,0.68);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+    max-width: 58ch;
+  }
+
+  .diagram-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    position: relative;
+  }
+
+  .diagram-area svg {
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    max-height: 280px;
+  }
+
+  .compare-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid rgba(26,25,23,0.1);
+  }
+
+  .compare-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted-dark);
+    margin-right: 0.25rem;
+  }
+
+  .compare-btn {
+    padding: 0.45rem 0.95rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    border: 1px solid rgba(26,25,23,0.18);
+    border-radius: 100px;
+    color: var(--near-black);
+    transition: all 0.4s var(--ease);
+  }
+
+  .compare-btn:hover { border-color: var(--brass); }
+  .compare-btn.active {
+    background: var(--near-black);
+    color: var(--paper);
+    border-color: var(--near-black);
+  }
+
+  .iso-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem 1.35rem;
+    align-items: center;
+    margin-top: 0.85rem;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid rgba(176,141,87,0.22);
+    border-radius: 2px;
+    background: rgba(243,239,230,0.03);
+    max-width: 640px;
+  }
+
+  .iso-legend .leg {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .iso-legend .swatch {
+    width: 18px;
+    height: 10px;
+    flex-shrink: 0;
+  }
+
+  .diagram-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .diagram-wrap.compare-duo {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .diagram-pane {
+    flex: 1 1 240px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .diagram-pane .pane-label {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.95rem;
+    color: var(--near-black);
+    letter-spacing: 0.02em;
+  }
+
+  .path-note {
+    font-size: 0.72rem;
+    color: rgba(26,25,23,0.58);
+    line-height: 1.45;
+    text-align: center;
+    max-width: 52ch;
+    font-style: italic;
+  }
+
+  .diagram-area svg {
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    max-height: 260px;
+  }
+
+  .diagram-pane svg {
+    max-width: 100%;
+    max-height: 200px;
+  }
+
+  /* Footer whisper */
+  .whisper {
+    padding: 0.65rem 2.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(232,228,220,0.28);
+    border-top: 1px solid rgba(176,141,87,0.1);
+    flex-shrink: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .prologue { grid-template-columns: 1fr; }
+    .tonal { display: none; }
+    .suite { grid-template-columns: 1fr; }
+    .side-panel {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: min(320px, 90vw);
+      z-index: 10;
+      box-shadow: -12px 0 40px rgba(0,0,0,0.4);
+      transform: translateX(100%);
+      transition: transform 0.5s var(--ease);
+    }
+    .side-panel.open { transform: translateX(0); }
+    .iso-body { grid-template-columns: 1fr; }
+    .plates { flex-direction: row; flex-wrap: wrap; overflow: visible; }
+    .rail { padding: 1rem 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+    .prologue-copy, .suite-main, .isolation { padding-left: 1.5rem; padding-right: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Chapters">
+    <div class="rail-brand">CAPC · Study</div>
+    <div class="chapters">
+      <button class="chapter active" data-screen="prologue" aria-current="page">
+        <span class="num">01</span><span class="label">Prologue</span>
+      </button>
+      <button class="chapter" data-screen="suite">
+        <span class="num">02</span><span class="label">Suite</span>
+      </button>
+      <button class="chapter" data-screen="isolation">
+        <span class="num">03</span><span class="label">Isolation</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="stage">
+    <!-- ── 01 PROLOGUE ── -->
+    <section class="screen prologue active" id="screen-prologue" aria-label="Prologue">
+      <div class="tonal" aria-hidden="true">
+        <div class="tonal-ring"></div>
+        <div class="tonal-mark">I</div>
+      </div>
+      <div class="prologue-copy">
+        <p class="eyebrow">Phase A · Technical study</p>
+        <h1 class="title">Cairo Audio<br>Production Centre</h1>
+        <p class="chapter-tag">The brief</p>
+        <p class="lede">
+          A measured look at how a flagship recording suite might be planned —
+          room by room, wall by wall. This is a technical study, not a
+          feasibility appraisal or commercial prospectus.
+        </p>
+        <div class="chips">
+          <span class="chip">Flexible live room</span>
+          <span class="chip">High isolation</span>
+          <span class="chip">Explained for non-specialists</span>
+        </div>
+        <button class="btn-begin" id="btn-begin">Begin</button>
+      </div>
+    </section>
+
+    <!-- ── 02 SUITE ── -->
+    <section class="screen suite" id="screen-suite" aria-label="The flagship suite">
+      <div class="suite-main">
+        <div class="suite-header">
+          <div>
+            <p class="eyebrow">Chapter 02</p>
+            <h2 class="title">The flagship suite</h2>
+          </div>
+          <div class="toggle" role="group" aria-label="Footprint mode">
+            <button type="button" class="active" data-mode="net">Net rooms</button>
+            <button type="button" data-mode="gross">Gross footprint</button>
+          </div>
+        </div>
+        <div class="plan-wrap">
+          <p class="plan-note" id="plan-note">Net usable floor area of each room. Select a space to read why it is sized this way.</p>
+          <svg class="plan-svg" viewBox="0 0 760 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Suite floor plan">
+            <!-- Lobby -->
+            <g class="room" data-room="lobby">
+              <rect x="20" y="20" width="140" height="120" rx="2"/>
+              <text x="90" y="72" text-anchor="middle">Lobby</text>
+              <text class="sub size" x="90" y="90" text-anchor="middle">20–35 m²</text>
+            </g>
+            <!-- Lounge -->
+            <g class="room" data-room="lounge">
+              <rect x="20" y="150" width="140" height="150" rx="2"/>
+              <text x="90" y="215" text-anchor="middle">Lounge</text>
+              <text class="sub size" x="90" y="233" text-anchor="middle">25–40 m²</text>
+            </g>
+            <!-- Machine -->
+            <g class="room" data-room="machine">
+              <rect x="20" y="310" width="140" height="150" rx="2"/>
+              <text x="90" y="375" text-anchor="middle">Machine</text>
+              <text class="sub size" x="90" y="393" text-anchor="middle">15–25 m²</text>
+            </g>
+            <!-- Live room (centre) -->
+            <g class="room" data-room="live">
+              <rect x="175" y="20" width="340" height="300" rx="2"/>
+              <text x="345" y="155" text-anchor="middle" style="font-size:14px">Live room</text>
+              <text class="sub size" x="345" y="178" text-anchor="middle" style="font-size:11px">90–100 m² · 5 m+</text>
+            </g>
+            <!-- Iso A -->
+            <g class="room" data-room="isoA">
+              <rect x="175" y="335" width="160" height="125" rx="2"/>
+              <text x="255" y="388" text-anchor="middle">Iso A</text>
+              <text class="sub size" x="255" y="406" text-anchor="middle">12–18 m²</text>
+            </g>
+            <!-- Iso B -->
+            <g class="room" data-room="isoB">
+              <rect x="350" y="335" width="165" height="125" rx="2"/>
+              <text x="432" y="388" text-anchor="middle">Iso B</text>
+              <text class="sub size" x="432" y="406" text-anchor="middle">10–16 m²</text>
+            </g>
+            <!-- Control -->
+            <g class="room" data-room="control">
+              <rect x="530" y="20" width="210" height="300" rx="2"/>
+              <text x="635" y="155" text-anchor="middle">Control</text>
+              <text class="sub size" x="635" y="178" text-anchor="middle">35–50 m²</text>
+            </g>
+            <!-- Circulation stub -->
+            <g class="room" data-room="control" style="pointer-events:none; opacity:0.5">
+              <rect x="530" y="335" width="210" height="125" rx="2" fill="#e0dbd0" stroke="#c4bba8"/>
+              <text x="635" y="400" text-anchor="middle" style="font-size:10px; fill:#8a8478; letter-spacing:0.1em">CIRCULATION</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <aside class="side-panel" id="side-panel">
+        <div id="side-content">
+          <p class="side-empty">Select a room on the plan to explore its role and size band.</p>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ── 03 ISOLATION ── -->
+    <section class="screen isolation" id="screen-isolation" aria-label="Isolation atelier">
+      <div class="iso-header">
+        <p class="eyebrow">Chapter 03 · Atelier</p>
+        <h2 class="title">Keeping the world out</h2>
+        <p class="iso-lede">Six plates on how sound is stopped — and where it still sneaks through. Plain English for investors, not acousticians.</p>
+        <div class="iso-legend" aria-label="Wave path legend">
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 8 Q5 2 9 8 Q13 2 17 8" fill="none" stroke="#c47a3a" stroke-width="1.6"/></svg>Airborne</span>
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 5 H5 M7 5 H11 M13 5 H17" fill="none" stroke="#5b7c9a" stroke-width="1.8" stroke-linecap="round"/></svg>Structure-borne</span>
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 5 H7 M11 5 H17" fill="none" stroke="#8a8478" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.55"/></svg>Stopped</span>
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M2 5 H12" fill="none" stroke="#c45a3a" stroke-width="1.4"/><path d="M11 2 L16 5 L11 8 Z" fill="#c45a3a"/></svg>Flanking</span>
+        </div>
+      </div>
+      <div class="iso-body">
+        <div class="plates" role="tablist" aria-label="Isolation plates">
+          <button class="plate" data-plate="enemies" role="tab"><span class="roman">I</span><span class="pname">Two enemies</span></button>
+          <button class="plate" data-plate="myth" role="tab"><span class="roman">II</span><span class="pname">Thick-wall myth</span></button>
+          <button class="plate active" data-plate="box" role="tab" aria-selected="true"><span class="roman">III</span><span class="pname">Box-in-box</span></button>
+          <button class="plate" data-plate="floor" role="tab"><span class="roman">IV</span><span class="pname">Floating floor</span></button>
+          <button class="plate" data-plate="holes" role="tab"><span class="roman">V</span><span class="pname">Forgotten holes</span></button>
+          <button class="plate" data-plate="air" role="tab"><span class="roman">VI</span><span class="pname">Quiet air</span></button>
+        </div>
+        <div class="iso-canvas">
+          <h3 class="iso-canvas-title" id="iso-title">Box-in-box</h3>
+          <p class="iso-caption" id="iso-caption"></p>
+          <div class="diagram-area" id="diagram-area"></div>
+          <div class="compare-bar">
+            <span class="compare-label">Compare</span>
+            <button class="compare-btn" data-compare="thick">Thick wall only</button>
+            <button class="compare-btn active" data-compare="box">Box-in-box</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="whisper">Cairo Audio Production Centre · Phase A technical study · Not a feasibility report</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Navigation ── */
+  const screens = {
+    prologue: document.getElementById('screen-prologue'),
+    suite: document.getElementById('screen-suite'),
+    isolation: document.getElementById('screen-isolation')
+  };
+  const chapters = document.querySelectorAll('.chapter');
+
+  function goTo(name) {
+    Object.keys(screens).forEach(k => {
+      screens[k].classList.toggle('active', k === name);
+    });
+    chapters.forEach(c => {
+      const on = c.dataset.screen === name;
+      c.classList.toggle('active', on);
+      if (on) c.setAttribute('aria-current', 'page');
+      else c.removeAttribute('aria-current');
+    });
+  }
+
+  chapters.forEach(c => c.addEventListener('click', () => goTo(c.dataset.screen)));
+  document.getElementById('btn-begin').addEventListener('click', () => goTo('suite'));
+
+  /* ── Suite rooms ── */
+  const rooms = {
+    live: {
+      name: 'Live room',
+      size: '90–100 m²',
+      height: '5 m+',
+      why: 'The heart of the suite. Generous floor area and height give air for ensembles, orchestral sections, and flexible staging — whilst leaving room for variable acoustics rather than a single fixed character.'
+    },
+    isoA: {
+      name: 'Iso booth A',
+      size: '12–18 m²',
+      height: '2.7–3.2 m',
+      why: 'A primary isolation booth for vocal or featured instruments. Sized to feel calm rather than cramped, with enough volume that the booth itself does not colour the take unduly.'
+    },
+    isoB: {
+      name: 'Iso booth B',
+      size: '10–16 m²',
+      height: '2.7–3.2 m',
+      why: 'A secondary booth for overdubs, amplifiers, or parallel takes. Slightly tighter than Iso A so two booths can run without competing for the same footprint.'
+    },
+    control: {
+      name: 'Control room',
+      size: '35–50 m²',
+      height: '3.0–3.5 m',
+      why: 'Where judgements are made. Width and depth support a proper listening triangle and rear treatment; the size band avoids both a cramped sweet spot and an oversize room that fights the monitors.'
+    },
+    machine: {
+      name: 'Machine room',
+      size: '15–25 m²',
+      height: '2.7–3.0 m',
+      why: 'Heat, hum, and hard drives belong here — not in the control room. Isolating plant and compute keeps the listening space cool, quiet, and free of fan noise.'
+    },
+    lounge: {
+      name: 'Lounge',
+      size: '25–40 m²',
+      height: '2.7–3.2 m',
+      why: 'A soft landing for artists between takes. Sized for a small group without becoming a second lobby; acoustically decoupled so conversation does not bleed into a session.'
+    },
+    lobby: {
+      name: 'Lobby',
+      size: '20–35 m²',
+      height: '3.0–4.0 m',
+      why: 'Arrival, greeting, and the quiet threshold before the suite. Modest footprint with enough presence to set the tone — and to act as a first acoustic buffer from the street.'
+    }
+  };
+
+  const grossMultiplierNote = 'Isolation thickness means gross often runs 1.6–2.2× net. Figures below show indicative gross bands.';
+  const netNote = 'Net usable floor area of each room. Select a space to read why it is sized this way.';
+
+  let footprintMode = 'net';
+  let selectedRoom = null;
+
+  function grossBand(netStr) {
+    // Parse "90–100 m²" style and multiply roughly mid of 1.6–2.2 → use 1.6 and 2.2 on ends
+    const m = netStr.match(/([\d.]+)\s*[–-]\s*([\d.]+)/);
+    if (!m) return netStr + ' (gross)';
+    const lo = Math.round(parseFloat(m[1]) * 1.6);
+    const hi = Math.round(parseFloat(m[2]) * 2.2);
+    return lo + '–' + hi + ' m²';
+  }
+
+  function updatePlanLabels() {
+    document.querySelectorAll('.room[data-room]').forEach(g => {
+      const key = g.dataset.room;
+      const data = rooms[key];
+      if (!data) return;
+      const sizeEl = g.querySelector('.size');
+      if (!sizeEl) return;
+      if (key === 'live') {
+        sizeEl.textContent = footprintMode === 'net'
+          ? data.size + ' · 5 m+'
+          : grossBand(data.size) + ' · 5 m+';
+      } else {
+        sizeEl.textContent = footprintMode === 'net' ? data.size : grossBand(data.size);
+      }
+    });
+    document.getElementById('plan-note').textContent =
+      footprintMode === 'net' ? netNote : grossMultiplierNote;
+    if (selectedRoom) renderSide(selectedRoom);
+  }
+
+  function renderSide(key) {
+    const r = rooms[key];
+    const size = footprintMode === 'net' ? r.size : grossBand(r.size);
+    const sizeLabel = footprintMode === 'net' ? 'Net area' : 'Gross footprint';
+    const panel = document.getElementById('side-panel');
+    panel.classList.add('open');
+    document.getElementById('side-content').innerHTML =
+      '<p class="eyebrow">Selected room</p>' +
+      '<h3 class="side-name">' + r.name + '</h3>' +
+      '<div class="meta-grid">' +
+        '<div class="meta-item"><label>' + sizeLabel + '</label><span>' + size + '</span></div>' +
+        '<div class="meta-item"><label>Clear height</label><span>' + r.height + '</span></div>' +
+      '</div>' +
+      '<p class="why-text">' + r.why + '</p>';
+  }
+
+  document.querySelectorAll('.room[data-room]').forEach(g => {
+    g.addEventListener('click', () => {
+      document.querySelectorAll('.room').forEach(x => x.classList.remove('selected'));
+      g.classList.add('selected');
+      selectedRoom = g.dataset.room;
+      renderSide(selectedRoom);
+    });
+  });
+
+  document.querySelectorAll('.toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      footprintMode = btn.dataset.mode;
+      updatePlanLabels();
+    });
+  });
+
+  /* ── Isolation plates ── */
+  const AIR = '#c47a3a';
+  const STRUCT = '#5b7c9a';
+  const FLANK = '#c45a3a';
+  const MUTED = '#8a8478';
+  const WALL = '#c4bba8';
+  const WALL_LT = '#ddd2b8';
+  const INK = '#1a1917';
+  const PAPER_SVG = '#ebe6db';
+  const BRASS = '#b08d57';
+
+  const plates = {
+    enemies: {
+      title: 'Two enemies',
+      caption: 'Airborne sound travels through the air; structure-borne sound travels through the building. A thick wall may blunt one while the other walks straight through the slab.',
+      pathNote: 'Orange arcs = airborne; blue dashes = structure-borne — one street source, two routes in.',
+      diagram: 'enemies'
+    },
+    myth: {
+      title: 'The thick-wall myth',
+      caption: 'Piling on mass helps — until it does not. A single heavy wall still couples to the structure. Without a break, vibration finds a path around your investment.',
+      pathNote: 'Orange fades in the mass; blue runs under the wall via the slab; the red arrow marks a door flanking leak.',
+      diagram: 'myth'
+    },
+    box: {
+      title: 'Box-in-box',
+      caption: 'An inner room, structurally independent of the outer shell, resting on isolators. The gap is the point: two skins, one deliberate break. This is the gold standard for high isolation.',
+      pathNote: 'Orange stops at the outer shell and gap; blue breaks at the resilient mounts — the inner room stays calm.',
+      diagram: 'box'
+    },
+    floor: {
+      title: 'Floating floor',
+      caption: 'The floor of the inner box sits on resilient mounts, not on the building slab. Footfall, bass, and plant vibration stop at the isolators instead of entering the room — or leaving it.',
+      pathNote: 'Blue rising from below stops at the resilient layer; the ghost bolt shows a through-fix failure path.',
+      diagram: 'floor'
+    },
+    holes: {
+      title: 'Forgotten holes',
+      caption: 'A perfect wall ruined by a cable tray, a duct, or a poorly sealed door. Isolation is only as quiet as its weakest penetration. Details matter more than marketing claims.',
+      pathNote: 'Orange and blue both leak through the duct and cable tray even though the wall itself looks solid.',
+      diagram: 'holes'
+    },
+    air: {
+      title: 'Quiet air',
+      caption: 'Air conditioning must move air without moving noise. Long, lined ducts, staggered paths, and careful fan selection keep the room cool without announcing the plant room.',
+      pathNote: 'Left: fast small duct radiates orange into the room; right: large slow duct lets the path dissipate before arrival.',
+      diagram: 'air'
+    }
+  };
+
+  function svgDefs(uid) {
+    return `<defs>
+      <marker id="${uid}-flank" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="${FLANK}"/>
+      </marker>
+      <marker id="${uid}-air" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="${AIR}"/>
+      </marker>
+      <marker id="${uid}-struct" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="${STRUCT}"/>
+      </marker>
+    </defs>`;
+  }
+
+  /* Shared street-noise source icon (left of every diagram) */
+  function streetSource(cx, cy) {
+    return `
+      <g class="street-source" transform="translate(${cx},${cy})">
+        <circle r="14" fill="${WALL_LT}" stroke="${MUTED}" stroke-width="1"/>
+        <path d="M-4 -5 L-4 5 L2 5 L8 9 L8 -9 L2 -5 Z" fill="${INK}" opacity="0.75"/>
+        <path d="M10 -4 Q14 0 10 4" fill="none" stroke="${AIR}" stroke-width="1.2"/>
+        <path d="M13 -6 Q19 0 13 6" fill="none" stroke="${AIR}" stroke-width="1" opacity="0.55"/>
+        <text y="28" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.08em">STREET</text>
+      </g>`;
+  }
+
+  function airArc(d, opacity, width) {
+    return `<path d="${d}" fill="none" stroke="${AIR}" stroke-width="${width || 1.6}" opacity="${opacity == null ? 1 : opacity}" stroke-linecap="round"/>`;
+  }
+
+  function structPulse(d, opacity, width) {
+    return `<path d="${d}" fill="none" stroke="${STRUCT}" stroke-width="${width || 1.8}" stroke-dasharray="5 4" opacity="${opacity == null ? 1 : opacity}" stroke-linecap="round"/>`;
+  }
+
+  function brokenPath(d, colour, width) {
+    return `<path d="${d}" fill="none" stroke="${colour}" stroke-width="${width || 1.5}" stroke-dasharray="3 5" opacity="0.35" stroke-linecap="round"/>`;
+  }
+
+  function svgEnemies() {
+    const uid = 'en';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two enemies wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 95)}
+      <!-- Wall + slab -->
+      <rect x="300" y="40" width="22" height="100" fill="${WALL}"/>
+      <rect x="70" y="140" width="430" height="16" fill="${WALL_LT}"/>
+      <text x="400" y="152" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.06em">SLAB</text>
+      <!-- Split node -->
+      <circle cx="110" cy="95" r="3.5" fill="${BRASS}"/>
+      <!-- Orange airborne (upper) -->
+      ${airArc('M110 88 Q170 40 250 70 Q280 82 300 85', 1, 1.7)}
+      ${airArc('M110 95 Q175 55 255 80 Q285 90 300 92', 0.55, 1.2)}
+      <text x="200" y="48" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="9" letter-spacing="0.04em">airborne</text>
+      <!-- Blue structure (lower along slab) -->
+      ${structPulse('M110 102 Q160 130 220 145 H470', 1, 1.9)}
+      ${structPulse('M110 108 Q155 135 210 148', 0.5, 1.2)}
+      <text x="340" y="178" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9" letter-spacing="0.04em">structure-borne</text>
+      <text x="320" y="30" fill="${MUTED}" font-family="Cormorant Garamond, Georgia, serif" font-size="13">One source · two paths</text>
+    </svg>`;
+  }
+
+  function svgMyth() {
+    const uid = 'my';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Thick-wall myth wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 90)}
+      <!-- Thick wall -->
+      <rect x="210" y="28" width="90" height="120" fill="${WALL}" stroke="${MUTED}" stroke-width="1"/>
+      <text x="255" y="95" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="14">Thick wall</text>
+      <!-- Door flanking -->
+      <rect x="248" y="118" width="14" height="30" fill="${INK}" opacity="0.55"/>
+      <text x="255" y="160" text-anchor="middle" fill="${FLANK}" font-family="DM Sans, sans-serif" font-size="8">DOOR</text>
+      <!-- Slab under -->
+      <rect x="70" y="148" width="430" height="14" fill="${WALL_LT}"/>
+      <!-- Orange fades into wall -->
+      ${airArc('M70 70 Q130 55 210 75', 1, 1.7)}
+      ${airArc('M210 78 Q235 82 255 88', 0.45, 1.4)}
+      ${brokenPath('M255 90 Q280 95 310 92', AIR, 1.3)}
+      <text x="140" y="48" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="9">air fades in mass</text>
+      <!-- Blue continues under wall -->
+      ${structPulse('M70 155 H480', 1, 2)}
+      <text x="380" y="180" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9">blue continues under</text>
+      <!-- Flanking arrow through door -->
+      <path d="M262 130 Q320 125 380 110" fill="none" stroke="${FLANK}" stroke-width="1.5" marker-end="url(#${uid}-flank)"/>
+      <text x="360" y="100" fill="${FLANK}" font-family="DM Sans, sans-serif" font-size="9">flanking</text>
+    </svg>`;
+  }
+
+  function svgBox() {
+    const uid = 'bx';
+    return `<svg viewBox="0 0 560 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Box-in-box wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(36, 100)}
+      <!-- Outer shell -->
+      <rect x="80" y="24" width="420" height="170" fill="none" stroke="${MUTED}" stroke-width="9"/>
+      <!-- Inner box -->
+      <rect x="128" y="58" width="324" height="100" fill="${PAPER_SVG}" stroke="${BRASS}" stroke-width="2.5"/>
+      <!-- Isolators -->
+      <rect x="160" y="162" width="26" height="12" rx="2" fill="${BRASS}"/>
+      <rect x="265" y="162" width="26" height="12" rx="2" fill="${BRASS}"/>
+      <rect x="370" y="162" width="26" height="12" rx="2" fill="${BRASS}"/>
+      <rect x="70" y="190" width="440" height="12" fill="${WALL_LT}"/>
+      <!-- Gap -->
+      <text x="104" y="112" text-anchor="middle" fill="${BRASS}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.08em">GAP</text>
+      <text x="290" y="112" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="16">Inner room · calm</text>
+      <!-- Orange stops at outer shell -->
+      ${airArc('M58 70 Q68 55 80 60', 1, 1.6)}
+      ${brokenPath('M82 62 Q100 58 120 70', AIR, 1.4)}
+      <text x="95" y="44" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="8">orange stops</text>
+      <!-- Blue along slab breaks at mounts -->
+      ${structPulse('M58 196 H158', 1, 1.8)}
+      ${brokenPath('M186 196 H265', STRUCT, 1.6)}
+      ${brokenPath('M291 196 H370', STRUCT, 1.6)}
+      <text x="290" y="218" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.04em">blue breaks at resilient mounts</text>
+    </svg>`;
+  }
+
+  function svgFloor() {
+    const uid = 'fl';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Floating floor wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 155)}
+      <!-- Inner floor -->
+      <rect x="100" y="36" width="380" height="18" fill="${WALL_LT}" stroke="${WALL}"/>
+      <text x="290" y="49" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="9">INNER FLOOR</text>
+      <!-- Resilient layer / mounts -->
+      <rect x="150" y="58" width="22" height="28" rx="3" fill="${BRASS}"/>
+      <rect x="280" y="58" width="22" height="28" rx="3" fill="${BRASS}"/>
+      <rect x="410" y="58" width="22" height="28" rx="3" fill="${BRASS}"/>
+      <text x="290" y="78" text-anchor="middle" fill="${BRASS}" font-family="DM Sans, sans-serif" font-size="8">RESILIENT</text>
+      <!-- Building slab -->
+      <rect x="80" y="92" width="420" height="20" fill="${WALL}"/>
+      <text x="290" y="106" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="9">BUILDING SLAB</text>
+      <!-- Blue vertical from below — stopped -->
+      ${structPulse('M161 180 V120', 1, 1.9)}
+      ${structPulse('M291 180 V120', 0.85, 1.9)}
+      ${brokenPath('M161 90 V54', STRUCT, 1.5)}
+      ${brokenPath('M291 90 V54', STRUCT, 1.5)}
+      <text x="200" y="170" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9">blue stops here</text>
+      <!-- Ghost bolted-through failure -->
+      <g opacity="0.4">
+        <line x1="420" y1="36" x2="420" y2="112" stroke="${FLANK}" stroke-width="1.5" stroke-dasharray="2 3"/>
+        <circle cx="420" cy="44" r="3" fill="none" stroke="${FLANK}" stroke-width="1"/>
+        <circle cx="420" cy="102" r="3" fill="none" stroke="${FLANK}" stroke-width="1"/>
+        <text x="448" y="78" fill="${FLANK}" font-family="DM Sans, sans-serif" font-size="8">bolted through</text>
+      </g>
+      <!-- Small airborne hint from street (context) -->
+      ${airArc('M58 140 Q80 100 100 70', 0.35, 1)}
+    </svg>`;
+  }
+
+  function svgHoles() {
+    const uid = 'ho';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Forgotten holes wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 95)}
+      <!-- Good wall -->
+      <rect x="230" y="28" width="28" height="140" fill="${WALL}"/>
+      <text x="244" y="20" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.06em">GOOD WALL</text>
+      <!-- Cable tray opening -->
+      <rect x="230" y="52" width="28" height="16" fill="${INK}"/>
+      <!-- Duct opening -->
+      <rect x="230" y="118" width="28" height="18" fill="${INK}"/>
+      <rect x="70" y="168" width="420" height="12" fill="${WALL_LT}"/>
+      <!-- Orange + blue through cable tray -->
+      ${airArc('M70 50 Q150 45 230 58', 1, 1.6)}
+      ${airArc('M258 58 Q340 48 420 40', 0.9, 1.5)}
+      ${structPulse('M70 68 Q150 70 230 62', 0.85, 1.5)}
+      ${structPulse('M258 62 Q340 70 430 75', 0.8, 1.5)}
+      <path d="M420 40 L445 35" fill="none" stroke="${FLANK}" stroke-width="1.4" marker-end="url(#${uid}-flank)"/>
+      <text x="140" y="38" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="9">cable tray leak</text>
+      <!-- Orange + blue through duct -->
+      ${airArc('M70 125 Q150 122 230 126', 1, 1.6)}
+      ${airArc('M258 126 Q350 135 440 145', 0.9, 1.5)}
+      ${structPulse('M70 140 Q150 145 230 132', 0.85, 1.5)}
+      ${structPulse('M258 132 Q350 150 450 160', 0.8, 1.5)}
+      <path d="M440 145 L465 150" fill="none" stroke="${FLANK}" stroke-width="1.4" marker-end="url(#${uid}-flank)"/>
+      <text x="140" y="155" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9">duct leak</text>
+      <!-- Wall itself stops mid-height (good) -->
+      ${brokenPath('M70 95 H230', AIR, 1.2)}
+      <text x="150" y="90" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8" opacity="0.7">wall stops mid-path</text>
+    </svg>`;
+  }
+
+  function svgAir() {
+    const uid = 'ai';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Quiet air duct comparison">
+      ${svgDefs(uid)}
+      ${streetSource(36, 50)}
+      <!-- LEFT: fast small duct -->
+      <text x="160" y="22" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="13">Fast · small duct</text>
+      <rect x="80" y="40" width="40" height="28" rx="2" fill="${WALL_LT}" stroke="${MUTED}"/>
+      <text x="100" y="58" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">FAN</text>
+      <path d="M120 54 H210" fill="none" stroke="${MUTED}" stroke-width="5"/>
+      <path d="M120 54 H210" fill="none" stroke="${PAPER_SVG}" stroke-width="2.5"/>
+      <rect x="210" y="38" width="55" height="32" rx="2" fill="${PAPER_SVG}" stroke="${FLANK}" stroke-width="1.5"/>
+      <text x="237" y="57" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">ROOM</text>
+      <!-- Radiating orange into room -->
+      ${airArc('M130 48 Q160 35 200 42', 1, 1.5)}
+      ${airArc('M200 45 Q215 40 230 35', 0.9, 1.4)}
+      ${airArc('M200 55 Q220 60 235 68', 0.75, 1.3)}
+      ${airArc('M205 50 Q225 50 240 52', 0.85, 1.3)}
+      <text x="160" y="82" text-anchor="middle" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="8">radiates into room</text>
+
+      <!-- RIGHT: large slow duct -->
+      <text x="400" y="22" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="13">Large · slow duct</text>
+      <rect x="300" y="40" width="40" height="28" rx="2" fill="${WALL_LT}" stroke="${MUTED}"/>
+      <text x="320" y="58" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">FAN</text>
+      <!-- Staggered wide path -->
+      <path d="M340 54 H380 V100 H460 V54 H500" fill="none" stroke="${MUTED}" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M340 54 H380 V100 H460 V54 H500" fill="none" stroke="${PAPER_SVG}" stroke-width="6" stroke-linejoin="round"/>
+      <rect x="500" y="38" width="45" height="32" rx="2" fill="${PAPER_SVG}" stroke="${BRASS}" stroke-width="1.5"/>
+      <text x="522" y="57" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">ROOM</text>
+      <!-- Path dissipating -->
+      ${airArc('M350 48 Q370 40 380 54', 0.9, 1.5)}
+      ${airArc('M380 70 Q420 95 460 70', 0.55, 1.4)}
+      ${brokenPath('M460 54 Q480 50 500 54', AIR, 1.3)}
+      <text x="420" y="125" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8">path dissipates</text>
+
+      <!-- Shared slab context -->
+      <rect x="70" y="155" width="430" height="10" fill="${WALL_LT}"/>
+      ${structPulse('M70 160 H200', 0.35, 1.2)}
+      <text x="280" y="185" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="9" letter-spacing="0.06em">SAME AIR MOVE · DIFFERENT PATH BEHAVIOUR</text>
+    </svg>`;
+  }
+
+  /* Compare uses myth (II) and box (III) wave-path logic */
+  function svgThick() {
+    return svgMyth();
+  }
+
+  function wrapDiagram(svg, pathNote) {
+    return `<div class="diagram-wrap">${svg}<p class="path-note">${pathNote}</p></div>`;
+  }
+
+  function wrapCompareDuo() {
+    const left = svgMyth();
+    const right = svgBox();
+    return `<div class="diagram-wrap compare-duo">
+      <div class="diagram-pane">
+        <div class="pane-label">Thick wall only</div>
+        ${left}
+        <p class="path-note">Orange fades; blue under-runs; flanking at the door.</p>
+      </div>
+      <div class="diagram-pane">
+        <div class="pane-label">Box-in-box</div>
+        ${right}
+        <p class="path-note">Orange stops at the shell; blue breaks at the mounts.</p>
+      </div>
+    </div>`;
+  }
+
+  const diagrams = {
+    enemies: svgEnemies,
+    myth: svgMyth,
+    box: svgBox,
+    floor: svgFloor,
+    holes: svgHoles,
+    air: svgAir,
+    thick: svgThick
+  };
+
+  let currentPlate = 'box';
+  let compareMode = null;
+
+  function showPlate(key) {
+    currentPlate = key;
+    compareMode = null;
+    document.querySelectorAll('.plate').forEach(p => {
+      const on = p.dataset.plate === key;
+      p.classList.toggle('active', on);
+      p.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.compare-btn').forEach(b => {
+      b.classList.toggle('active', key === 'box' && b.dataset.compare === 'box');
+    });
+    const p = plates[key];
+    document.getElementById('iso-title').textContent = p.title;
+    document.getElementById('iso-caption').textContent = p.caption;
+    document.getElementById('diagram-area').innerHTML = wrapDiagram(diagrams[p.diagram](), p.pathNote);
+  }
+
+  function showCompare(mode) {
+    compareMode = mode;
+    document.querySelectorAll('.compare-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.compare === mode);
+    });
+    // Side-by-side emphasis: Thick wall (II) vs Box-in-box (III)
+    document.getElementById('iso-title').textContent = 'Thick wall only  ·  Box-in-box';
+    document.getElementById('iso-caption').textContent =
+      mode === 'thick'
+        ? 'Side by side: mass alone still lets structure-borne energy under-run and flanking sneak past. The box-in-box diagram shows where both paths are broken.'
+        : 'Side by side: the gap and resilient mounts stop what a single heavy wall cannot. Orange dies at the shell; blue dies at the isolators.';
+    document.getElementById('diagram-area').innerHTML = wrapCompareDuo();
+    // Emphasise selected side by opacity on panes
+    const panes = document.querySelectorAll('.diagram-pane');
+    if (panes.length === 2) {
+      if (mode === 'thick') {
+        panes[0].style.opacity = '1';
+        panes[1].style.opacity = '0.55';
+        panes[0].style.outline = '1px solid rgba(176,141,87,0.45)';
+        panes[1].style.outline = 'none';
+      } else {
+        panes[0].style.opacity = '0.55';
+        panes[1].style.opacity = '1';
+        panes[1].style.outline = '1px solid rgba(176,141,87,0.45)';
+        panes[0].style.outline = 'none';
+      }
+      panes.forEach(pane => {
+        pane.style.borderRadius = '2px';
+        pane.style.padding = '0.5rem';
+      });
+    }
+    // Keep plate selection on box when comparing box; on myth when thick
+    const plateKey = mode === 'thick' ? 'myth' : 'box';
+    currentPlate = plateKey;
+    document.querySelectorAll('.plate').forEach(p => {
+      const on = p.dataset.plate === plateKey;
+      p.classList.toggle('active', on);
+      p.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  document.querySelectorAll('.plate').forEach(p => {
+    p.addEventListener('click', () => showPlate(p.dataset.plate));
+  });
+
+  document.querySelectorAll('.compare-btn').forEach(b => {
+    b.addEventListener('click', () => showCompare(b.dataset.compare));
+  });
+
+  // Default: Box-in-box
+  showPlate('box');
+})();
+</script>
+</body>
+</html>

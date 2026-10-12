@@ -1,0 +1,2367 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cairo Audio Production Centre</title>
+<link href="fonts/fonts.css" rel="stylesheet">
+<style>
+  :root {
+    --graphite: #141416;
+    --paper: #f3efe6;
+    --brass: #b08d57;
+    --brass-dim: rgba(176, 141, 87, 0.35);
+    --brass-soft: rgba(176, 141, 87, 0.15);
+    --off-white: #e8e4dc;
+    --near-black: #1a1917;
+    --muted: rgba(232, 228, 220, 0.55);
+    --muted-dark: rgba(26, 25, 23, 0.55);
+    --panel-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --max: 1180px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--graphite);
+    color: var(--off-white);
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  .app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    max-width: var(--max);
+    margin: 0 auto;
+    position: relative;
+  }
+  .rail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.15rem 2rem 0.9rem;
+    border-bottom: 1px solid rgba(176, 141, 87, 0.18);
+    flex-shrink: 0;
+    z-index: 20;
+    gap: 1rem;
+  }
+  .rail-brand {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brass);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .chapters {
+    display: flex;
+    gap: 0.05rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chapters::-webkit-scrollbar { display: none; }
+  .chapter {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.5rem 0.85rem;
+    color: var(--muted);
+    transition: color 0.5s var(--ease), background 0.5s var(--ease), opacity 0.4s var(--ease);
+    border-radius: 2px;
+    position: relative;
+    white-space: nowrap;
+  }
+  .chapter:hover { color: var(--off-white); }
+  .chapter.active { color: var(--paper); }
+  .chapter[aria-disabled="true"] {
+    opacity: 0.38;
+    cursor: default;
+    pointer-events: none;
+  }
+  .chapter .num {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    color: var(--brass);
+    opacity: 0.7;
+  }
+  .chapter.active .num { opacity: 1; }
+  .chapter .label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+  .chapter.active::after {
+    content: "";
+    position: absolute;
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: 0;
+    height: 1px;
+    background: var(--brass);
+    transform-origin: left;
+    animation: underlineIn 0.6s var(--ease) forwards;
+  }
+  @keyframes underlineIn {
+    from { transform: scaleX(0); opacity: 0; }
+    to { transform: scaleX(1); opacity: 1; }
+  }
+  .stage { flex: 1; position: relative; overflow: hidden; }
+  .screen {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+    display: flex;
+    overflow: hidden;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .screen.essay-screen {
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex-direction: column;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.essay-screen:not(.active) { display: block; }
+
+  /* PROLOGUE */
+  .prologue { display: grid; grid-template-columns: 1.05fr 1fr; gap: 0; }
+  .tonal {
+    position: relative;
+    background:
+      radial-gradient(ellipse 80% 60% at 30% 70%, rgba(176,141,87,0.22) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 75% 25%, rgba(176,141,87,0.12) 0%, transparent 50%),
+      linear-gradient(165deg, #1c1b1e 0%, #0e0e10 45%, #1a1714 100%);
+    overflow: hidden;
+  }
+  .tonal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(-18deg, transparent, transparent 48px, rgba(176,141,87,0.03) 48px, rgba(176,141,87,0.03) 49px);
+  }
+  .tonal-mark {
+    position: absolute; bottom: 2.5rem; left: 2.5rem;
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 7rem; line-height: 0.85;
+    color: rgba(176,141,87,0.12); letter-spacing: -0.02em; user-select: none;
+  }
+  .tonal-ring {
+    position: absolute; width: 280px; height: 280px;
+    border: 1px solid rgba(176,141,87,0.18); border-radius: 50%;
+    top: 18%; left: 22%;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .tonal-ring::after {
+    content: ""; position: absolute; inset: 28px;
+    border: 1px solid rgba(176,141,87,0.1); border-radius: 50%;
+  }
+  @keyframes drift {
+    from { transform: translate(0, 0) rotate(0deg); }
+    to { transform: translate(18px, -12px) rotate(8deg); }
+  }
+  .prologue-copy {
+    padding: 3.5rem 3.25rem 3rem;
+    display: flex; flex-direction: column; justify-content: center;
+    background: var(--graphite);
+  }
+  .eyebrow {
+    font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--brass); font-weight: 400; margin-bottom: 1.5rem;
+  }
+  .title {
+    font-family: "Cormorant Garamond", Georgia, serif; font-weight: 400;
+    font-size: clamp(2.4rem, 4.2vw, 3.35rem); line-height: 1.12;
+    letter-spacing: -0.01em; color: var(--paper); margin-bottom: 0.35rem;
+  }
+  .chapter-tag {
+    font-family: "Cormorant Garamond", Georgia, serif; font-style: italic;
+    font-size: 1.35rem; color: var(--brass); margin-bottom: 1.75rem;
+  }
+  .lede {
+    color: var(--muted); max-width: 36ch; font-size: 0.98rem;
+    margin-bottom: 2.25rem; font-weight: 300;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2.75rem; }
+  .chip {
+    border: 1px solid var(--brass-dim); color: var(--off-white);
+    padding: 0.45rem 0.95rem; font-size: 0.72rem; letter-spacing: 0.06em;
+    border-radius: 100px; background: var(--brass-soft);
+    transition: border-color 0.4s var(--ease), background 0.4s var(--ease);
+  }
+  .chip:hover { border-color: var(--brass); background: rgba(176,141,87,0.22); }
+  .btn-begin {
+    align-self: flex-start; border: 1px solid var(--brass); color: var(--brass);
+    padding: 0.85rem 2.2rem; font-size: 0.72rem; letter-spacing: 0.22em;
+    text-transform: uppercase; border-radius: 1px;
+    transition: background 0.5s var(--ease), color 0.5s var(--ease), transform 0.4s var(--ease);
+  }
+  .btn-begin:hover { background: var(--brass); color: var(--graphite); transform: translateY(-1px); }
+
+  /* FRAMING */
+  .framing { background: var(--paper); color: var(--near-black); }
+  .essay-inner { max-width: 820px; margin: 0 auto; padding: 2.75rem 2.5rem 4rem; }
+  .framing .essay-inner { max-width: 860px; }
+  .essay-kicker {
+    font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--brass); margin-bottom: 0.85rem;
+  }
+  .essay-title {
+    font-family: "Cormorant Garamond", Georgia, serif; font-weight: 400;
+    font-size: clamp(2.1rem, 3.5vw, 2.85rem); line-height: 1.15;
+    color: var(--near-black); margin-bottom: 0.4rem;
+  }
+  .essay-sub {
+    font-family: "Cormorant Garamond", Georgia, serif; font-style: italic;
+    font-size: 1.2rem; color: var(--brass); margin-bottom: 2.5rem;
+  }
+  .essay-section { margin-bottom: 2.75rem; padding-top: 0.25rem; }
+  .essay-section h3 {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.45rem;
+    font-weight: 500; color: var(--near-black); margin-bottom: 1rem;
+  }
+  .essay-section p {
+    font-size: 0.95rem; color: rgba(26,25,23,0.78); line-height: 1.7;
+    margin-bottom: 0.95rem; font-weight: 300; max-width: 62ch;
+  }
+  .essay-section p:last-child { margin-bottom: 0; }
+  .essay-section ul { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+  .essay-section li {
+    position: relative; padding-left: 1.15rem; margin-bottom: 0.65rem;
+    font-size: 0.92rem; color: rgba(26,25,23,0.78); line-height: 1.6; max-width: 62ch;
+  }
+  .essay-section li::before {
+    content: ""; position: absolute; left: 0; top: 0.65em;
+    width: 5px; height: 1px; background: var(--brass);
+  }
+  .tests { display: grid; gap: 0.85rem; margin: 1.25rem 0 1.5rem; }
+  .test-card {
+    display: grid; grid-template-columns: 2.2rem 1fr; gap: 0.85rem;
+    padding: 1.1rem 1.25rem; background: rgba(20,20,22,0.03);
+    border: 1px solid rgba(26,25,23,0.08); border-radius: 2px;
+  }
+  .test-card .tn {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.15rem;
+    color: var(--brass); line-height: 1.2;
+  }
+  .test-card strong {
+    display: block; font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 1.15rem; font-weight: 500; color: var(--near-black); margin-bottom: 0.3rem;
+  }
+  .test-card p { margin: 0 !important; font-size: 0.88rem !important; max-width: none !important; }
+  .benchmark {
+    font-family: "Cormorant Garamond", Georgia, serif; font-style: italic;
+    font-size: 1.05rem; color: rgba(26,25,23,0.65);
+    border-left: 1px solid var(--brass); padding-left: 1.1rem;
+    margin: 1.25rem 0 0; max-width: 58ch; line-height: 1.5;
+  }
+  .scope-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0 1rem; font-size: 0.85rem; }
+  .scope-table th {
+    text-align: left; font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted-dark); font-weight: 400; padding: 0.55rem 0.75rem 0.55rem 0;
+    border-bottom: 1px solid rgba(26,25,23,0.14);
+  }
+  .scope-table td {
+    padding: 0.85rem 0.75rem 0.85rem 0; border-bottom: 1px solid rgba(26,25,23,0.08);
+    vertical-align: top; color: rgba(26,25,23,0.78); line-height: 1.45;
+  }
+  .scope-table td:first-child {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.05rem;
+    color: var(--near-black); font-weight: 500; min-width: 8rem;
+  }
+  .scope-table .depth {
+    font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--brass); white-space: nowrap;
+  }
+  .work-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; margin: 1.25rem 0 1rem; }
+  .work-card {
+    padding: 1.15rem 1.2rem; border: 1px solid rgba(26,25,23,0.1);
+    border-radius: 2px; background: #faf7f0;
+  }
+  .work-card h4 {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.1rem;
+    font-weight: 500; margin-bottom: 0.45rem; color: var(--near-black);
+  }
+  .work-card p { margin: 0 !important; font-size: 0.85rem !important; max-width: none !important; }
+  .honest-limit {
+    margin-top: 1rem; padding: 1rem 1.2rem; background: rgba(176,141,87,0.08);
+    border-radius: 2px; font-size: 0.9rem; color: rgba(26,25,23,0.8);
+    line-height: 1.55; max-width: 62ch;
+  }
+  .honest-limit strong {
+    font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; color: var(--near-black);
+  }
+  .building-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.15rem; }
+  .building-card {
+    padding: 1.15rem 1.2rem; border: 1px solid rgba(26,25,23,0.08);
+    border-radius: 2px; background: rgba(20,20,22,0.025);
+  }
+  .building-card h4 {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.1rem;
+    font-weight: 500; margin-bottom: 0.65rem; color: var(--near-black);
+  }
+  .building-card ul { margin-top: 0.35rem; }
+  .edges {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.65rem; margin: 1.15rem 0;
+  }
+  .edge { padding: 0.95rem 1rem; border: 1px solid rgba(26,25,23,0.1); border-radius: 2px; }
+  .edge strong {
+    display: block; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--brass); margin-bottom: 0.35rem; font-weight: 400;
+  }
+  .edge span { font-size: 0.85rem; color: rgba(26,25,23,0.72); line-height: 1.45; }
+  .roadmap { counter-reset: stage; list-style: none; margin: 1rem 0 0; padding: 0; }
+  .roadmap li {
+    counter-increment: stage; padding-left: 2.4rem; position: relative;
+    margin-bottom: 0.55rem; font-size: 0.9rem; color: rgba(26,25,23,0.78);
+    line-height: 1.5; max-width: none;
+  }
+  .roadmap li::before {
+    content: counter(stage); position: absolute; left: 0; top: 0;
+    width: 1.6rem; font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.95rem; color: var(--brass); background: none; height: auto;
+  }
+  .glossary {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem 1.25rem; margin-top: 1.15rem; padding-top: 1.5rem;
+    border-top: 1px solid rgba(26,25,23,0.1);
+  }
+  .gloss-item dt {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1rem;
+    font-weight: 500; color: var(--near-black); margin-bottom: 0.2rem;
+  }
+  .gloss-item dd { font-size: 0.8rem; color: rgba(26,25,23,0.62); line-height: 1.45; }
+  .essay-continue {
+    margin-top: 2.5rem; padding-top: 1.75rem;
+    border-top: 1px solid rgba(26,25,23,0.1);
+  }
+  .btn-continue {
+    display: inline-flex; align-items: center; gap: 0.65rem;
+    border: 1px solid var(--brass); color: var(--brass);
+    padding: 0.85rem 1.85rem; font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; border-radius: 1px;
+    transition: background 0.5s var(--ease), color 0.5s var(--ease), transform 0.4s var(--ease);
+  }
+  .btn-continue:hover { background: var(--brass); color: var(--graphite); transform: translateY(-1px); }
+  .framing .btn-continue { color: var(--near-black); border-color: var(--near-black); }
+  .framing .btn-continue:hover { background: var(--near-black); color: var(--paper); }
+
+  /* SUITE */
+  .suite { background: var(--graphite); flex-direction: column; }
+  .suite-plan-row {
+    display: grid; grid-template-columns: 1fr 300px; gap: 0;
+    min-height: min(58vh, 520px); flex-shrink: 0;
+  }
+  .suite-main {
+    padding: 1.75rem 2rem 1.5rem; display: flex; flex-direction: column; min-width: 0;
+  }
+  .suite-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 1.15rem; gap: 1.5rem;
+  }
+  .suite-header .title { font-size: clamp(1.7rem, 2.8vw, 2.25rem); margin-bottom: 0.2rem; }
+  .suite-subtitle { color: var(--muted); font-size: 0.85rem; max-width: 48ch; line-height: 1.5; }
+  .toggle {
+    display: flex; border: 1px solid var(--brass-dim); border-radius: 2px;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .toggle button {
+    padding: 0.55rem 1rem; font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); transition: all 0.4s var(--ease);
+    white-space: nowrap;
+  }
+  .toggle button.active { background: var(--brass); color: var(--graphite); }
+  .toggle button:not(.active):hover { color: var(--off-white); background: var(--brass-soft); }
+  .plan-wrap {
+    flex: 1; background: var(--paper); border-radius: 2px; padding: 1.15rem 1.35rem;
+    display: flex; flex-direction: column; min-height: 0; box-shadow: var(--panel-shadow);
+  }
+  .plan-note {
+    font-size: 0.7rem; color: var(--muted-dark); letter-spacing: 0.04em;
+    margin-bottom: 0.75rem; min-height: 1.2em;
+  }
+  .plan-svg { flex: 1; width: 100%; height: 100%; min-height: 280px; }
+  .room { cursor: pointer; }
+  .room rect, .room path {
+    fill: #ebe6db; stroke: #c4bba8; stroke-width: 1.5;
+    transition: fill 0.45s var(--ease), stroke 0.45s var(--ease);
+  }
+  .room:hover rect, .room:hover path { fill: #e4d9c4; stroke: var(--brass); }
+  .room.selected rect, .room.selected path { fill: #ddd2b8; stroke: var(--brass); stroke-width: 2; }
+  .room.preferred rect { stroke: var(--brass); stroke-dasharray: 4 3; }
+  .room text {
+    font-family: "DM Sans", sans-serif; font-size: 11px; fill: var(--near-black);
+    letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; font-weight: 400;
+  }
+  .room .sub { font-size: 9px; fill: var(--muted-dark); letter-spacing: 0.04em; text-transform: none; }
+  .side-panel {
+    background: var(--paper); color: var(--near-black); padding: 2rem 1.65rem;
+    display: flex; flex-direction: column; border-left: 1px solid rgba(20,20,22,0.08);
+    overflow-y: auto;
+  }
+  .side-empty {
+    color: var(--muted-dark); font-family: "Cormorant Garamond", Georgia, serif;
+    font-style: italic; font-size: 1.1rem; margin-top: 1.5rem; line-height: 1.4;
+  }
+  .side-panel .eyebrow { color: var(--brass); margin-bottom: 0.65rem; }
+  .side-name {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.75rem;
+    font-weight: 500; line-height: 1.15; margin-bottom: 1.25rem; color: var(--near-black);
+  }
+  .meta-grid {
+    display: grid; gap: 0.95rem; margin-bottom: 1.35rem; padding-bottom: 1.35rem;
+    border-bottom: 1px solid rgba(26,25,23,0.12);
+  }
+  .meta-item label {
+    display: block; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted-dark); margin-bottom: 0.25rem;
+  }
+  .meta-item span {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.15rem; color: var(--near-black);
+  }
+  .why-text { font-size: 0.88rem; color: rgba(26,25,23,0.72); line-height: 1.65; font-weight: 300; }
+  .side-badge {
+    display: inline-block; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--brass); border: 1px solid var(--brass-dim); padding: 0.25rem 0.55rem;
+    border-radius: 100px; margin-bottom: 0.85rem;
+  }
+  .suite-essay {
+    background: var(--paper); color: var(--near-black);
+    border-top: 1px solid rgba(176,141,87,0.2);
+  }
+  .suite-essay .essay-inner { max-width: 900px; padding-top: 2.5rem; padding-bottom: 3.5rem; }
+  .suite-essay .essay-title { font-size: clamp(1.6rem, 2.5vw, 2rem); }
+  .suite-essay .btn-continue { color: var(--near-black); border-color: var(--near-black); }
+  .suite-essay .btn-continue:hover { background: var(--near-black); color: var(--paper); }
+  .term-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem; margin: 1.15rem 0;
+  }
+  .term-card {
+    padding: 0.95rem 1rem; background: rgba(20,20,22,0.03);
+    border: 1px solid rgba(26,25,23,0.08); border-radius: 2px;
+  }
+  .term-card strong {
+    display: block; font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 1.05rem; font-weight: 500; margin-bottom: 0.3rem; color: var(--near-black);
+  }
+  .term-card span { font-size: 0.82rem; color: rgba(26,25,23,0.68); line-height: 1.45; }
+  .programme-box {
+    margin: 1.25rem 0; padding: 1.35rem 1.5rem;
+    border: 1px solid rgba(176,141,87,0.35); border-radius: 2px; background: #faf7f0;
+  }
+  .programme-box h4 {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.2rem;
+    font-weight: 500; margin-bottom: 0.85rem; color: var(--near-black);
+  }
+  .programme-box ul { margin: 0; }
+  .programme-box li { max-width: none; }
+  .footprint-callout {
+    display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; align-items: center;
+    padding: 1.25rem 1.4rem; margin: 1.15rem 0;
+    background: var(--near-black); color: var(--paper); border-radius: 2px;
+  }
+  .footprint-callout .big {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.85rem;
+    color: var(--brass); line-height: 1.1; white-space: nowrap;
+  }
+  .footprint-callout p {
+    margin: 0 !important; color: var(--muted) !important;
+    font-size: 0.88rem !important; max-width: none !important;
+  }
+
+  /* ISOLATION (preserved look) */
+  .isolation {
+    background: var(--graphite); display: flex; flex-direction: column;
+    padding: 2rem 2.5rem 2rem;
+  }
+  .iso-header { margin-bottom: 1.5rem; }
+  .iso-header .title { font-size: clamp(1.9rem, 3vw, 2.5rem); margin-bottom: 0.35rem; }
+  .iso-lede { color: var(--muted); max-width: 52ch; font-size: 0.92rem; }
+  .iso-body {
+    flex: 1; display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; min-height: 0;
+  }
+  .plates {
+    display: flex; flex-direction: column; gap: 0.35rem;
+    overflow-y: auto; padding-right: 0.5rem;
+  }
+  .plate {
+    text-align: left; padding: 0.85rem 1rem; border: 1px solid transparent;
+    border-radius: 2px; transition: all 0.45s var(--ease);
+    display: flex; gap: 0.85rem; align-items: baseline;
+  }
+  .plate:hover { background: rgba(243,239,230,0.04); border-color: rgba(176,141,87,0.2); }
+  .plate.active { background: var(--paper); color: var(--near-black); border-color: var(--paper); }
+  .plate .roman {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 0.95rem;
+    color: var(--brass); min-width: 1.4rem; letter-spacing: 0.05em;
+  }
+  .plate .pname { font-size: 0.82rem; letter-spacing: 0.04em; font-weight: 400; }
+  .iso-canvas {
+    background: var(--paper); border-radius: 2px; padding: 2rem 2.25rem;
+    display: flex; flex-direction: column; box-shadow: var(--panel-shadow);
+    min-height: 0; overflow: hidden;
+  }
+  .iso-canvas-title {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.65rem;
+    color: var(--near-black); margin-bottom: 0.35rem; font-weight: 500;
+  }
+  .iso-caption {
+    font-size: 0.9rem; color: rgba(26,25,23,0.68); line-height: 1.6;
+    margin-bottom: 1.25rem; max-width: 58ch;
+  }
+  .diagram-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    min-height: 220px; position: relative;
+  }
+  .diagram-area svg { width: 100%; max-width: 640px; height: auto; max-height: 260px; }
+  .compare-bar {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-top: 1.25rem; padding-top: 1.15rem;
+    border-top: 1px solid rgba(26,25,23,0.1);
+  }
+  .compare-label {
+    font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted-dark); margin-right: 0.25rem;
+  }
+  .compare-btn {
+    padding: 0.45rem 0.95rem; font-size: 0.72rem; letter-spacing: 0.06em;
+    border: 1px solid rgba(26,25,23,0.18); border-radius: 100px; color: var(--near-black);
+    transition: all 0.4s var(--ease);
+  }
+  .compare-btn:hover { border-color: var(--brass); }
+  .compare-btn.active { background: var(--near-black); color: var(--paper); border-color: var(--near-black); }
+  .iso-legend {
+    display: flex; flex-wrap: wrap; gap: 0.85rem 1.35rem; align-items: center;
+    margin-top: 0.85rem; padding: 0.55rem 0.85rem;
+    border: 1px solid rgba(176,141,87,0.22); border-radius: 2px;
+    background: rgba(243,239,230,0.03); max-width: 640px;
+  }
+  .iso-legend .leg {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  }
+  .iso-legend .swatch { width: 18px; height: 10px; flex-shrink: 0; }
+  .diagram-wrap {
+    width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
+  }
+  .diagram-wrap.compare-duo {
+    flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: stretch; gap: 1rem;
+  }
+  .diagram-pane {
+    flex: 1 1 240px; max-width: 320px; display: flex; flex-direction: column;
+    align-items: center; gap: 0.4rem;
+  }
+  .diagram-pane .pane-label {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 0.95rem;
+    color: var(--near-black); letter-spacing: 0.02em;
+  }
+  .path-note {
+    font-size: 0.72rem; color: rgba(26,25,23,0.58); line-height: 1.45;
+    text-align: center; max-width: 52ch; font-style: italic;
+  }
+  .diagram-pane svg { max-width: 100%; max-height: 200px; }
+  .whisper {
+    padding: 0.65rem 2.5rem; font-size: 0.62rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(232,228,220,0.28);
+    border-top: 1px solid rgba(176,141,87,0.1); flex-shrink: 0;
+  }
+  @media (max-width: 1100px) {
+    .chapter .label { display: none; }
+    .chapter { padding: 0.5rem 0.65rem; }
+    .chapter.active::after { left: 0.55rem; right: 0.55rem; }
+  }
+  @media (max-width: 900px) {
+    .prologue { grid-template-columns: 1fr; }
+    .tonal { display: none; }
+    .suite-plan-row { grid-template-columns: 1fr; min-height: auto; }
+    .side-panel {
+      max-height: 280px; border-left: none; border-top: 1px solid rgba(20,20,22,0.08);
+    }
+    .iso-body { grid-template-columns: 1fr; }
+    .plates { flex-direction: row; flex-wrap: wrap; overflow: visible; }
+    .rail { padding: 1rem 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+    .prologue-copy, .suite-main, .isolation, .essay-inner { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .work-types { grid-template-columns: 1fr; }
+    .building-grid { grid-template-columns: 1fr; }
+    .footprint-callout { grid-template-columns: 1fr; gap: 0.65rem; }
+  }
+  /* ── SUITE · image-led pages (Stage 1) ── */
+  .sx { padding: 1.6rem 2rem 2.5rem; }
+  .sx-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+  .sx-head .title { font-size: clamp(1.7rem, 2.8vw, 2.25rem); margin-bottom: 0.2rem; }
+  .sx-controls { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+  .sx-seg { display: flex; border: 1px solid var(--brass-dim); border-radius: 2px; overflow: hidden; }
+  .sx-seg button { padding: 0.6rem 0.95rem; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); transition: background .45s var(--ease), color .45s var(--ease); white-space: nowrap; min-height: 40px; }
+  .sx-seg button .pn { font-family: "Cormorant Garamond", Georgia, serif; font-size: 0.9rem; letter-spacing: 0.05em; color: var(--brass); margin-right: 0.35rem; }
+  .sx-seg button.active { background: var(--brass); color: var(--graphite); }
+  .sx-seg button.active .pn { color: var(--graphite); }
+  .sx-seg button:not(.active):hover { color: var(--off-white); background: var(--brass-soft); }
+  .sx-mute { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.6rem 0.85rem; min-height: 40px; border: 1px solid var(--brass-dim); border-radius: 2px; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); transition: color .4s var(--ease), border-color .4s var(--ease); }
+  .sx-mute svg { width: 16px; height: 16px; }
+  .sx-mute:hover { color: var(--off-white); border-color: var(--brass); }
+  .sx-mute[aria-pressed="true"] { color: var(--brass); }
+  .sx-hintbar { display: flex; align-items: center; gap: 0.55rem; font-size: 0.78rem; color: var(--muted); margin: 0.2rem 0 1.4rem; }
+  .sx-hintbar .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brass); animation: sxPulse 2.4s var(--ease) infinite; }
+  @keyframes sxPulse { 0%,100% { opacity: .35; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.15); } }
+  .sx-page { display: none; }
+  .sx-page.active { display: block; animation: sxIn .7s var(--ease) both; }
+  @keyframes sxIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .sx-lede { font-family: "Cormorant Garamond", Georgia, serif; font-size: clamp(1.25rem, 2vw, 1.55rem); line-height: 1.35; color: var(--paper); max-width: 46ch; margin-bottom: 0.4rem; }
+  .sx-keys { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.6rem 0 1.5rem; }
+  .sx-key { border-left: 1px solid var(--brass); padding-left: 0.75rem; }
+  .sx-key b { display: block; font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 1.45rem; color: var(--paper); line-height: 1.1; }
+  .sx-key span { font-size: 0.66rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .sx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.35rem; }
+  .sx-card { display: flex; flex-direction: column; border-radius: 3px; overflow: hidden; transition: box-shadow .6s var(--ease), transform .6s var(--ease); }
+  .sx-fig { position: relative; display: block; width: 100%; aspect-ratio: 400 / 240; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .sx-fig svg { display: block; width: 100%; height: 100%; }
+  .sx-fig:focus-visible { outline: 1px solid var(--brass); outline-offset: -4px; }
+  .sx-hint { position: absolute; right: 10px; top: 9px; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.3rem 0.55rem; border-radius: 100px; pointer-events: none; transition: opacity .5s var(--ease); }
+  .sx-hint svg { width: 11px; height: 11px; }
+  .sx-card.playing .sx-hint { opacity: 0; }
+  .sx-cap { padding: 0.95rem 1.1rem 1.1rem; flex: 1; }
+  .sx-cap h3 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 1.28rem; line-height: 1.2; margin-bottom: 0.3rem; }
+  .sx-cap h3 .n { font-size: 0.8rem; letter-spacing: 0.12em; color: var(--brass); margin-right: 0.45rem; }
+  .sx-cap p { font-size: 0.86rem; line-height: 1.55; }
+  .sx-cap .state { margin-top: 0.4rem; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brass); }
+  .sx-next { margin-top: 1.8rem; display: flex; justify-content: flex-end; gap: 0.75rem; }
+  .sx-next button { padding: 0.75rem 1.2rem; border: 1px solid var(--brass-dim); color: var(--paper); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; transition: background .4s var(--ease), color .4s var(--ease); }
+  .sx-next button:hover { background: var(--brass); color: var(--graphite); }
+  .sx-planhead { margin: 2.2rem 0 0.8rem; display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+  .sx-planhead h3 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 400; font-size: 1.5rem; color: var(--paper); }
+  .sx .suite-plan-row { min-height: 440px; border-radius: 3px; overflow: hidden; }
+  .sx .suite-main { padding: 0; }
+
+  /* shared SVG grammar */
+  .sx-fig .l { fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+  .sx-fig .l.t { stroke-width: 0.8; }
+  .sx-fig .l.k { stroke-width: 2.6; }
+  .sx-fig .l.d { stroke-width: 0.8; stroke-dasharray: 3 4; opacity: 0.5; }
+  .sx-fig .pf { fill: var(--ink); stroke: none; }
+  .sx-fig .w { fill: var(--wash); stroke: none; }
+  .sx-fig .l.w { stroke: var(--ink); }
+  .sx-fig .pref { stroke-dasharray: 5 4; }
+  .sx-fig .gl { fill: var(--glass); stroke: var(--fx); stroke-width: 0.8; }
+  .sx-fig .lbl { font-family: "DM Sans", sans-serif; font-size: 10.5px; letter-spacing: 0.08em; fill: var(--ink); fill-opacity: 0.8; }
+  .sx-fig .lbl.big { font-family: "Cormorant Garamond", Georgia, serif; font-size: 20px; letter-spacing: 0.02em; fill-opacity: 1; }
+  .sx-fig .fx .f { fill: none; stroke: var(--fx); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .sx-fig .fx .ff { fill: var(--fx); stroke: none; }
+
+  /* Variant A · sketch (ink pen on cream paper) */
+  .v-sketch .sx-card { background: #f3efe6; color: var(--near-black); box-shadow: 0 18px 44px rgba(0,0,0,0.32); }
+  .v-sketch .sx-fig { --ink: #1f1d1a; --wash: rgba(176,141,87,0.24); --fx: #9a7440; --glass: rgba(176,141,87,0.18);
+    background:
+      radial-gradient(ellipse 90% 80% at 50% 45%, rgba(255,252,244,0.65), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.28 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E"),
+      #efe9dc; }
+  .v-sketch .sx-fig .base { filter: url(#sx-pen); }
+  .v-sketch .sx-fig .dbl { filter: url(#sx-pen2); opacity: 0.32; }
+  .v-sketch .sx-fig .h { fill: url(#sx-hatch); stroke: none; }
+  .v-sketch .sx-fig .s { fill: url(#sx-xhatch); stroke: var(--ink); stroke-width: 0.9; }
+  .v-sketch .sx-fig .w { fill: url(#sx-wash); }
+  .v-sketch .sx-fig .gf { display: none; }
+  .v-sketch .sx-hint { background: rgba(31,29,26,0.07); color: #6d5330; }
+  .v-sketch .sx-cap h3 { color: var(--near-black); }
+  .v-sketch .sx-cap p { color: rgba(26,25,23,0.72); }
+  .v-sketch .sx-card.playing { box-shadow: 0 18px 44px rgba(0,0,0,0.32), 0 0 0 1px rgba(176,141,87,0.7); }
+
+  /* Variant B · graphic (crisp flat vector) */
+  .v-graphic .sx-card { background: #1c1c1f; color: var(--off-white); border: 1px solid rgba(176,141,87,0.16); }
+  .v-graphic .sx-fig { --ink: #e8e4dc; --wash: rgba(176,141,87,0.16); --fx: #d0ad72; --glass: rgba(176,141,87,0.28);
+    background: linear-gradient(180deg, #202024 0%, #18181b 100%); }
+  .v-graphic .sx-fig .dbl, .v-graphic .sx-fig .sk { display: none; }
+  .v-graphic .sx-fig .l { stroke-width: 1.4; opacity: 0.92; }
+  .v-graphic .sx-fig .l.t { stroke-width: 0.9; opacity: 0.7; }
+  .v-graphic .sx-fig .h { fill: rgba(232,228,220,0.06); stroke: none; }
+  .v-graphic .sx-fig .s { fill: #3b3934; stroke: none; }
+  .v-graphic .sx-fig .gf { fill: rgba(232,228,220,0.035); stroke: none; }
+  .v-graphic .sx-hint { background: rgba(176,141,87,0.14); color: var(--brass); }
+  .v-graphic .sx-cap h3 { color: var(--paper); }
+  .v-graphic .sx-cap p { color: var(--muted); }
+  .v-graphic .sx-card.playing { border-color: rgba(176,141,87,0.6); }
+
+  @media (max-width: 760px) {
+    .sx { padding: 1.25rem 1.1rem 2rem; }
+    .sx-grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { .sx-page.active { animation: none; } .sx-hintbar .dot { animation: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Chapters">
+    <div class="rail-brand">CAPC · Study</div>
+    <div class="chapters">
+      <button class="chapter active" data-screen="prologue" aria-current="page">
+        <span class="num">00</span><span class="label">Prologue</span>
+      </button>
+      <button class="chapter" data-screen="framing">
+        <span class="num">01</span><span class="label">Framing</span>
+      </button>
+      <button class="chapter" data-screen="suite">
+        <span class="num">02</span><span class="label">Suite</span>
+      </button>
+      <button class="chapter" data-screen="isolation">
+        <span class="num">03</span><span class="label">Isolation</span>
+      </button>
+      <button class="chapter" aria-disabled="true" tabindex="-1" title="Coming in later stages">
+        <span class="num">04</span><span class="label">Acoustics</span>
+      </button>
+      <button class="chapter" aria-disabled="true" tabindex="-1" title="Coming in later stages">
+        <span class="num">05</span><span class="label">Interior</span>
+      </button>
+      <button class="chapter" aria-disabled="true" tabindex="-1" title="Coming in later stages">
+        <span class="num">06</span><span class="label">Signal</span>
+      </button>
+      <button class="chapter" aria-disabled="true" tabindex="-1" title="Coming in later stages">
+        <span class="num">07</span><span class="label">Campus</span>
+      </button>
+      <button class="chapter" aria-disabled="true" tabindex="-1" title="Coming in later stages">
+        <span class="num">08</span><span class="label">Next</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="stage">
+    <section class="screen prologue active" id="screen-prologue" aria-label="Prologue">
+      <div class="tonal" aria-hidden="true">
+        <div class="tonal-ring"></div>
+        <div class="tonal-mark">I</div>
+      </div>
+      <div class="prologue-copy">
+        <p class="eyebrow">Phase 1 · Technical study</p>
+        <h1 class="title">Cairo Audio<br>Production Centre</h1>
+        <p class="chapter-tag">Framing the flagship</p>
+        <p class="lede">
+          A technical study for decision-makers: what “world-class and complete”
+          actually requires — starting with the flagship suite in Cairo, room by room.
+        </p>
+        <div class="chips">
+          <span class="chip">Flagship first</span>
+          <span class="chip">Plain language</span>
+          <span class="chip">No prices · no CapEx</span>
+        </div>
+        <button class="btn-begin" id="btn-begin">Begin</button>
+      </div>
+    </section>
+
+    <section class="screen framing essay-screen" id="screen-framing" aria-label="Framing and assumptions">
+      <div class="essay-inner">
+        <p class="essay-kicker">Stage 0 · Framing</p>
+        <h2 class="essay-title">What this study is for</h2>
+        <p class="essay-sub">Assumptions before the rooms</p>
+
+        <div class="essay-section">
+          <h3>Who this is for</h3>
+          <p>Written for decision-makers who are intelligent and commercially serious, but who may not live inside recording studios every day — and for working engineers who have never built a facility at this scale.</p>
+          <p>It is a <strong>technical study</strong>, not a feasibility or business plan. It does not argue whether the centre will make money. It answers a narrower question: what “world-class and complete” actually requires in rooms, isolation, acoustics, infrastructure, equipment classes, and working methods — flagship in full detail; the rest of the facility at outline level only.</p>
+        </div>
+
+        <div class="essay-section">
+          <h3>What “world-class” means</h3>
+          <p>Not a logo on the door. A visiting artist or producer who has worked in London, Los Angeles, New York or Paris walks in and finds <strong>nothing to apologise for</strong> — not the street under a whispered vocal, not speakers that flatter, not a headphone feed that crackles at two in the morning.</p>
+          <div class="tests">
+            <div class="test-card">
+              <span class="tn">01</span>
+              <div>
+                <strong>Silence</strong>
+                <p>With the doors shut and nobody playing, you should hear almost nothing: not the road, not the lift, not the air-conditioning. A quiet vocal, a solo oud or a Quran recitation needs a black background, not a grey one.</p>
+              </div>
+            </div>
+            <div class="test-card">
+              <span class="tn">02</span>
+              <div>
+                <strong>Honest monitoring</strong>
+                <p>The speakers in the control room (engineers call them <em>monitors</em>) must tell the truth. If the low end sounds right here, it should sound right in a car on the Ring Road, on earbuds in a Dubai hotel, and in a cinema in Paris.</p>
+              </div>
+            </div>
+            <div class="test-card">
+              <span class="tn">03</span>
+              <div>
+                <strong>A live room that flatters without lying</strong>
+                <p>Musicians should enjoy playing in it. Strings should bloom and drums should feel big — but what the microphones capture must still be controllable later. Pretty and honest are not opposites; both simply take more space and more design.</p>
+              </div>
+            </div>
+            <div class="test-card">
+              <span class="tn">04</span>
+              <div>
+                <strong>Reliable technology</strong>
+                <p>Every input, every headphone feed, every patch point works, every day. Sessions at this level run on tight clocks. A string section booked for a morning cannot sit waiting while someone hunts for a faulty cable.</p>
+              </div>
+            </div>
+            <div class="test-card">
+              <span class="tn">05</span>
+              <div>
+                <strong>Discreet hospitality</strong>
+                <p>Artists spend twelve-hour days here. They need somewhere to rest, eat, take a call and think — away from the public and away from cameras. Great studios are remembered as much for how they made people feel as for their microphone cupboards.</p>
+              </div>
+            </div>
+          </div>
+          <p class="benchmark">Abbey Road, Capitol, AIR and Electric Lady are useful benchmarks — not to copy, but because the people we most want to attract carry those rooms in their heads. Aim: a producer who knows those rooms should leave Cairo without an asterisk next to the session.</p>
+        </div>
+
+        <div class="essay-section">
+          <h3>Scope — one centre, five kinds of room</h3>
+          <p>Whatever you need for sound, you find it here: global and Arabic pop stars, emerging artists, mahraganat and rap, film Foley, Quran reciters, news and documentary voice — one roof, one technical standard.</p>
+          <p><em>Foley</em>, for readers outside film, is the craft of performing everyday sounds (footsteps, clothing rustle, a door, a cup on a table) in time with the picture, so a soundtrack feels physically real.</p>
+          <table class="scope-table">
+            <thead>
+              <tr><th>Facility</th><th>Rooms</th><th>What it is for</th><th>Phase 1</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Flagship studio</td>
+                <td>1</td>
+                <td>The reputation room: pop and Arabic pop, orchestral and ensemble section tracking, film scoring</td>
+                <td class="depth">Full detail</td>
+              </tr>
+              <tr>
+                <td>Rehearsal hall</td>
+                <td>1</td>
+                <td>Large, instrument-equipped hall for rehearsal and show preparation, recordable through its own studio</td>
+                <td class="depth">Outline</td>
+              </tr>
+              <tr>
+                <td>Foley &amp; effects</td>
+                <td>1</td>
+                <td>Performing and recording sound effects in sync with picture for film, television and online drama</td>
+                <td class="depth">Outline</td>
+              </tr>
+              <tr>
+                <td>Voice / Quran</td>
+                <td>2</td>
+                <td>Recitation, voiceover, news and documentary narration, dubbing and audiobooks</td>
+                <td class="depth">Outline</td>
+              </tr>
+              <tr>
+                <td>Music studios</td>
+                <td>3</td>
+                <td>Day-to-day production: vocals, overdubs, emerging artists, mahraganat and rap, editing and mixing</td>
+                <td class="depth">Outline</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>The flagship sets the bar. Decisions there — isolation, air-conditioning noise, clean power, cabling, signal paths — become the house standard. The other rooms inherit those standards at their own scale.</p>
+        </div>
+
+        <div class="essay-section">
+          <h3>The flagship brief</h3>
+          <p>Deliberately flexible — designed to earn its keep across three kinds of work:</p>
+          <div class="work-types">
+            <div class="work-card">
+              <h4>Pop &amp; Arabic pop</h4>
+              <p>A band tracking together, vocals, live players alongside programmed parts. Loud, dense and bass-heavy, with artists who expect speed.</p>
+            </div>
+            <div class="work-card">
+              <h4>Orchestral section</h4>
+              <p>A string or brass section, or an oriental ensemble (qanun, oud, nay, violins and percussion) with the sound of a real room around them.</p>
+            </div>
+            <div class="work-card">
+              <h4>Film scoring</h4>
+              <p>Musicians recording in time with picture, with the composer — and often the director — in the control room, hearing the score against the scene.</p>
+            </div>
+          </div>
+          <div class="honest-limit">
+            <strong>One honest limit.</strong> The live room is designed for a <em>section</em>, not a full symphony orchestra. A rhythm section with strings, or a mid-sized oriental ensemble, will breathe in it. Sixty players will not.
+          </div>
+        </div>
+
+        <div class="essay-section">
+          <h3>Place — what we ask of the building</h3>
+          <p>The site is the client’s decision. We do not find land or choose the building. We specify what the building must provide — and offer siting guidance, because in Cairo the wrong location can defeat the best studio design before the first wall goes up.</p>
+          <p>Cairo is loud, and more importantly it <strong>vibrates</strong>. Airborne noise (horns, voices) can be stopped with mass and sealed construction. Low-frequency rumble travelling through the ground is far harder — the easiest fix is simply not to be next to it.</p>
+          <div class="building-grid">
+            <div class="building-card">
+              <h4>Siting guidance</h4>
+              <ul>
+                <li>Keep well away from metro lines and heavy-traffic corridors</li>
+                <li>Generous setbacks from main roads and noisy neighbours</li>
+                <li>Check the sky as well as the street — aircraft approach paths</li>
+                <li>Quieter edge districts (New Cairo, Sheikh Zayed, 6th of October) tend to suit — suggestions only; a noise and vibration survey decides</li>
+              </ul>
+            </div>
+            <div class="building-card">
+              <h4>What the building must provide</h4>
+              <ul>
+                <li><strong>Height for a room-within-a-room</strong> — an independent inner shell (walls, ceiling, floating floor on isolating mounts) inside the building structure, with an air gap. The live room wants 5&nbsp;m+ clear inside; a standard office floor is nowhere near enough</li>
+                <li><strong>Structure that can carry weight</strong> — isolated floors and heavy inner walls are dense; ground-floor slab often best</li>
+                <li><strong>Distance from the building’s own vibration</strong> — lifts, ramps, loading bays, generators, pumps</li>
+                <li><strong>Plant kept well away</strong> — chillers, air-handling, pumps and generators on their own mounts, with long lined ductwork</li>
+                <li><strong>No flanking paths</strong> — shared slabs, continuous ceiling voids, ducts or pipes that let sound sneak around a good wall</li>
+                <li><strong>Room for services</strong> — clean audio power, risers, cable routes, maintenance access</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="essay-section">
+          <h3>Edges — what Phase 1 does not do</h3>
+          <div class="edges">
+            <div class="edge"><strong>No prices</strong><span>No capital costs, cost bands or budgets. Purely technical.</span></div>
+            <div class="edge"><strong>No drawings</strong><span>We write the brief; the architect turns it into drawings.</span></div>
+            <div class="edge"><strong>No tender</strong><span>No supplier shortlists or equipment quotations yet.</span></div>
+            <div class="edge"><strong>No business case</strong><span>Whether it makes money is a separate study.</span></div>
+            <div class="edge"><strong>No site selection</strong><span>The client finds the site; we advise; the survey decides.</span></div>
+          </div>
+          <p>Mixing technical design with money too early almost always trims the silence before anyone understands what it is worth. Agree first on what world-class requires; then have the budget conversation with that picture on the table.</p>
+        </div>
+
+        <div class="essay-section">
+          <h3>Voice &amp; Phase 1 roadmap</h3>
+          <p>Every term is explained in plain English the first time it appears. Where we choose one approach over another, we say <strong>why</strong> — so the investor can challenge us intelligently rather than rubber-stamp jargon. Practitioner voice, not brochure.</p>
+          <ol class="roadmap">
+            <li><strong>Stage 1</strong> — How big the flagship really needs to be, and why</li>
+            <li><strong>Stage 2</strong> — Isolation (keeping the world out and the music in)</li>
+            <li><strong>Stage 3</strong> — Acoustics (making the inside sound honest and usable)</li>
+            <li><strong>Stage 4</strong> — Interior, furniture, and the quiet kind of luxury</li>
+            <li><strong>Stage 5</strong> — Power, grounding, cabling, and signal infrastructure</li>
+            <li><strong>Stage 6</strong> — Equipment classes and the path from microphone to master</li>
+            <li><strong>Stage 7</strong> — Short outlines for rehearsal, Foley, voice/Quran, and three music studios</li>
+            <li><strong>Stage 8</strong> — Fee for this study and the shape of Phase 2</li>
+          </ol>
+        </div>
+
+        <div class="essay-section">
+          <h3>Glossary seed</h3>
+          <dl class="glossary">
+            <div class="gloss-item"><dt>Airborne noise</dt><dd>Sound travelling through air.</dd></div>
+            <div class="gloss-item"><dt>Structure-borne noise</dt><dd>Vibration travelling through building structure.</dd></div>
+            <div class="gloss-item"><dt>Isolation</dt><dd>Stopping sound and vibration crossing room boundaries.</dd></div>
+            <div class="gloss-item"><dt>Acoustics</dt><dd>How sound behaves <em>inside</em> a room once it is already there.</dd></div>
+            <div class="gloss-item"><dt>HVAC</dt><dd>Heating, ventilation and air conditioning — often the loudest “silent” problem if designed like an office.</dd></div>
+            <div class="gloss-item"><dt>Flagship studio</dt><dd>The single highest-spec room complex that sets the reputation of the whole centre.</dd></div>
+            <div class="gloss-item"><dt>Foley</dt><dd>Performing everyday sounds in sync with film picture.</dd></div>
+            <div class="gloss-item"><dt>Room-within-a-room</dt><dd>Independent inner shell inside the main structure, separated by an air gap and isolating mounts; also called box-in-box.</dd></div>
+            <div class="gloss-item"><dt>Flanking path</dt><dd>A route by which sound bypasses a wall — shared structure, ducts, voids or pipes.</dd></div>
+            <div class="gloss-item"><dt>Plant</dt><dd>The building’s mechanical equipment (chillers, air-handling, pumps, generators) and the room that houses it.</dd></div>
+          </dl>
+        </div>
+
+        <div class="essay-continue">
+          <button class="btn-continue" data-goto="suite">Continue to Suite →</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen suite essay-screen" id="screen-suite" aria-label="The flagship suite">
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="sx-pen" x="-4%" y="-4%" width="108%" height="108%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="4" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+          <filter id="sx-pen2" x="-4%" y="-4%" width="108%" height="108%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.028" numOctaves="2" seed="11" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="3.4" xChannelSelector="G" yChannelSelector="R"/>
+          </filter>
+          <pattern id="sx-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-38)">
+            <line x1="0" y1="0" x2="0" y2="5" stroke="#1f1d1a" stroke-width="0.55" opacity="0.42"/>
+          </pattern>
+          <pattern id="sx-xhatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="4" height="4" fill="#e6dfcf"/>
+            <line x1="0" y1="0" x2="0" y2="4" stroke="#1f1d1a" stroke-width="0.6" opacity="0.6"/>
+            <line x1="0" y1="0" x2="4" y2="0" stroke="#1f1d1a" stroke-width="0.4" opacity="0.35"/>
+          </pattern>
+          <pattern id="sx-wash" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
+            <rect width="6" height="6" fill="rgba(176,141,87,0.2)"/>
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#b08d57" stroke-width="0.7" opacity="0.35"/>
+          </pattern>
+        </defs>
+      </svg>
+
+      <div class="sx v-sketch" id="sx">
+        <div class="sx-head">
+          <div>
+            <p class="eyebrow">Stage 1 · Space and room programme</p>
+            <h2 class="title">The flagship suite</h2>
+            <p class="suite-subtitle">How big, and why size is not vanity.</p>
+          </div>
+          <div class="sx-controls">
+            <div class="sx-seg" role="tablist" aria-label="Page">
+              <button type="button" class="active" data-page="1" role="tab" aria-selected="true"><span class="pn">1</span>Volume of air</button>
+              <button type="button" data-page="2" role="tab" aria-selected="false"><span class="pn">2</span>Rooms and adjacencies</button>
+            </div>
+            <div class="sx-seg" role="group" aria-label="Drawing style">
+              <button type="button" class="active" data-var="sketch">A · Sketch</button>
+              <button type="button" data-var="graphic">B · Graphic</button>
+            </div>
+            <button type="button" class="sx-mute" id="sx-mute" aria-pressed="false" aria-label="Mute sound"></button>
+          </div>
+        </div>
+        <p class="sx-hintbar"><span class="dot"></span>Tap any drawing to see it, and hear it. Sound is gentle; mute at any time.</p>
+
+        <div class="sx-page active" data-page="1" id="sx-p1">
+          <p class="sx-lede">The first shock of a true flagship is the volume of air. Small rooms can sound charming; they almost never sound unarguable.</p>
+          <div class="sx-keys">
+            <div class="sx-key"><b>90–100 m²</b><span>Live room, net</span></div>
+            <div class="sx-key"><b>5 m+</b><span>Clear height, preferred</span></div>
+          </div>
+          <div class="sx-grid" data-grid="1"></div>
+          <div class="sx-next"><button type="button" data-page-go="2">Rooms and adjacencies →</button></div>
+        </div>
+
+        <div class="sx-page" data-page="2" id="sx-p2">
+          <p class="sx-lede">Getting the sizes right is half the job. The other half is placing each room next to the right neighbours.</p>
+          <div class="sx-keys">
+            <div class="sx-key"><b>2 + 1</b><span>Booths · third strongly preferred</span></div>
+            <div class="sx-key"><b>~40 m²</b><span>Control room, net</span></div>
+            <div class="sx-key"><b>300–450 m²</b><span>Whole suite, gross</span></div>
+          </div>
+          <div class="sx-grid" data-grid="2"></div>
+
+          <div class="sx-planhead">
+            <h3>The plan · tap a room</h3>
+            <div class="toggle" role="group" aria-label="Footprint mode">
+              <button type="button" class="active" data-mode="net">Net rooms</button>
+              <button type="button" data-mode="gross">Gross footprint</button>
+            </div>
+          </div>
+          <div class="suite-plan-row">
+            <div class="suite-main">
+              <div class="plan-wrap">
+                <p class="plan-note" id="plan-note">Net usable floor area of each room. Select a space to read why it is sized this way. Iso C is strongly preferred.</p>
+                <svg class="plan-svg" viewBox="0 0 760 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Suite floor plan">
+              <g class="room" data-room="lobby">
+                <rect x="20" y="20" width="140" height="120" rx="2"/>
+                <text x="90" y="72" text-anchor="middle">Lobby</text>
+                <text class="sub size" x="90" y="90" text-anchor="middle">20–35 m²</text>
+              </g>
+              <g class="room" data-room="lounge">
+                <rect x="20" y="150" width="140" height="150" rx="2"/>
+                <text x="90" y="215" text-anchor="middle">Lounge</text>
+                <text class="sub size" x="90" y="233" text-anchor="middle">25–40 m²</text>
+              </g>
+              <g class="room" data-room="machine">
+                <rect x="20" y="310" width="140" height="150" rx="2"/>
+                <text x="90" y="375" text-anchor="middle">Machine</text>
+                <text class="sub size" x="90" y="393" text-anchor="middle">15–25 m²</text>
+              </g>
+              <g class="room" data-room="live">
+                <rect x="175" y="20" width="340" height="300" rx="2"/>
+                <text x="345" y="155" text-anchor="middle" style="font-size:14px">Live room</text>
+                <text class="sub size" x="345" y="178" text-anchor="middle" style="font-size:11px">90–100 m² · 5 m+</text>
+              </g>
+              <g class="room" data-room="isoA">
+                <rect x="175" y="335" width="105" height="125" rx="2"/>
+                <text x="227" y="388" text-anchor="middle">Iso A</text>
+                <text class="sub size" x="227" y="406" text-anchor="middle">12–18 m²</text>
+              </g>
+              <g class="room" data-room="isoB">
+                <rect x="290" y="335" width="105" height="125" rx="2"/>
+                <text x="342" y="388" text-anchor="middle">Iso B</text>
+                <text class="sub size" x="342" y="406" text-anchor="middle">10–16 m²</text>
+              </g>
+              <g class="room preferred" data-room="isoC">
+                <rect x="405" y="335" width="110" height="125" rx="2"/>
+                <text x="460" y="380" text-anchor="middle">Iso C</text>
+                <text class="sub size" x="460" y="398" text-anchor="middle">~Iso B</text>
+                <text class="sub" x="460" y="414" text-anchor="middle" style="font-size:8px; letter-spacing:0.06em">PREFERRED</text>
+              </g>
+              <g class="room" data-room="control">
+                <rect x="530" y="20" width="210" height="440" rx="2"/>
+                <text x="635" y="220" text-anchor="middle">Control</text>
+                <text class="sub size" x="635" y="243" text-anchor="middle">35–50 m²</text>
+              </g>
+                </svg>
+              </div>
+            </div>
+            <aside class="side-panel" id="side-panel">
+              <div id="side-content">
+                <p class="side-empty">Select a room on the plan to see its role and size band.</p>
+              </div>
+            </aside>
+          </div>
+          <div class="sx-next">
+            <button type="button" data-page-go="1">← Volume of air</button>
+            <button type="button" data-goto="isolation">Continue to Isolation →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ── 03 ISOLATION ── -->
+    <section class="screen isolation" id="screen-isolation" aria-label="Isolation atelier">
+      <div class="iso-header">
+        <p class="eyebrow">Stage 2 · Atelier</p>
+        <h2 class="title">Keeping the world out</h2>
+        <p class="iso-lede">Six plates on how sound is stopped — and where it still sneaks through. Plain English for investors, not acousticians.</p>
+        <div class="iso-legend" aria-label="Wave path legend">
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 8 Q5 2 9 8 Q13 2 17 8" fill="none" stroke="#c47a3a" stroke-width="1.6"/></svg>Airborne</span>
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 5 H5 M7 5 H11 M13 5 H17" fill="none" stroke="#5b7c9a" stroke-width="1.8" stroke-linecap="round"/></svg>Structure-borne</span>
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 5 H7 M11 5 H17" fill="none" stroke="#8a8478" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.55"/></svg>Stopped</span>
+          <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M2 5 H12" fill="none" stroke="#c45a3a" stroke-width="1.4"/><path d="M11 2 L16 5 L11 8 Z" fill="#c45a3a"/></svg>Flanking</span>
+        </div>
+      </div>
+      <div class="iso-body">
+        <div class="plates" role="tablist" aria-label="Isolation plates">
+          <button class="plate" data-plate="enemies" role="tab"><span class="roman">I</span><span class="pname">Two enemies</span></button>
+          <button class="plate" data-plate="myth" role="tab"><span class="roman">II</span><span class="pname">Thick-wall myth</span></button>
+          <button class="plate active" data-plate="box" role="tab" aria-selected="true"><span class="roman">III</span><span class="pname">Box-in-box</span></button>
+          <button class="plate" data-plate="floor" role="tab"><span class="roman">IV</span><span class="pname">Floating floor</span></button>
+          <button class="plate" data-plate="holes" role="tab"><span class="roman">V</span><span class="pname">Forgotten holes</span></button>
+          <button class="plate" data-plate="air" role="tab"><span class="roman">VI</span><span class="pname">Quiet air</span></button>
+        </div>
+        <div class="iso-canvas">
+          <h3 class="iso-canvas-title" id="iso-title">Box-in-box</h3>
+          <p class="iso-caption" id="iso-caption"></p>
+          <div class="diagram-area" id="diagram-area"></div>
+          <div class="compare-bar">
+            <span class="compare-label">Compare</span>
+            <button class="compare-btn" data-compare="thick">Thick wall only</button>
+            <button class="compare-btn active" data-compare="box">Box-in-box</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  <footer class="whisper">Cairo Audio Production Centre · Phase 1 technical study · Not a feasibility report</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const screens = {
+    prologue: document.getElementById('screen-prologue'),
+    framing: document.getElementById('screen-framing'),
+    suite: document.getElementById('screen-suite'),
+    isolation: document.getElementById('screen-isolation')
+  };
+  const chapters = document.querySelectorAll('.chapter[data-screen]');
+
+  function goTo(name) {
+    if (!screens[name]) return;
+    Object.keys(screens).forEach(k => {
+      screens[k].classList.toggle('active', k === name);
+    });
+    chapters.forEach(c => {
+      const on = c.dataset.screen === name;
+      c.classList.toggle('active', on);
+      if (on) c.setAttribute('aria-current', 'page');
+      else c.removeAttribute('aria-current');
+    });
+    if (screens[name].classList.contains('essay-screen')) {
+      screens[name].scrollTop = 0;
+    }
+  }
+
+  chapters.forEach(c => c.addEventListener('click', () => goTo(c.dataset.screen)));
+  document.getElementById('btn-begin').addEventListener('click', () => goTo('framing'));
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => goTo(btn.dataset.goto));
+  });
+
+  const rooms = {
+    live: {
+      name: 'Live room',
+      size: '90–100 m²',
+      height: '5 m+',
+      why: 'The heart of the suite. Bass notes are physically long, so the room needs volume for the low end to be even rather than boomy. Height stops the cymbals bouncing straight back into every microphone. Strings and ensembles need distance to blend, the room adds its own natural bloom, and variable acoustics let it be tight one day and open the next.'
+    },
+    isoA: {
+      name: 'Iso booth A',
+      size: '12–18 m²',
+      height: 'Generous; set in Stages 2 and 3',
+      why: 'The larger booth: a vocalist with room to move, an upright piano, percussion, or a soloist kept apart from a section. Glass to the live room and the control room, so everyone can see each other.'
+    },
+    isoB: {
+      name: 'Iso booth B',
+      size: '10–16 m²',
+      height: 'Generous; set in Stages 2 and 3',
+      why: 'Vocals, guitar and bass amplifiers, or a single acoustic instrument, kept off the other microphones while the band plays together.'
+    },
+    isoC: {
+      name: 'Iso booth C',
+      size: 'Similar to Iso B',
+      height: 'Generous; set in Stages 2 and 3',
+      preferred: true,
+      why: 'Strongly preferred. A third source kept separate while the band plays together. With two booths somebody is always compromising; with three, the session runs the way the producer imagined it.'
+    },
+    control: {
+      name: 'Control room',
+      size: '35–50 m² (target ~40 m²)',
+      height: 'Generous; set in Stages 2 and 3',
+      why: 'Where decisions are made. Symmetrical left to right so the stereo picture does not tilt, large enough for main monitors and nearfields, with the producer and guests seated behind the engineer. A large window to the live room and every booth.'
+    },
+    machine: {
+      name: 'Machine room',
+      size: '15–25 m²',
+      height: 'Standard',
+      why: 'Noisy, hot equipment kept out of the listening room. Close to the control room for short cables, behind a heavy wall rather than a thin one, with its own cooling running around the clock.'
+    },
+    lounge: {
+      name: 'Lounge',
+      size: '25–40 m²',
+      height: 'Standard',
+      why: 'An acoustic buffer between the suite and the public corridors, and somewhere for artists to rest a voice, eat and step away for ten minutes.'
+    },
+    lobby: {
+      name: 'Lobby',
+      size: '20–35 m²',
+      height: 'Standard',
+      why: 'The entry and the first layer of quiet. With the lounge and the sound locks, it means nobody reaches a studio door straight from a public corridor.'
+    }
+  };
+
+  const grossMultiplierNote = 'Isolation thickness means gross often runs 1.6–2.2× net. Figures below show indicative gross bands.';
+  const netNote = 'Net usable floor area of each room. Select a space to read why it is sized this way. Iso C is strongly preferred.';
+
+  let footprintMode = 'net';
+  let selectedRoom = null;
+
+  function grossBand(netStr) {
+    const m = netStr.match(/([\d.]+)\s*[–-]\s*([\d.]+)/);
+    if (!m) return netStr + ' (gross class)';
+    const lo = Math.round(parseFloat(m[1]) * 1.6);
+    const hi = Math.round(parseFloat(m[2]) * 2.2);
+    return lo + '–' + hi + ' m²';
+  }
+
+  function updatePlanLabels() {
+    document.querySelectorAll('.room[data-room]').forEach(g => {
+      const key = g.dataset.room;
+      const data = rooms[key];
+      if (!data) return;
+      const sizeEl = g.querySelector('.size');
+      if (!sizeEl) return;
+      if (key === 'live') {
+        sizeEl.textContent = footprintMode === 'net'
+          ? data.size + ' · 5 m+'
+          : grossBand(data.size) + ' · 5 m+';
+      } else if (key === 'isoC') {
+        sizeEl.textContent = footprintMode === 'net' ? '~Iso B' : '~Iso B gross';
+      } else {
+        sizeEl.textContent = footprintMode === 'net' ? data.size.replace(' (target ~40 m²)', '') : grossBand(data.size);
+      }
+    });
+    document.getElementById('plan-note').textContent =
+      footprintMode === 'net' ? netNote : grossMultiplierNote;
+    if (selectedRoom) renderSide(selectedRoom);
+  }
+
+  function renderSide(key) {
+    const r = rooms[key];
+    let size;
+    if (key === 'isoC') {
+      size = footprintMode === 'net' ? 'Similar to Iso B' : 'Similar to Iso B (gross)';
+    } else {
+      size = footprintMode === 'net' ? r.size : grossBand(r.size);
+    }
+    const sizeLabel = footprintMode === 'net' ? 'Net area' : 'Gross footprint';
+    const panel = document.getElementById('side-panel');
+    panel.classList.add('open');
+    const badge = r.preferred ? '<span class="side-badge">Strongly preferred</span>' : '';
+    document.getElementById('side-content').innerHTML =
+      '<p class="eyebrow">Selected room</p>' +
+      badge +
+      '<h3 class="side-name">' + r.name + '</h3>' +
+      '<div class="meta-grid">' +
+        '<div class="meta-item"><label>' + sizeLabel + '</label><span>' + size + '</span></div>' +
+        '<div class="meta-item"><label>Clear height</label><span>' + r.height + '</span></div>' +
+      '</div>' +
+      '<p class="why-text">' + r.why + '</p>';
+  }
+
+  document.querySelectorAll('.room[data-room]').forEach(g => {
+    g.addEventListener('click', () => {
+      document.querySelectorAll('.room').forEach(x => x.classList.remove('selected'));
+      g.classList.add('selected');
+      selectedRoom = g.dataset.room;
+      renderSide(selectedRoom);
+    });
+  });
+
+  document.querySelectorAll('.toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      footprintMode = btn.dataset.mode;
+      updatePlanLabels();
+    });
+  });
+
+  /* ── Isolation plates ── */
+  const AIR = '#c47a3a';
+  const STRUCT = '#5b7c9a';
+  const FLANK = '#c45a3a';
+  const MUTED = '#8a8478';
+  const WALL = '#c4bba8';
+  const WALL_LT = '#ddd2b8';
+  const INK = '#1a1917';
+  const PAPER_SVG = '#ebe6db';
+  const BRASS = '#b08d57';
+
+  const plates = {
+    enemies: {
+      title: 'Two enemies',
+      caption: 'Airborne sound travels through the air; structure-borne sound travels through the building. A thick wall may blunt one while the other walks straight through the slab.',
+      pathNote: 'Orange arcs = airborne; blue dashes = structure-borne — one street source, two routes in.',
+      diagram: 'enemies'
+    },
+    myth: {
+      title: 'The thick-wall myth',
+      caption: 'Piling on mass helps — until it does not. A single heavy wall still couples to the structure. Without a break, vibration finds a path around your investment.',
+      pathNote: 'Orange fades in the mass; blue runs under the wall via the slab; the red arrow marks a door flanking leak.',
+      diagram: 'myth'
+    },
+    box: {
+      title: 'Box-in-box',
+      caption: 'An inner room, structurally independent of the outer shell, resting on isolators. The gap is the point: two skins, one deliberate break. This is the gold standard for high isolation.',
+      pathNote: 'Orange stops at the outer shell and gap; blue breaks at the resilient mounts — the inner room stays calm.',
+      diagram: 'box'
+    },
+    floor: {
+      title: 'Floating floor',
+      caption: 'The floor of the inner box sits on resilient mounts, not on the building slab. Footfall, bass, and plant vibration stop at the isolators instead of entering the room — or leaving it.',
+      pathNote: 'Blue rising from below stops at the resilient layer; the ghost bolt shows a through-fix failure path.',
+      diagram: 'floor'
+    },
+    holes: {
+      title: 'Forgotten holes',
+      caption: 'A perfect wall ruined by a cable tray, a duct, or a poorly sealed door. Isolation is only as quiet as its weakest penetration. Details matter more than marketing claims.',
+      pathNote: 'Orange and blue both leak through the duct and cable tray even though the wall itself looks solid.',
+      diagram: 'holes'
+    },
+    air: {
+      title: 'Quiet air',
+      caption: 'Air conditioning must move air without moving noise. Long, lined ducts, staggered paths, and careful fan selection keep the room cool without announcing the plant room.',
+      pathNote: 'Left: fast small duct radiates orange into the room; right: large slow duct lets the path dissipate before arrival.',
+      diagram: 'air'
+    }
+  };
+
+  function svgDefs(uid) {
+    return `<defs>
+      <marker id="${uid}-flank" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="${FLANK}"/>
+      </marker>
+      <marker id="${uid}-air" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="${AIR}"/>
+      </marker>
+      <marker id="${uid}-struct" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="${STRUCT}"/>
+      </marker>
+    </defs>`;
+  }
+
+  /* Shared street-noise source icon (left of every diagram) */
+  function streetSource(cx, cy) {
+    return `
+      <g class="street-source" transform="translate(${cx},${cy})">
+        <circle r="14" fill="${WALL_LT}" stroke="${MUTED}" stroke-width="1"/>
+        <path d="M-4 -5 L-4 5 L2 5 L8 9 L8 -9 L2 -5 Z" fill="${INK}" opacity="0.75"/>
+        <path d="M10 -4 Q14 0 10 4" fill="none" stroke="${AIR}" stroke-width="1.2"/>
+        <path d="M13 -6 Q19 0 13 6" fill="none" stroke="${AIR}" stroke-width="1" opacity="0.55"/>
+        <text y="28" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.08em">STREET</text>
+      </g>`;
+  }
+
+  function airArc(d, opacity, width) {
+    return `<path d="${d}" fill="none" stroke="${AIR}" stroke-width="${width || 1.6}" opacity="${opacity == null ? 1 : opacity}" stroke-linecap="round"/>`;
+  }
+
+  function structPulse(d, opacity, width) {
+    return `<path d="${d}" fill="none" stroke="${STRUCT}" stroke-width="${width || 1.8}" stroke-dasharray="5 4" opacity="${opacity == null ? 1 : opacity}" stroke-linecap="round"/>`;
+  }
+
+  function brokenPath(d, colour, width) {
+    return `<path d="${d}" fill="none" stroke="${colour}" stroke-width="${width || 1.5}" stroke-dasharray="3 5" opacity="0.35" stroke-linecap="round"/>`;
+  }
+
+  function svgEnemies() {
+    const uid = 'en';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two enemies wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 95)}
+      <!-- Wall + slab -->
+      <rect x="300" y="40" width="22" height="100" fill="${WALL}"/>
+      <rect x="70" y="140" width="430" height="16" fill="${WALL_LT}"/>
+      <text x="400" y="152" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.06em">SLAB</text>
+      <!-- Split node -->
+      <circle cx="110" cy="95" r="3.5" fill="${BRASS}"/>
+      <!-- Orange airborne (upper) -->
+      ${airArc('M110 88 Q170 40 250 70 Q280 82 300 85', 1, 1.7)}
+      ${airArc('M110 95 Q175 55 255 80 Q285 90 300 92', 0.55, 1.2)}
+      <text x="200" y="48" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="9" letter-spacing="0.04em">airborne</text>
+      <!-- Blue structure (lower along slab) -->
+      ${structPulse('M110 102 Q160 130 220 145 H470', 1, 1.9)}
+      ${structPulse('M110 108 Q155 135 210 148', 0.5, 1.2)}
+      <text x="340" y="178" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9" letter-spacing="0.04em">structure-borne</text>
+      <text x="320" y="30" fill="${MUTED}" font-family="Cormorant Garamond, Georgia, serif" font-size="13">One source · two paths</text>
+    </svg>`;
+  }
+
+  function svgMyth() {
+    const uid = 'my';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Thick-wall myth wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 90)}
+      <!-- Thick wall -->
+      <rect x="210" y="28" width="90" height="120" fill="${WALL}" stroke="${MUTED}" stroke-width="1"/>
+      <text x="255" y="95" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="14">Thick wall</text>
+      <!-- Door flanking -->
+      <rect x="248" y="118" width="14" height="30" fill="${INK}" opacity="0.55"/>
+      <text x="255" y="160" text-anchor="middle" fill="${FLANK}" font-family="DM Sans, sans-serif" font-size="8">DOOR</text>
+      <!-- Slab under -->
+      <rect x="70" y="148" width="430" height="14" fill="${WALL_LT}"/>
+      <!-- Orange fades into wall -->
+      ${airArc('M70 70 Q130 55 210 75', 1, 1.7)}
+      ${airArc('M210 78 Q235 82 255 88', 0.45, 1.4)}
+      ${brokenPath('M255 90 Q280 95 310 92', AIR, 1.3)}
+      <text x="140" y="48" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="9">air fades in mass</text>
+      <!-- Blue continues under wall -->
+      ${structPulse('M70 155 H480', 1, 2)}
+      <text x="380" y="180" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9">blue continues under</text>
+      <!-- Flanking arrow through door -->
+      <path d="M262 130 Q320 125 380 110" fill="none" stroke="${FLANK}" stroke-width="1.5" marker-end="url(#${uid}-flank)"/>
+      <text x="360" y="100" fill="${FLANK}" font-family="DM Sans, sans-serif" font-size="9">flanking</text>
+    </svg>`;
+  }
+
+  function svgBox() {
+    const uid = 'bx';
+    return `<svg viewBox="0 0 560 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Box-in-box wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(36, 100)}
+      <!-- Outer shell -->
+      <rect x="80" y="24" width="420" height="170" fill="none" stroke="${MUTED}" stroke-width="9"/>
+      <!-- Inner box -->
+      <rect x="128" y="58" width="324" height="100" fill="${PAPER_SVG}" stroke="${BRASS}" stroke-width="2.5"/>
+      <!-- Isolators -->
+      <rect x="160" y="162" width="26" height="12" rx="2" fill="${BRASS}"/>
+      <rect x="265" y="162" width="26" height="12" rx="2" fill="${BRASS}"/>
+      <rect x="370" y="162" width="26" height="12" rx="2" fill="${BRASS}"/>
+      <rect x="70" y="190" width="440" height="12" fill="${WALL_LT}"/>
+      <!-- Gap -->
+      <text x="104" y="112" text-anchor="middle" fill="${BRASS}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.08em">GAP</text>
+      <text x="290" y="112" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="16">Inner room · calm</text>
+      <!-- Orange stops at outer shell -->
+      ${airArc('M58 70 Q68 55 80 60', 1, 1.6)}
+      ${brokenPath('M82 62 Q100 58 120 70', AIR, 1.4)}
+      <text x="95" y="44" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="8">orange stops</text>
+      <!-- Blue along slab breaks at mounts -->
+      ${structPulse('M58 196 H158', 1, 1.8)}
+      ${brokenPath('M186 196 H265', STRUCT, 1.6)}
+      ${brokenPath('M291 196 H370', STRUCT, 1.6)}
+      <text x="290" y="218" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.04em">blue breaks at resilient mounts</text>
+    </svg>`;
+  }
+
+  function svgFloor() {
+    const uid = 'fl';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Floating floor wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 155)}
+      <!-- Inner floor -->
+      <rect x="100" y="36" width="380" height="18" fill="${WALL_LT}" stroke="${WALL}"/>
+      <text x="290" y="49" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="9">INNER FLOOR</text>
+      <!-- Resilient layer / mounts -->
+      <rect x="150" y="58" width="22" height="28" rx="3" fill="${BRASS}"/>
+      <rect x="280" y="58" width="22" height="28" rx="3" fill="${BRASS}"/>
+      <rect x="410" y="58" width="22" height="28" rx="3" fill="${BRASS}"/>
+      <text x="290" y="78" text-anchor="middle" fill="${BRASS}" font-family="DM Sans, sans-serif" font-size="8">RESILIENT</text>
+      <!-- Building slab -->
+      <rect x="80" y="92" width="420" height="20" fill="${WALL}"/>
+      <text x="290" y="106" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="9">BUILDING SLAB</text>
+      <!-- Blue vertical from below — stopped -->
+      ${structPulse('M161 180 V120', 1, 1.9)}
+      ${structPulse('M291 180 V120', 0.85, 1.9)}
+      ${brokenPath('M161 90 V54', STRUCT, 1.5)}
+      ${brokenPath('M291 90 V54', STRUCT, 1.5)}
+      <text x="200" y="170" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9">blue stops here</text>
+      <!-- Ghost bolted-through failure -->
+      <g opacity="0.4">
+        <line x1="420" y1="36" x2="420" y2="112" stroke="${FLANK}" stroke-width="1.5" stroke-dasharray="2 3"/>
+        <circle cx="420" cy="44" r="3" fill="none" stroke="${FLANK}" stroke-width="1"/>
+        <circle cx="420" cy="102" r="3" fill="none" stroke="${FLANK}" stroke-width="1"/>
+        <text x="448" y="78" fill="${FLANK}" font-family="DM Sans, sans-serif" font-size="8">bolted through</text>
+      </g>
+      <!-- Small airborne hint from street (context) -->
+      ${airArc('M58 140 Q80 100 100 70', 0.35, 1)}
+    </svg>`;
+  }
+
+  function svgHoles() {
+    const uid = 'ho';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Forgotten holes wave paths">
+      ${svgDefs(uid)}
+      ${streetSource(42, 95)}
+      <!-- Good wall -->
+      <rect x="230" y="28" width="28" height="140" fill="${WALL}"/>
+      <text x="244" y="20" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8" letter-spacing="0.06em">GOOD WALL</text>
+      <!-- Cable tray opening -->
+      <rect x="230" y="52" width="28" height="16" fill="${INK}"/>
+      <!-- Duct opening -->
+      <rect x="230" y="118" width="28" height="18" fill="${INK}"/>
+      <rect x="70" y="168" width="420" height="12" fill="${WALL_LT}"/>
+      <!-- Orange + blue through cable tray -->
+      ${airArc('M70 50 Q150 45 230 58', 1, 1.6)}
+      ${airArc('M258 58 Q340 48 420 40', 0.9, 1.5)}
+      ${structPulse('M70 68 Q150 70 230 62', 0.85, 1.5)}
+      ${structPulse('M258 62 Q340 70 430 75', 0.8, 1.5)}
+      <path d="M420 40 L445 35" fill="none" stroke="${FLANK}" stroke-width="1.4" marker-end="url(#${uid}-flank)"/>
+      <text x="140" y="38" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="9">cable tray leak</text>
+      <!-- Orange + blue through duct -->
+      ${airArc('M70 125 Q150 122 230 126', 1, 1.6)}
+      ${airArc('M258 126 Q350 135 440 145', 0.9, 1.5)}
+      ${structPulse('M70 140 Q150 145 230 132', 0.85, 1.5)}
+      ${structPulse('M258 132 Q350 150 450 160', 0.8, 1.5)}
+      <path d="M440 145 L465 150" fill="none" stroke="${FLANK}" stroke-width="1.4" marker-end="url(#${uid}-flank)"/>
+      <text x="140" y="155" fill="${STRUCT}" font-family="DM Sans, sans-serif" font-size="9">duct leak</text>
+      <!-- Wall itself stops mid-height (good) -->
+      ${brokenPath('M70 95 H230', AIR, 1.2)}
+      <text x="150" y="90" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8" opacity="0.7">wall stops mid-path</text>
+    </svg>`;
+  }
+
+  function svgAir() {
+    const uid = 'ai';
+    return `<svg viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Quiet air duct comparison">
+      ${svgDefs(uid)}
+      ${streetSource(36, 50)}
+      <!-- LEFT: fast small duct -->
+      <text x="160" y="22" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="13">Fast · small duct</text>
+      <rect x="80" y="40" width="40" height="28" rx="2" fill="${WALL_LT}" stroke="${MUTED}"/>
+      <text x="100" y="58" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">FAN</text>
+      <path d="M120 54 H210" fill="none" stroke="${MUTED}" stroke-width="5"/>
+      <path d="M120 54 H210" fill="none" stroke="${PAPER_SVG}" stroke-width="2.5"/>
+      <rect x="210" y="38" width="55" height="32" rx="2" fill="${PAPER_SVG}" stroke="${FLANK}" stroke-width="1.5"/>
+      <text x="237" y="57" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">ROOM</text>
+      <!-- Radiating orange into room -->
+      ${airArc('M130 48 Q160 35 200 42', 1, 1.5)}
+      ${airArc('M200 45 Q215 40 230 35', 0.9, 1.4)}
+      ${airArc('M200 55 Q220 60 235 68', 0.75, 1.3)}
+      ${airArc('M205 50 Q225 50 240 52', 0.85, 1.3)}
+      <text x="160" y="82" text-anchor="middle" fill="${AIR}" font-family="DM Sans, sans-serif" font-size="8">radiates into room</text>
+
+      <!-- RIGHT: large slow duct -->
+      <text x="400" y="22" text-anchor="middle" fill="${INK}" font-family="Cormorant Garamond, Georgia, serif" font-size="13">Large · slow duct</text>
+      <rect x="300" y="40" width="40" height="28" rx="2" fill="${WALL_LT}" stroke="${MUTED}"/>
+      <text x="320" y="58" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">FAN</text>
+      <!-- Staggered wide path -->
+      <path d="M340 54 H380 V100 H460 V54 H500" fill="none" stroke="${MUTED}" stroke-width="10" stroke-linejoin="round"/>
+      <path d="M340 54 H380 V100 H460 V54 H500" fill="none" stroke="${PAPER_SVG}" stroke-width="6" stroke-linejoin="round"/>
+      <rect x="500" y="38" width="45" height="32" rx="2" fill="${PAPER_SVG}" stroke="${BRASS}" stroke-width="1.5"/>
+      <text x="522" y="57" text-anchor="middle" fill="${INK}" font-family="DM Sans, sans-serif" font-size="8">ROOM</text>
+      <!-- Path dissipating -->
+      ${airArc('M350 48 Q370 40 380 54', 0.9, 1.5)}
+      ${airArc('M380 70 Q420 95 460 70', 0.55, 1.4)}
+      ${brokenPath('M460 54 Q480 50 500 54', AIR, 1.3)}
+      <text x="420" y="125" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="8">path dissipates</text>
+
+      <!-- Shared slab context -->
+      <rect x="70" y="155" width="430" height="10" fill="${WALL_LT}"/>
+      ${structPulse('M70 160 H200', 0.35, 1.2)}
+      <text x="280" y="185" text-anchor="middle" fill="${MUTED}" font-family="DM Sans, sans-serif" font-size="9" letter-spacing="0.06em">SAME AIR MOVE · DIFFERENT PATH BEHAVIOUR</text>
+    </svg>`;
+  }
+
+  /* Compare uses myth (II) and box (III) wave-path logic */
+  function svgThick() {
+    return svgMyth();
+  }
+
+  function wrapDiagram(svg, pathNote) {
+    return `<div class="diagram-wrap">${svg}<p class="path-note">${pathNote}</p></div>`;
+  }
+
+  function wrapCompareDuo() {
+    const left = svgMyth();
+    const right = svgBox();
+    return `<div class="diagram-wrap compare-duo">
+      <div class="diagram-pane">
+        <div class="pane-label">Thick wall only</div>
+        ${left}
+        <p class="path-note">Orange fades; blue under-runs; flanking at the door.</p>
+      </div>
+      <div class="diagram-pane">
+        <div class="pane-label">Box-in-box</div>
+        ${right}
+        <p class="path-note">Orange stops at the shell; blue breaks at the mounts.</p>
+      </div>
+    </div>`;
+  }
+
+  const diagrams = {
+    enemies: svgEnemies,
+    myth: svgMyth,
+    box: svgBox,
+    floor: svgFloor,
+    holes: svgHoles,
+    air: svgAir,
+    thick: svgThick
+  };
+
+  let currentPlate = 'box';
+  let compareMode = null;
+
+  function showPlate(key) {
+    currentPlate = key;
+    compareMode = null;
+    document.querySelectorAll('.plate').forEach(p => {
+      const on = p.dataset.plate === key;
+      p.classList.toggle('active', on);
+      p.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.compare-btn').forEach(b => {
+      b.classList.toggle('active', key === 'box' && b.dataset.compare === 'box');
+    });
+    const p = plates[key];
+    document.getElementById('iso-title').textContent = p.title;
+    document.getElementById('iso-caption').textContent = p.caption;
+    document.getElementById('diagram-area').innerHTML = wrapDiagram(diagrams[p.diagram](), p.pathNote);
+  }
+
+  function showCompare(mode) {
+    compareMode = mode;
+    document.querySelectorAll('.compare-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.compare === mode);
+    });
+    // Side-by-side emphasis: Thick wall (II) vs Box-in-box (III)
+    document.getElementById('iso-title').textContent = 'Thick wall only  ·  Box-in-box';
+    document.getElementById('iso-caption').textContent =
+      mode === 'thick'
+        ? 'Side by side: mass alone still lets structure-borne energy under-run and flanking sneak past. The box-in-box diagram shows where both paths are broken.'
+        : 'Side by side: the gap and resilient mounts stop what a single heavy wall cannot. Orange dies at the shell; blue dies at the isolators.';
+    document.getElementById('diagram-area').innerHTML = wrapCompareDuo();
+    // Emphasise selected side by opacity on panes
+    const panes = document.querySelectorAll('.diagram-pane');
+    if (panes.length === 2) {
+      if (mode === 'thick') {
+        panes[0].style.opacity = '1';
+        panes[1].style.opacity = '0.55';
+        panes[0].style.outline = '1px solid rgba(176,141,87,0.45)';
+        panes[1].style.outline = 'none';
+      } else {
+        panes[0].style.opacity = '0.55';
+        panes[1].style.opacity = '1';
+        panes[1].style.outline = '1px solid rgba(176,141,87,0.45)';
+        panes[0].style.outline = 'none';
+      }
+      panes.forEach(pane => {
+        pane.style.borderRadius = '2px';
+        pane.style.padding = '0.5rem';
+      });
+    }
+    // Keep plate selection on box when comparing box; on myth when thick
+    const plateKey = mode === 'thick' ? 'myth' : 'box';
+    currentPlate = plateKey;
+    document.querySelectorAll('.plate').forEach(p => {
+      const on = p.dataset.plate === plateKey;
+      p.classList.toggle('active', on);
+      p.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  document.querySelectorAll('.plate').forEach(p => {
+    p.addEventListener('click', () => showPlate(p.dataset.plate));
+  });
+
+  document.querySelectorAll('.compare-btn').forEach(b => {
+    b.addEventListener('click', () => showCompare(b.dataset.compare));
+  });
+
+  // Default: Box-in-box
+  showPlate('box');
+})();
+</script>
+<script>
+/* ── Suite · image-led, interactive Stage 1 pages (A sketch / B graphic) ── */
+(function () {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const root = document.getElementById('sx');
+  if (!root) return;
+
+  /* ---------- Audio (Web Audio, synthesised, starts only on tap) ---------- */
+  const A = { ctx: null, master: null, rev: null, revS: null, nbuf: null,
+    muted: (function(){ try { return localStorage.getItem('capc-mute') === '1'; } catch (e) { return false; } })() };
+  function makeRev(sec, decay, level) {
+    const c = A.ctx, len = Math.floor(c.sampleRate * sec), b = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay); }
+    const cv = c.createConvolver(); cv.buffer = b; const g = c.createGain(); g.gain.value = level;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200;
+    cv.connect(lp); lp.connect(g); g.connect(A.master); return cv;
+  }
+  function ac() {
+    try {
+      if (!A.ctx) {
+        const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+        A.ctx = new C();
+        const comp = A.ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 3.5; comp.knee.value = 12;
+        A.master = A.ctx.createGain(); A.master.gain.value = A.muted ? 0 : 0.55;
+        A.master.connect(comp); comp.connect(A.ctx.destination);
+        A.rev = makeRev(2.6, 2.4, 0.55); A.revS = makeRev(0.5, 3.5, 0.5);
+        const len = A.ctx.sampleRate * 2; A.nbuf = A.ctx.createBuffer(1, len, A.ctx.sampleRate);
+        const d = A.nbuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (A.ctx.state === 'suspended') A.ctx.resume();
+      return A.ctx;
+    } catch (e) { return null; }
+  }
+  function S(fn) { const c = ac(); if (!c) return; try { fn(c, c.currentTime + 0.03); } catch (e) { /* audio is optional */ } }
+  function out(node, o) {
+    o = o || {}; const c = A.ctx; let n = node;
+    if (o.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = o.pan; n.connect(p); n = p; }
+    if (o.dry !== 0) { const dg = c.createGain(); dg.gain.value = o.dry == null ? 1 : o.dry; n.connect(dg); dg.connect(A.master); }
+    if (o.wet) { const s = c.createGain(); s.gain.value = o.wet; n.connect(s); s.connect(o.short ? A.revS : A.rev); }
+    return n;
+  }
+  function env(param, t, a, peak, hold, r) {
+    const p = Math.max(peak, 0.0002);
+    param.cancelScheduledValues(t); param.setValueAtTime(0.0001, t);
+    param.exponentialRampToValueAtTime(p, t + a); param.setValueAtTime(p, t + a + hold);
+    param.exponentialRampToValueAtTime(0.0001, t + a + hold + r);
+  }
+  function tone(f, o) {
+    o = o || {}; const c = A.ctx, t = o.t, a = o.a == null ? 0.04 : o.a, hold = o.hold == null ? 0.3 : o.hold, r = o.r == null ? 0.6 : o.r;
+    const g = c.createGain(); env(g.gain, t, a, o.peak == null ? 0.1 : o.peak, hold, r);
+    (o.partials || [[1, 1]]).forEach(function (p) {
+      const os = c.createOscillator(); os.type = o.type || 'sine'; os.frequency.value = f * p[0];
+      const pg = c.createGain(); pg.gain.value = p[1]; os.connect(pg); pg.connect(g);
+      os.start(t); os.stop(t + a + hold + r + 0.1);
+    });
+    if (o.into) g.connect(o.into); else out(g, o);
+    return g;
+  }
+  function noise(t, dur) { const s = A.ctx.createBufferSource(); s.buffer = A.nbuf; s.loop = true; s.start(t); s.stop(t + dur + 0.1); return s; }
+  function filt(type, f, q) { const b = A.ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; if (q != null) b.Q.value = q; return b; }
+  function chain() { for (let i = 0; i < arguments.length - 1; i++) arguments[i].connect(arguments[i + 1]); return arguments[arguments.length - 1]; }
+  function whoosh(t, dur, f0, f1, peak, o) {
+    const n = noise(t, dur), bp = filt('bandpass', f0, 1.1), g = A.ctx.createGain();
+    bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.6);
+    bp.frequency.exponentialRampToValueAtTime(Math.max(f0, 80), t + dur);
+    env(g.gain, t, dur * 0.4, peak, dur * 0.2, dur * 0.4); chain(n, bp, g); out(g, o); return g;
+  }
+  function thud(t, peak) { tone(62, { t: t, a: 0.004, hold: 0.01, r: 0.28, peak: peak || 0.16, partials: [[1, 1], [1.5, 0.3]] });
+    const n = noise(t, 0.12), lp = filt('lowpass', 420), g = A.ctx.createGain(); env(g.gain, t, 0.003, 0.05, 0.01, 0.1); chain(n, lp, g); out(g); }
+  function chime(t, f, pan, peak) { tone(f, { t: t, a: 0.004, hold: 0.02, r: 1.3, peak: peak || 0.045, pan: pan || 0, wet: 0.45, partials: [[1, 1], [2.76, 0.18], [5.4, 0.05]] }); }
+
+  /* ---------- Animation helpers (requestAnimationFrame, eased) ---------- */
+  const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const eo = t => 1 - Math.pow(1 - t, 3);
+  const lin = t => t;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function tween(ms, fn, ease) {
+    ease = ease || eio;
+    return new Promise(res => { const s = performance.now();
+      function f(n) { const t = Math.max(0, Math.min(1, (n - s) / ms)); fn(ease(t), t); if (t < 1) requestAnimationFrame(f); else res(); }
+      requestAnimationFrame(f); });
+  }
+  function E(tag, at, parent) { const e = document.createElementNS(NS, tag);
+    for (const k in at) e.setAttribute(k, at[k]); if (parent) parent.appendChild(e); return e; }
+  function draw(el, ms, ease) { const L = el.getTotalLength(); el.style.strokeDasharray = L + ' ' + L; el.style.strokeDashoffset = L;
+    return tween(ms, k => { el.style.strokeDashoffset = L * (1 - k); }, ease || eio); }
+  function fade(el, a, b, ms, ease) { return tween(ms, k => el.setAttribute('opacity', a + (b - a) * k), ease || eio); }
+  function ring(g, cx, cy, r0, r1, ms, o0, o) {
+    o = o || {}; const c = E('circle', { cx: cx, cy: cy, r: r0, class: 'f', opacity: 0 }, g);
+    if (o.w) c.style.strokeWidth = o.w;
+    return wait(o.delay || 0).then(() => tween(ms, (k, t) => {
+      c.setAttribute('r', r0 + (r1 - r0) * k);
+      const a = o.op ? o.op(t) : o0 * (1 - t); c.setAttribute('opacity', Math.max(0, a) * Math.min(1, t * 12));
+    }, o.ease || eo)).then(() => c.remove());
+  }
+
+  /* ---------- Drawing vocabulary (shared by both variants) ---------- */
+  function person(x, y, h) { const r = h * 0.085;
+    return '<circle class="l" cx="' + x + '" cy="' + (y - h + r) + '" r="' + r + '"/>' +
+      '<path class="l" d="M' + x + ' ' + (y - h + 2 * r) + ' L' + x + ' ' + (y - h * 0.46) +
+      ' M' + (x - h * 0.13) + ' ' + y + ' L' + x + ' ' + (y - h * 0.46) + ' L' + (x + h * 0.13) + ' ' + y +
+      ' M' + (x - h * 0.18) + ' ' + (y - h * 0.6) + ' L' + x + ' ' + (y - h * 0.74) + ' L' + (x + h * 0.18) + ' ' + (y - h * 0.6) + '"/>'; }
+  function seated(x, y, kind) {
+    let s = '<circle class="l" cx="' + x + '" cy="' + (y - 26) + '" r="5"/><path class="l" d="M' + x + ' ' + (y - 21) + ' L' + x + ' ' + (y - 8) + ' L' + (x + 9) + ' ' + (y - 8) + ' L' + (x + 9) + ' ' + y + ' M' + (x - 6) + ' ' + (y - 8) + ' H' + (x + 4) + ' M' + (x - 5) + ' ' + (y - 8) + ' V' + y + '"/>';
+    if (kind === 'oud') s += '<ellipse class="l w" cx="' + (x - 9) + '" cy="' + (y - 13) + '" rx="7" ry="5.5"/><path class="l t" d="M' + (x - 3) + ' ' + (y - 16) + ' L' + (x + 8) + ' ' + (y - 24) + '"/>';
+    else if (kind === 'qanun') s += '<path class="l w" d="M' + (x - 16) + ' ' + (y - 12) + ' L' + (x + 2) + ' ' + (y - 12) + ' L' + (x - 3) + ' ' + (y - 6) + ' L' + (x - 16) + ' ' + (y - 6) + ' Z"/>';
+    else if (kind === 'cello') s += '<ellipse class="l w" cx="' + (x - 7) + '" cy="' + (y - 9) + '" rx="5" ry="8"/><path class="l t" d="M' + (x - 7) + ' ' + (y - 17) + ' V' + (y - 30) + ' M' + (x - 7) + ' ' + (y - 1) + ' V' + (y + 2) + '"/>';
+    else s += '<ellipse class="l w" cx="' + (x - 6) + '" cy="' + (y - 18) + '" rx="5" ry="3" transform="rotate(-25 ' + (x - 6) + ' ' + (y - 18) + ')"/><path class="l t" d="M' + (x - 14) + ' ' + (y - 24) + ' L' + (x + 4) + ' ' + (y - 12) + '"/>';
+    return s; }
+  function mic(x, y) { return '<path class="l" d="M' + x + ' 205 V' + (y + 6) + ' L' + (x - 7) + ' ' + (y - 2) + '"/><rect class="l w" x="' + (x - 12) + '" y="' + (y - 9) + '" width="8" height="13" rx="4" transform="rotate(-42 ' + (x - 8) + ' ' + (y - 2) + ')"/>'; }
+  function floor(x0, x1, y) { return '<rect class="h" x="' + x0 + '" y="' + y + '" width="' + (x1 - x0) + '" height="9"/><path class="l" d="M' + x0 + ' ' + y + ' H' + x1 + '"/>'; }
+  function room(x, y, w, h, extra) { return '<rect class="gf" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/><rect class="l ' + (extra || '') + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/>'; }
+  function head(x, y) { return '<ellipse class="l t" cx="' + x + '" cy="' + (y + 3) + '" rx="8" ry="4"/><circle class="l w" cx="' + x + '" cy="' + y + '" r="4.5"/>'; }
+
+  const scenes = [];
+  function add(page, o) { o.page = page; scenes.push(o); }
+  /* PAGE 1 · Volume of air ------------------------------------------- */
+  add(1, { id: 'air', title: 'A volume of air',
+    cap: 'Around 90–100 m² of floor and 5 m or more of clear height. Tap to fill the live room and feel the size of it.',
+    svg: () => room(40, 30, 300, 175) + floor(30, 350, 205) +
+      '<path class="l t" d="M352 30 H368 M352 205 H368 M360 36 V199 M356 42 L360 34 L364 42 M356 193 L360 201 L364 193"/>' +
+      person(95, 205, 63) +
+      '<path class="l w" d="M178 160 H296 Q318 160 318 150 Q318 140 300 140 L232 140 Q216 140 210 130 L178 130 Z"/>' +
+      '<path class="l" d="M186 160 V205 M300 160 V205 M244 160 V200 M200 130 L262 96 L300 140"/>' +
+      '<path class="l t" d="M60 60 v22 M80 60 v22 M300 60 v22 M320 60 v22"/>',
+    lab: () => '<text class="lbl" x="376" y="122" transform="rotate(-90 376 122)" text-anchor="middle">5 m+</text><text class="lbl" x="190" y="232" text-anchor="middle">90–100 m² net</text>',
+    defs: id => '<linearGradient id="g-' + id + '" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#b08d57" stop-opacity="0.34"/><stop offset="1" stop-color="#b08d57" stop-opacity="0.04"/></linearGradient><clipPath id="c-' + id + '"><rect x="41" y="31" width="298" height="173"/></clipPath>',
+    play: async c => {
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      const air = E('rect', { x: 41, y: 204, width: 298, height: 0, fill: 'url(#g-' + c.id + ')' }, g);
+      const lines = []; for (let i = 0; i < 6; i++) {
+        const y = 185 - i * 26; const p = E('path', { class: 'f', d: 'M20 ' + y + ' C 90 ' + (y - 8) + ', 160 ' + (y + 8) + ', 230 ' + y + ' S 360 ' + (y - 6) + ', 420 ' + y, opacity: 0 }, g);
+        p.style.strokeWidth = 0.7; lines.push(p); }
+      S((x, t) => { whoosh(t, 2.6, 260, 1300, 0.06, { wet: 0.3 });
+        tone(110, { t: t + 0.2, a: 1.1, hold: 0.9, r: 1.6, peak: 0.05, wet: 0.6, partials: [[1, 1], [1.5, 0.5], [2, 0.35]] }); });
+      await tween(1900, k => { air.setAttribute('y', 204 - 173 * k); air.setAttribute('height', 173 * k);
+        lines.forEach((p, i) => { const on = Math.max(0, Math.min(1, k * 6 - i)); p.setAttribute('opacity', 0.55 * on); p.setAttribute('transform', 'translate(' + (-30 + 30 * k) + ' 0)'); }); });
+      await tween(800, k => lines.forEach(p => p.setAttribute('transform', 'translate(' + (8 * k) + ' 0)')), lin);
+      await tween(1100, k => { g.setAttribute('opacity', 1 - k); });
+    } });
+
+  add(1, { id: 'wave', title: 'Bass notes are physically long',
+    cap: 'The lowest note on a standard bass guitar has a wavelength of more than eight metres. Tap to hear it and see it drawn to scale beside a person.',
+    svg: () => '<path class="l" d="M10 205 H392"/><rect class="h" x="10" y="205" width="382" height="9"/>' +
+      '<rect class="l w" x="18" y="128" width="36" height="77" rx="2"/><circle class="l" cx="36" cy="150" r="9"/><circle class="l" cx="36" cy="182" r="13"/><circle class="l t" cx="36" cy="182" r="5"/>' +
+      '<path class="l d" d="M62 150 H345"/>' + person(372, 205, 64),
+    lab: () => '<text class="lbl" x="203" y="236" text-anchor="middle">more than 8 m</text>',
+    play: async c => {
+      let d = ''; for (let x = 62; x <= 345; x += 2) d += (x === 62 ? 'M' : 'L') + x + ' ' + (150 - 36 * Math.sin(2 * Math.PI * (x - 62) / 283)).toFixed(1) + ' ';
+      const w = E('path', { class: 'f', d: d }, c.fx); w.style.strokeWidth = 2.2;
+      const dim = E('path', { class: 'f', d: 'M62 222 H345 M62 216 V228 M345 216 V228', opacity: 0 }, c.fx); dim.style.strokeWidth = 1;
+      const tip = E('circle', { class: 'ff', r: 3.2, cx: 62, cy: 150 }, c.fx);
+      S((x, t) => { tone(41.2, { t: t, a: 0.25, hold: 1.85, r: 1.0, peak: 0.24, partials: [[1, 1], [2, 0.6], [3, 0.32], [4, 0.14]] }); });
+      const L = w.getTotalLength(); w.style.strokeDasharray = L; w.style.strokeDashoffset = L;
+      await tween(2000, k => { w.style.strokeDashoffset = L * (1 - k); const p = w.getPointAtLength(L * k); tip.setAttribute('cx', p.x); tip.setAttribute('cy', p.y); dim.setAttribute('opacity', Math.max(0, k * 1.6 - 0.6)); }, eio);
+      await tween(1000, k => { w.setAttribute('opacity', 1 - k); tip.setAttribute('opacity', 1 - k); dim.setAttribute('opacity', 1 - k * 0.6); }, lin);
+      await fade(dim, 0.4, 0, 500);
+    } });
+
+  add(1, { id: 'modes', title: 'Too small, and the bass booms',
+    cap: 'In a small room long waves pile up between parallel walls: some notes boom, others almost vanish, and it changes as you walk a metre. A larger room spreads them out, so the bass is even. Tap to walk through each room.',
+    svg: () => room(20, 60, 140, 130) + room(185, 30, 200, 175) +
+      '<rect class="l w" x="24" y="115" width="9" height="20"/><rect class="l w" x="189" y="108" width="9" height="20"/>' +
+      '<path class="l d" d="M36 125 H156 M201 117.5 H381"/>' + head(90, 168) + head(285, 185),
+    play: async c => {
+      async function run(x0, x1, cy, amp, gfun, ms) {
+        let up = '', back = '', dn = '';
+        for (let x = x0; x <= x1; x += 2) { const v = gfun(x);
+          up += (x === x0 ? 'M' : 'L') + x + ' ' + (cy - amp * v).toFixed(1) + ' ';
+          dn += (x === x0 ? 'M' : 'L') + x + ' ' + (cy + amp * v).toFixed(1) + ' ';
+          back = 'L' + x + ' ' + (cy + amp * v).toFixed(1) + ' ' + back; }
+        const band = E('path', { class: 'ff', d: up + back + 'Z', opacity: 0 }, c.fx);
+        const pu = E('path', { class: 'f', d: up, opacity: 0 }, c.fx), pd = E('path', { class: 'f', d: dn, opacity: 0 }, c.fx);
+        pu.style.strokeWidth = pd.style.strokeWidth = 1.1;
+        const xa = x0 + 8, xb = x1 - 8;
+        const dot = E('circle', { class: 'ff', cx: xa, cy: cy, r: 3 }, c.fx);
+        const halo = E('circle', { class: 'f', cx: xa, cy: cy, r: 6, opacity: 0 }, c.fx); halo.style.strokeWidth = 1;
+        await tween(380, k => { band.setAttribute('opacity', 0.14 * k); pu.setAttribute('opacity', 0.85 * k); pd.setAttribute('opacity', 0.85 * k); });
+        S((ctx, t) => {
+          const n = 128, curve = new Float32Array(n), sec = ms / 1000;
+          for (let i = 0; i < n; i++) { const u = i / (n - 1), x = xa + (xb - xa) * eio(u);
+            const win = Math.min(1, u / 0.05, (1 - u) / 0.05); curve[i] = Math.max(0.0001, 0.32 * (0.03 + 0.97 * gfun(x)) * win); }
+          const g = ctx.createGain(); g.gain.value = 0.0001; g.gain.setValueCurveAtTime(curve, t, sec);
+          [[70, 1], [140, 0.5], [210, 0.18]].forEach(p => { const o = ctx.createOscillator(); o.frequency.value = p[0]; const pg = ctx.createGain(); pg.gain.value = p[1]; o.connect(pg); pg.connect(g); o.start(t); o.stop(t + sec + 0.05); });
+          out(g);
+        });
+        await tween(ms, (k, t) => { const x = xa + (xb - xa) * k, v = gfun(x);
+          dot.setAttribute('cx', x); halo.setAttribute('cx', x); dot.setAttribute('r', 2.4 + 5 * v);
+          halo.setAttribute('r', 5 + 14 * v); halo.setAttribute('opacity', 0.55 * v * Math.min(1, t * 8, (1 - t) * 8)); }, eio);
+        await tween(450, k => [band, pu, pd, dot, halo].forEach(e => e.setAttribute('opacity', (1 - k) * (e === band ? 0.14 : 0.85))));
+        [band, pu, pd, dot, halo].forEach(e => e.remove());
+      }
+      await run(20, 160, 125, 52, x => Math.abs(Math.cos(2 * Math.PI * (x - 20) / 140)), 2700);
+      await wait(250);
+      await run(185, 385, 117.5, 70, x => 0.8 + 0.2 * Math.abs(Math.cos(5 * Math.PI * (x - 185) / 200)), 2700);
+    } });
+
+  add(1, { id: 'height', title: 'Drums need height',
+    cap: 'In a low room the cymbals hit the ceiling and come straight back into every microphone, and the kit sounds boxed in. Height lets the sound develop and decay before it returns. Tap: low room, then tall room.',
+    svg: () => {
+      function kit(o) { return '<circle class="l w" cx="' + (70 + o) + '" cy="189" r="15"/><circle class="l t" cx="' + (70 + o) + '" cy="189" r="6"/>' +
+        '<path class="l" d="M' + (100 + o) + ' 205 V158 M' + (92 + o) + ' 205 L' + (100 + o) + ' 192 L' + (108 + o) + ' 205"/><ellipse class="l w" cx="' + (100 + o) + '" cy="157" rx="16" ry="3" transform="rotate(-8 ' + (100 + o) + ' 157)"/>' + mic(155 + o, 138); }
+      return '<rect class="h" x="20" y="95" width="170" height="10"/><path class="l k" d="M20 105 H190"/><path class="l" d="M20 105 V205 M190 105 V205"/>' + floor(14, 196, 205) +
+        '<rect class="h" x="210" y="15" width="175" height="10"/><path class="l k" d="M210 25 H385"/><path class="l" d="M210 25 V205 M385 25 V205"/>' + floor(204, 391, 205) + kit(0) + kit(190);
+    },
+    play: async c => {
+      S((ctx, t) => {
+        const n = noise(t, 0.9), hp = filt('highpass', 5200), g = ctx.createGain(); env(g.gain, t, 0.002, 0.13, 0.02, 0.55); chain(n, hp, g);
+        const dl = ctx.createDelay(0.1); dl.delayTime.value = 0.0065; const fb = ctx.createGain(); fb.gain.value = 0.62; const bp = filt('bandpass', 2600, 0.8);
+        g.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(bp); out(g); out(bp, { dry: 0.6 });
+        const t2 = t + 1.6; const n2 = noise(t2, 1.4), hp2 = filt('highpass', 5200), g2 = ctx.createGain(); env(g2.gain, t2, 0.002, 0.11, 0.02, 0.95); chain(n2, hp2, g2);
+        const d2 = ctx.createDelay(0.2); d2.delayTime.value = 0.034; const dg = ctx.createGain(); dg.gain.value = 0.28; g2.connect(d2); d2.connect(dg);
+        out(g2, { wet: 0.55 }); out(dg, { wet: 0.4 });
+      });
+      async function rays(src, pts, ms, op, glowR) {
+        const ps = pts.map(p => { const e = E('path', { class: 'f', d: 'M' + src[0] + ' ' + src[1] + ' L' + p[0] + ' ' + p[1] + ' L' + p[2] + ' ' + p[3], opacity: op }, c.fx); e.style.strokeWidth = 1.5; e.style.strokeDasharray = '0 1000'; return e; });
+        await Promise.all(ps.map((p, i) => wait(i * 70).then(() => draw(p, ms, eo))));
+        const m = pts[0]; const glow = E('circle', { class: 'ff', cx: m[2], cy: m[3], r: glowR, opacity: 0 }, c.fx);
+        await tween(160, k => glow.setAttribute('opacity', op * 0.55 * k), lin);
+        await Promise.all([fade(glow, op * 0.55, 0, 700, eo)].concat(ps.map(p => fade(p, op, 0, 900, eo))));
+        glow.remove(); ps.forEach(p => p.remove());
+      }
+      const ceilL = E('path', { class: 'f', d: 'M20 105 H190', opacity: 0 }, c.fx); ceilL.style.strokeWidth = 2.6;
+      tween(700, (k, t) => ceilL.setAttribute('opacity', 0.9 * Math.sin(Math.PI * t)), lin).then(() => ceilL.remove());
+      const a = rays([100, 157], [[126, 105, 148, 133], [86, 105, 148, 133], [112, 105, 148, 133]], 240, 0.95, 13);
+      await wait(1600);
+      const ceilR = E('path', { class: 'f', d: 'M210 25 H385', opacity: 0 }, c.fx); ceilR.style.strokeWidth = 1.6;
+      tween(1200, (k, t) => ceilR.setAttribute('opacity', 0.35 * Math.sin(Math.PI * t)), lin).then(() => ceilR.remove());
+      const b = rays([290, 157], [[318, 25, 338, 133], [262, 25, 338, 133]], 700, 0.55, 9);
+      await Promise.all([a, b]);
+    } });
+
+  add(1, { id: 'blend', title: 'A section needs distance to blend',
+    cap: 'Strings sound like a section, not a row of players, when the instruments merge in the air before they reach the microphones. The same goes for qanun, oud and violins: one living texture.',
+    svg: () => room(20, 18, 360, 197) + '<path class="l" d="M200 18 V44"/><rect class="l w" x="195" y="44" width="10" height="16" rx="5"/>' +
+      seated(95, 192, 'violin') + seated(160, 204, 'qanun') + seated(240, 204, 'oud') + seated(305, 192, 'cello'),
+    defs: id => '<clipPath id="c-' + id + '"><rect x="21" y="19" width="358" height="195"/></clipPath>',
+    play: async c => {
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      const P = [[90, 176], [155, 186], [234, 186], [298, 176]], st = [0, 90, 170, 260];
+      S((ctx, t) => { [146.83, 220, 293.66, 349.23].forEach((f, i) => tone(f, { t: t + st[i] / 1000, a: 0.45, hold: 1.5, r: 1.6, peak: 0.035, wet: 0.35 + i * 0.05, pan: (i - 1.5) * 0.35, partials: [[1, 1], [2, 0.32], [3, 0.12]] })); });
+      const rs = [];
+      P.forEach((p, i) => { for (let j = 0; j < 2; j++) rs.push(ring(g, p[0], p[1], 4, 110, 1500, 0.75, { delay: st[i] + j * 260, w: 1.2 })); });
+      const merge = [0, 1, 2].map(j => { const e = E('ellipse', { class: 'f', cx: 197, cy: 190, rx: 70, ry: 30, opacity: 0 }, g); e.style.strokeWidth = 1.6 - j * 0.35; return e; });
+      const mg = E('circle', { class: 'ff', cx: 200, cy: 52, r: 16, opacity: 0 }, c.fx);
+      await wait(550);
+      await tween(2000, (k, t) => { merge.forEach((e, j) => { const kk = Math.max(0, Math.min(1, k * 1.15 - j * 0.08));
+        e.setAttribute('rx', 70 + 160 * kk); e.setAttribute('ry', 30 + 150 * kk); e.setAttribute('opacity', 0.8 * Math.sin(Math.PI * Math.min(1, t * 1.05))); });
+        mg.setAttribute('opacity', 0.35 * Math.max(0, Math.sin(Math.PI * Math.max(0, (t - 0.45) / 0.55)))); }, eo);
+      await Promise.all(rs);
+      mg.remove();
+    } });
+  add(1, { id: 'bloom', title: 'The room answers',
+    cap: 'Reverberation is the way sound lingers after the source stops. A good live room adds a short, flattering bloom, and players play better when the room answers them. Tap to play a note.',
+    svg: () => room(30, 25, 340, 180) + floor(24, 376, 205) + person(120, 205, 60) +
+      '<ellipse class="l w" cx="106" cy="160" rx="7" ry="4" transform="rotate(-30 106 160)"/><path class="l t" d="M96 168 L124 150"/>' +
+      '<path class="l t" d="M300 60 v30 M320 60 v30 M340 60 v30"/>',
+    defs: id => '<clipPath id="c-' + id + '"><rect x="31" y="26" width="338" height="178"/></clipPath>',
+    play: async c => {
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      const wash = E('rect', { class: 'ff', x: 31, y: 26, width: 338, height: 178, opacity: 0 }, g);
+      S((ctx, t) => { tone(220, { t: t, a: 0.006, hold: 0.03, r: 1.1, peak: 0.12, wet: 1.0, partials: [[1, 1], [2, 0.45], [3, 0.2], [4, 0.1]] });
+        tone(329.63, { t: t + 0.02, a: 0.006, hold: 0.03, r: 0.9, peak: 0.05, wet: 1.0, partials: [[1, 1], [2, 0.3]] }); });
+      const src = [120, 160];
+      const imgs = [[src[0], src[1], 0.9], [60 - src[0], src[1], 0.5], [740 - src[0], src[1], 0.5], [src[0], 50 - src[1], 0.5], [src[0], 410 - src[1], 0.45], [60 - src[0], 50 - src[1], 0.28], [740 - src[0], 50 - src[1], 0.28]];
+      const all = [];
+      [0, 380].forEach((dly, w) => imgs.forEach(p => all.push(ring(g, p[0], p[1], 2, 460, 2300, p[2], { delay: dly, w: w ? 0.8 : 1.2, ease: lin, op: t => p[2] * (w ? 0.5 : 1) * Math.exp(-t * 2.6) }))));
+      all.push(tween(2800, (k, t) => wash.setAttribute('opacity', 0.2 * Math.min(1, t * 10) * Math.exp(-t * 2.2)), lin));
+      await Promise.all(all);
+    } });
+
+  add(1, { id: 'vary', title: 'One room, many characters',
+    cap: 'Panels that turn from hard to soft, curtains that draw, and movable screens. Tight and dry for a pop rhythm section on Monday; open and live for strings on Tuesday. Tap to turn the room.',
+    state: ['Now: tight and dry', 'Now: open and live'],
+    svg: () => {
+      let s = '<rect class="gf" x="20" y="40" width="360" height="175"/><rect class="h" x="20" y="28" width="360" height="12"/><path class="l k" d="M20 40 H380"/><path class="l" d="M20 40 V215 M380 40 V215 M20 215 H380"/>';
+      for (let i = 0; i < 6; i++) { const cx = 55 + i * 50, cy = 62, r = 14;
+        const A1 = [cx, cy - r], B = [(cx + r * 0.866).toFixed(1), cy + r * 0.5], C = [(cx - r * 0.866).toFixed(1), cy + r * 0.5];
+        s += '<g data-k="p' + i + '" transform="rotate(180 ' + cx + ' ' + cy + ')"><path class="h" d="M' + A1 + ' L' + B + ' L' + C + ' Z"/><path class="l" d="M' + A1 + ' L' + B + ' M' + A1 + ' L' + C + '"/><path class="l k" d="M' + C + ' L' + B + '"/></g>'; }
+      let cur = 'M368 46'; for (let y = 46; y < 206; y += 16) cur += ' q-7 8 0 16';
+      s += '<g data-k="curtain"><path class="l" d="' + cur + '"/><path class="l t" d="' + cur.replace('M368', 'M362') + '"/></g>';
+      s += '<path class="l k" d="M120 170 L150 150"/><path class="l k" d="M262 150 L292 170"/>';
+      s += '<circle class="l w" cx="200" cy="168" r="11"/><circle class="l t" cx="200" cy="168" r="4"/><circle class="l" cx="222" cy="160" r="6"/><ellipse class="l w" cx="180" cy="152" rx="10" ry="2.5"/>';
+      return s; },
+    defs: id => '<clipPath id="c-' + id + '"><rect x="21" y="41" width="358" height="173"/></clipPath>',
+    play: async c => {
+      const live = !c.live; c.live = live;
+      const P = []; for (let i = 0; i < 6; i++) P.push(c.k('p' + i));
+      const cur = c.k('curtain');
+      S((ctx, t) => { whoosh(t, 0.95, 380, 900, 0.035); });
+      await tween(1000, k => {
+        P.forEach((p, i) => { const kk = eio(Math.max(0, Math.min(1, (k * 1000 - i * 60) / 640)));
+          const a = live ? 180 - 180 * kk : 180 * kk; const cx = 55 + i * 50; p.setAttribute('transform', 'rotate(' + a + ' ' + cx + ' 62)'); });
+        const s = live ? 1 - 0.86 * eio(k) : 0.14 + 0.86 * eio(k); cur.setAttribute('transform', 'translate(0 46) scale(1 ' + s + ') translate(0 -46)');
+      }, lin);
+      c.setState(live ? 1 : 0);
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      S((ctx, t) => {
+        const n = noise(t, 0.3), bp = filt('bandpass', 1900, 0.7), gg = ctx.createGain(); env(gg.gain, t, 0.002, 0.16, 0.01, 0.17); chain(n, bp, gg);
+        out(gg, { wet: live ? 0.95 : 0.04, dry: live ? 0.9 : 1 });
+        tone(185, { t: t, a: 0.002, hold: 0.01, r: 0.14, peak: 0.12, wet: live ? 0.8 : 0.02 });
+      });
+      const src = [200, 168], imgs = live ? [[src[0], src[1], 0.9], [src[0], 2 * 76 - src[1], 0.55], [40 - src[0], src[1], 0.4], [760 - src[0], src[1], 0.4]] : [[src[0], src[1], 0.9]];
+      await Promise.all(imgs.map(p => ring(g, p[0], p[1], 3, 330, live ? 1900 : 900, p[2], { w: 1.3, ease: lin, op: t => live ? p[2] * Math.exp(-t * 2.2) : p[2] * Math.pow(1 - t, 3) })).concat(
+        live ? [] : [ring(g, src[0], src[1], 3, 330, 900, 0.5, { delay: 120, w: 0.8, ease: lin, op: t => 0.5 * Math.pow(1 - t, 4) })]));
+    } });
+
+  add(1, { id: 'trim', title: 'Trim it, and it stays trimmed',
+    cap: 'A live room cut from 95 m² to 60 m² looks like an economy on a drawing. In use, the bass always fights, the drums sound boxed in, and the strings sound like a small room. A room’s volume is fixed for its lifetime.',
+    svg: () => '<rect class="l d" x="73" y="46.5" width="254" height="143"/><g data-k="room"><rect class="gf" x="40" y="28" width="320" height="180"/><rect class="l k" x="40" y="28" width="320" height="180"/></g>' +
+      '<circle class="l w" cx="110" cy="84" r="13"/><circle class="l" cx="130" cy="74" r="7"/><ellipse class="l w" cx="92" cy="70" rx="11" ry="2.6"/>' +
+      '<path class="l w" d="M258 66 H296 Q312 66 312 82 Q312 100 296 100 L280 100 Q270 100 266 92 L258 92 Z"/><path class="l t" d="M258 70 V88"/>' +
+      head(160, 154) + head(200, 166) + head(240, 154),
+    lab: () => '<text class="lbl big" data-k="area" x="350" y="200" text-anchor="end">95 m²</text>',
+    defs: id => '<clipPath id="c-' + id + '"><rect x="41" y="29" width="318" height="178"/></clipPath>',
+    play: async c => {
+      const R = c.k('room'), area = c.lab.querySelector('[data-k="area"]'), clip = c.svg.querySelector('#c-' + c.id + ' rect');
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      function phrase(ctx, t, small) {
+        const bus = ctx.createGain(); bus.gain.value = 1;
+        if (small) { const pk = filt('peaking', 105, 2.2); pk.gain.value = 15; const dl = ctx.createDelay(0.2); dl.delayTime.value = 0.028; const fb = ctx.createGain(); fb.gain.value = 0.42;
+          bus.connect(pk); pk.connect(dl); dl.connect(fb); fb.connect(dl); out(pk, { dry: 0.75 }); out(dl, { dry: 0.35 }); }
+        else out(bus, { wet: 0.7, dry: 0.85 });
+        tone(55, { t: t, a: 0.02, hold: 0.5, r: 0.5, peak: 0.16, into: bus, partials: [[1, 1], [2, 0.6], [3, 0.3]] });
+        tone(110, { t: t + 0.45, a: 0.02, hold: 0.25, r: 0.45, peak: 0.1, into: bus, partials: [[1, 1], [2, 0.5], [3, 0.25]] });
+        [220, 277.18, 329.63].forEach((f, i) => tone(f, { t: t + 0.02 + i * 0.03, a: 0.01, hold: 0.05, r: 0.9, peak: 0.03, into: bus, partials: [[1, 1], [2, 0.3]] }));
+      }
+      S((ctx, t) => phrase(ctx, t, false));
+      await ring(g, 200, 118, 4, 240, 1500, 0.7, { w: 1.3, ease: lin, op: t => 0.7 * Math.exp(-t * 2.4) });
+      S((ctx, t) => whoosh(t, 1.0, 900, 300, 0.035));
+      const s1 = Math.sqrt(60 / 95);
+      function setSize(s) { const w = 320 * s, h = 180 * s, x = 200 - w / 2, y = 118 - h / 2;
+        R.querySelectorAll('rect').forEach(r => { r.setAttribute('x', x); r.setAttribute('y', y); r.setAttribute('width', w); r.setAttribute('height', h); });
+        clip.setAttribute('x', x + 1); clip.setAttribute('y', y + 1); clip.setAttribute('width', w - 2); clip.setAttribute('height', h - 2);
+        area.setAttribute('x', x + w - 10); area.setAttribute('y', y + h - 8); }
+      await tween(1000, k => { setSize(1 + (s1 - 1) * k); area.textContent = Math.round(95 + (60 - 95) * k) + ' m²'; });
+      S((ctx, t) => phrase(ctx, t, true));
+      const flash = E('rect', { class: 'f', x: 200 - 127, y: 118 - 71.5, width: 254, height: 143, opacity: 0 }, c.fx); flash.style.strokeWidth = 2.6;
+      await Promise.all([0, 160, 320, 480].map(d => ring(g, 200, 118, 4, 170, 520, 0.85, { delay: d, w: 1.4, ease: lin, op: t => 0.85 * (1 - t) })).concat([
+        tween(1400, (k, t) => flash.setAttribute('opacity', 0.75 * Math.abs(Math.sin(t * Math.PI * 4)) * (1 - t)), lin)]));
+      flash.remove();
+      await wait(500);
+      await tween(1000, k => { setSize(s1 + (1 - s1) * k); area.textContent = Math.round(60 + 35 * k) + ' m²'; });
+    } });
+  /* PAGE 2 · Rooms and adjacencies -------------------------------------- */
+  add(2, { id: 'booths', title: 'Booths: two minimum, a third strongly preferred',
+    cap: 'Each booth keeps its source off the others’ microphones while the band plays together. With two, somebody is always compromising; with three, the session runs as the producer imagined. A 12–18 m², B 10–16 m², C similar to B.',
+    svg: () => room(20, 20, 360, 105) + '<rect class="s" x="20" y="125" width="360" height="12"/>' +
+      '<rect class="gl" x="48" y="126" width="38" height="10"/><rect class="gl" x="182" y="126" width="38" height="10"/><rect class="gl" x="304" y="126" width="38" height="10"/>' +
+      room(20, 137, 118, 80) + room(148, 137, 110, 80) + '<rect class="w" x="268" y="137" width="112" height="80"/>' + room(268, 137, 112, 80, 'pref') +
+      '<rect class="s" x="138" y="137" width="10" height="80"/><rect class="s" x="258" y="137" width="10" height="80"/>' +
+      '<circle class="l w" cx="80" cy="70" r="14"/><circle class="l" cx="104" cy="58" r="7"/><ellipse class="l w" cx="62" cy="54" rx="11" ry="2.6"/>' + head(200, 74) + head(290, 66) +
+      head(79, 182) + '<path class="l" d="M79 168 V160"/><rect class="l w" x="190" y="164" width="28" height="26" rx="2"/><circle class="l t" cx="204" cy="177" r="8"/>' +
+      '<circle class="l w" cx="318" cy="182" r="9"/><circle class="l w" cx="330" cy="172" r="6.5"/><path class="l t" d="M334 168 L350 152"/>',
+    lab: () => '<text class="lbl" x="28" y="152">A</text><text class="lbl" x="156" y="152">B</text><text class="lbl" x="276" y="152">C</text>',
+    defs: id => '<clipPath id="c-' + id + '-0"><rect x="21" y="138" width="116" height="78"/></clipPath><clipPath id="c-' + id + '-1"><rect x="149" y="138" width="108" height="78"/></clipPath><clipPath id="c-' + id + '-2"><rect x="269" y="138" width="110" height="78"/></clipPath>',
+    play: async c => {
+      const B = [[20, 137, 118, 80, 79, 178], [148, 137, 110, 80, 204, 177], [268, 137, 112, 80, 322, 178]];
+      function sound(i, k) { S((ctx, t) => {
+        if (i === 0) { /* voice: buzzy source through two formant filters, gentle vibrato */
+          const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 220; const lfo = ctx.createOscillator(); lfo.frequency.value = 5; const lg = ctx.createGain(); lg.gain.value = 2.5; lfo.connect(lg); lg.connect(o.frequency);
+          const f1 = filt('bandpass', 760, 7), f2 = filt('bandpass', 1150, 9), g = ctx.createGain(); env(g.gain, t, 0.09, 0.5 * k, 0.45, 0.35); o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g);
+          o.start(t); lfo.start(t); o.stop(t + 1); lfo.stop(t + 1); out(g, { pan: -0.5, wet: 0.12 }); }
+        else if (i === 1) { /* guitar amp: warm, low-passed square */
+          const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 110; const lp = filt('lowpass', 1000, 1.5), g = ctx.createGain(); env(g.gain, t, 0.01, 0.05 * k, 0.35, 0.4); chain(o, lp, g); o.start(t); o.stop(t + 1); out(g); }
+        else tone(329.63, { t: t, a: 0.003, hold: 0.02, r: 0.8, peak: 0.1 * k, pan: 0.5, wet: 0.15, type: 'triangle', partials: [[1, 1], [1.5, 0.35], [2, 0.25]] });
+      }); }
+      async function contain(i) {
+        const b = B[i]; const g = E('g', { 'clip-path': 'url(#c-' + c.id + '-' + i + ')' }, c.fx);
+        const edge = E('rect', { class: 'f', x: b[0], y: b[1], width: b[2], height: b[3], opacity: 0 }, c.fx); edge.style.strokeWidth = 2.4;
+        const rs = [0, 170, 340].map(d => ring(g, b[4], b[5], 3, 80, 900, 0.85, { delay: d, w: 1.3 }));
+        await wait(260);
+        await tween(1000, (k, t) => edge.setAttribute('opacity', 0.85 * Math.sin(Math.PI * t)), lin);
+        await Promise.all(rs); edge.remove(); g.remove();
+      }
+      const seq = [];
+      for (let i = 0; i < 3; i++) { sound(i, 1); seq.push(contain(i)); await wait(850); }
+      await Promise.all(seq); await wait(200);
+      [0, 1, 2].forEach(i => sound(i, 0.7));
+      await Promise.all([0, 1, 2].map(i => contain(i)));
+    } });
+
+  add(2, { id: 'sight', title: 'Sightlines through glass',
+    cap: 'Glass between each booth and the live room, and between the booths and the control room. The engineer never has to guess who is about to play. Musicians who can see each other play together.',
+    svg: () => room(20, 20, 225, 135) + '<rect class="s" x="20" y="155" width="225" height="11"/>' +
+      room(20, 166, 72, 52) + room(98, 166, 70, 52) + '<rect class="w" x="174" y="166" width="71" height="52"/>' + room(174, 166, 71, 52, 'pref') +
+      '<rect class="s" x="245" y="20" width="16" height="198"/>' + room(261, 20, 124, 198) +
+      '<rect class="gl" data-k="g0" x="246" y="55" width="14" height="58"/><rect class="gl" data-k="g1" x="246" y="178" width="14" height="30"/>' +
+      '<rect class="gl" data-k="g2" x="36" y="156" width="40" height="9"/><rect class="gl" data-k="g3" x="113" y="156" width="40" height="9"/><rect class="gl" data-k="g4" x="189" y="156" width="40" height="9"/>' +
+      '<rect class="l w" x="292" y="70" width="58" height="18" rx="2"/>' + head(322, 104) + head(120, 82) + '<circle class="l w" cx="80" cy="60" r="12"/><ellipse class="l w" cx="62" cy="46" rx="10" ry="2.4"/>' +
+      head(56, 194) + head(133, 194) + head(209, 194),
+    play: async c => {
+      const beams = [
+        { d: 'M322 100 L253 84 L128 82', g: 'g0', tgt: [120, 82], f: 1318.5, pan: -0.1 },
+        { d: 'M322 100 L253 193 L216 194', g: 'g1', tgt: [209, 194], f: 1568, pan: 0.2 },
+        { d: 'M120 88 L56 160 L56 186', g: 'g2', tgt: [56, 194], f: 1174.66, pan: -0.6 },
+        { d: 'M120 88 L133 160 L133 186', g: 'g3', tgt: [133, 194], f: 1396.9, pan: -0.3 },
+        { d: 'M120 88 L209 160 L209 186', g: 'g4', tgt: [209, 194], f: 1760, pan: 0.1 } ];
+      const paths = [], fx = [];
+      for (let i = 0; i < beams.length; i++) {
+        const b = beams[i]; const p = E('path', { class: 'f', d: b.d, opacity: 0.9 }, c.fx); p.style.strokeWidth = 1.2; paths.push(p);
+        S((ctx, t) => chime(t + 0.38, b.f, b.pan, 0.04));
+        draw(p, 520, eio).then(() => { p.style.strokeDasharray = '3 3'; p.style.strokeDashoffset = 0; });
+        const r = c.k(b.g).getBBox(); const fl = E('rect', { class: 'ff', x: r.x, y: r.y, width: r.width, height: r.height, opacity: 0 }, c.fx);
+        const halo = E('circle', { class: 'f', cx: b.tgt[0], cy: b.tgt[1], r: 6, opacity: 0 }, c.fx);
+        fx.push(wait(300).then(() => tween(900, (k, t) => fl.setAttribute('opacity', 0.75 * Math.sin(Math.PI * t)), lin)));
+        fx.push(wait(380).then(() => tween(900, (k, t) => { halo.setAttribute('r', 6 + 10 * k); halo.setAttribute('opacity', 0.9 * (1 - t)); }, eo)));
+        await wait(560);
+      }
+      await Promise.all(fx); await wait(500);
+      await tween(800, k => paths.forEach(e => e.setAttribute('opacity', 0.9 * (1 - k))));
+    } });
+
+  add(2, { id: 'control', title: 'Control room: around 40 m², symmetrical',
+    cap: 'Symmetrical left to right around the listening position, so the stereo picture never tilts. Room for main monitors and nearfields, and for the producer and artist behind the engineer. Range 35–50 m².',
+    svg: () => '<path class="gf" d="M75 22 H325 L358 215 H42 Z"/><rect class="h" x="70" y="12" width="260" height="10"/><path class="l k" d="M75 22 H325"/><path class="l" d="M75 22 L42 215 H358 L325 22"/>' +
+      '<path class="l d" d="M200 26 V212"/>' +
+      '<rect class="l w" x="104" y="24" width="32" height="18"/><circle class="l t" cx="120" cy="33" r="6"/><rect class="l w" x="264" y="24" width="32" height="18"/><circle class="l t" cx="280" cy="33" r="6"/>' +
+      '<rect class="l w" x="146" y="116" width="108" height="22" rx="2"/><rect class="l" x="160" y="104" width="10" height="11"/><rect class="l" x="230" y="104" width="10" height="11"/>' +
+      head(200, 152) + '<rect class="l w" x="138" y="186" width="124" height="18" rx="6"/>' + head(168, 182) + head(200, 182) + head(232, 182),
+    defs: id => '<clipPath id="c-' + id + '"><path d="M76 23 H324 L357 214 H43 Z"/></clipPath>',
+    play: async c => {
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      function chord(t, pan, hold, pk) { [329.63, 493.88, 659.25].forEach((f, i) => tone(f, { t: t, a: 0.06, hold: hold, r: 0.5, peak: pk * (i === 2 ? 0.5 : 1), pan: pan, wet: 0.2, partials: [[1, 1], [2, 0.2]] })); }
+      S((ctx, t) => { chord(t, -0.85, 0.55, 0.05); chord(t + 1.1, 0.85, 0.55, 0.05); chord(t + 2.2, -0.8, 1.2, 0.035); chord(t + 2.2, 0.8, 1.2, 0.035); });
+      const L = [120, 40], R = [280, 40];
+      function from(p, n) { return Promise.all([0, 200, 400].slice(0, n).map(d => ring(g, p[0], p[1], 3, 190, 1050, 0.8, { delay: d, w: 1.2 }))); }
+      const ear = E('circle', { class: 'ff', cx: 200, cy: 152, r: 10, opacity: 0 }, c.fx);
+      from(L, 2); await wait(1100);
+      from(R, 2); await wait(1100);
+      const both = Promise.all([from(L, 3), from(R, 3)]);
+      const axis = E('path', { class: 'f', d: 'M200 26 V212', opacity: 0 }, c.fx); axis.style.strokeWidth = 1;
+      await wait(450);
+      await tween(1400, (k, t) => { ear.setAttribute('opacity', 0.45 * Math.sin(Math.PI * t)); axis.setAttribute('opacity', 0.7 * Math.sin(Math.PI * t)); }, lin);
+      await both;
+      const sofa = [168, 200, 232].map(x => E('circle', { class: 'f', cx: x, cy: 182, r: 6, opacity: 0 }, c.fx));
+      await tween(700, (k, t) => sofa.forEach(s => { s.setAttribute('r', 6 + 6 * k); s.setAttribute('opacity', 0.8 * (1 - t)); }), eo);
+    } });
+  add(2, { id: 'machine', title: 'Machine room: noise kept out',
+    cap: 'Computers, storage and amplifiers make noise and heat. The machine room sits close to the control room for short cable runs, behind a heavy wall, never a weak one, with its own cooling. Tap: thin wall first, then the heavy wall. 15–25 m².',
+    svg: () => {
+      let s = room(20, 30, 225, 180) + room(275, 30, 110, 180) + '<g data-k="wall"><rect class="s" x="245" y="30" width="30" height="180"/></g>' +
+        '<rect class="l w" x="78" y="104" width="104" height="22" rx="2"/>' + head(130, 142) + '<path class="l d" d="M150 40 H300"/>';
+      [290, 332].forEach((x, j) => { s += '<rect class="l w" x="' + x + '" y="52" width="34" height="146" rx="1"/>'; for (let y = 64; y < 196; y += 12) s += '<path class="l t" d="M' + (x + 4) + ' ' + y + ' H' + (x + 30) + '"/>';
+        s += '<g data-k="fan' + j + '"><circle class="l" cx="' + (x + 17) + '" cy="96" r="9"/><path class="l t" d="M' + (x + 17) + ' 87 V105 M' + (x + 8) + ' 96 H' + (x + 26) + '"/></g>'; });
+      return s; },
+    defs: id => '<clipPath id="c-' + id + '"><rect x="21" y="31" width="363" height="178"/></clipPath>',
+    play: async c => {
+      const wall = c.k('wall').querySelector('rect'), fans = [c.k('fan0'), c.k('fan1')];
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      S((ctx, t) => { const n = noise(t, 4.0), bp = filt('bandpass', 1100, 0.45), lp = filt('lowpass', 5000), g1 = ctx.createGain();
+        const h = ctx.createGain(); h.gain.value = 0.35; [100, 200, 300].forEach((f, i) => { const o = ctx.createOscillator(); o.frequency.value = f; const og = ctx.createGain(); og.gain.value = [0.5, 0.25, 0.1][i]; o.connect(og); og.connect(h); o.start(t); o.stop(t + 4.1); });
+        n.connect(bp); bp.connect(lp); h.connect(lp); lp.connect(g1);
+        g1.gain.setValueAtTime(0.0001, t); g1.gain.exponentialRampToValueAtTime(0.12, t + 0.4);
+        /* heavy wall slides in from 1.45 s to 2.0 s: sound muffles and drops in step */
+        g1.gain.setValueAtTime(0.12, t + 1.45); g1.gain.exponentialRampToValueAtTime(0.012, t + 2.0);
+        lp.frequency.setValueAtTime(5000, t + 1.45); lp.frequency.exponentialRampToValueAtTime(240, t + 2.0);
+        g1.gain.setValueAtTime(0.012, t + 3.2); g1.gain.exponentialRampToValueAtTime(0.0001, t + 3.9);
+        out(g1); thud(t + 1.98, 0.14); });
+      let spin = true; const t0 = performance.now();
+      (function rot(n) { const a = (n - t0) * 0.6; fans.forEach((f, j) => f.setAttribute('transform', 'rotate(' + a + ' ' + [307, 349][j] + ' 96)')); if (spin) requestAnimationFrame(rot); })(t0);
+      await tween(450, k => { wall.setAttribute('x', 245 + 13 * k); wall.setAttribute('width', 30 - 26 * k); });
+      let heavy = false;
+      function squiggle(y, d) { const p = E('path', { class: 'f', d: 'M0 0 q4 -5 8 0 t8 0 t8 0', opacity: 0 }, g); p.style.strokeWidth = 1.2; let st = null;
+        return wait(d).then(() => tween(1300, (k, t) => { let x = 290 - 260 * k;
+          if (heavy && x < 282 && st == null) st = t; if (st != null) x = Math.max(x, 280);
+          const f = st != null ? Math.max(0, 1 - (t - st) * 6) : 1;
+          p.setAttribute('transform', 'translate(' + x + ' ' + y + ')'); p.setAttribute('opacity', 0.85 * Math.min(1, t * 6) * f * (x < 245 ? Math.max(0.15, (x - 20) / 225) : 1)); }, lin)).then(() => p.remove()); }
+      const runs = []; for (let i = 0; i < 12; i++) runs.push(squiggle(66 + (i * 37) % 124, i * 180));
+      await wait(1000);
+      await tween(550, k => { wall.setAttribute('x', 258 - 13 * k); wall.setAttribute('width', 4 + 26 * k); });
+      heavy = true;
+      const calm = E('circle', { class: 'f', cx: 130, cy: 142, r: 8, opacity: 0 }, c.fx);
+      tween(1400, (k, t) => { calm.setAttribute('r', 8 + 16 * k); calm.setAttribute('opacity', 0.7 * Math.sin(Math.PI * t)); }, eo);
+      await Promise.all(runs); await wait(400);
+      spin = false;
+    } });
+
+  add(2, { id: 'lock', title: 'Sound locks, lobby and lounge',
+    cap: 'A sound lock is a small space with a door at each end, like an airlock for sound: one door closes before the next opens, so noise never has a straight path in. The lobby and lounge are larger layers of the same idea, and a place for artists to rest.',
+    svg: () => '<rect class="h" x="8" y="60" width="77" height="120"/><path class="l t" d="M8 60 H85 M8 180 H85"/>' +
+      room(95, 40, 110, 160) + room(215, 80, 45, 80) + room(270, 30, 118, 180) +
+      '<rect class="s" x="85" y="40" width="10" height="58"/><rect class="s" x="85" y="142" width="10" height="58"/>' +
+      '<rect class="s" x="205" y="40" width="10" height="55"/><rect class="s" x="205" y="145" width="10" height="55"/>' +
+      '<rect class="s" x="260" y="30" width="10" height="65"/><rect class="s" x="260" y="145" width="10" height="65"/>' +
+      '<line data-k="d1" class="l k" x1="210" y1="95" x2="210" y2="145" transform="rotate(-78 210 95)"/>' +
+      '<line data-k="d2" class="l k" x1="265" y1="95" x2="265" y2="145" transform="rotate(-78 265 95)"/>' +
+      head(30, 95) + head(52, 140) + head(64, 104) + '<rect class="l w" x="112" y="150" width="70" height="22" rx="8"/>' + head(130, 136) +
+      head(330, 140) + '<path class="l" d="M330 128 V112"/><rect class="l w" x="326" y="100" width="8" height="12" rx="4"/>',
+    defs: id => '<clipPath id="c-' + id + '"><rect x="8" y="31" width="379" height="178"/></clipPath>',
+    play: async c => {
+      const d1 = c.k('d1'), d2 = c.k('d2');
+      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      S((ctx, t) => { const n = noise(t, 3.8), lp = filt('lowpass', 1400), pk = filt('peaking', 450, 1); pk.gain.value = 6;
+        const mod = ctx.createGain(); mod.gain.value = 0.7; const lfo = ctx.createOscillator(); lfo.frequency.value = 1.7; const lg = ctx.createGain(); lg.gain.value = 0.3; lfo.connect(lg); lg.connect(mod.gain); lfo.start(t); lfo.stop(t + 3.9);
+        const g1 = ctx.createGain(); chain(n, lp, pk, mod, g1);
+        g1.gain.setValueAtTime(0.0001, t); g1.gain.exponentialRampToValueAtTime(0.13, t + 0.3);
+        /* door 1 shuts 1.0–1.3 s, door 2 shuts 2.0–2.3 s: each step muffles and drops the murmur */
+        g1.gain.setValueAtTime(0.13, t + 1.05); g1.gain.exponentialRampToValueAtTime(0.035, t + 1.3);
+        lp.frequency.setValueAtTime(1400, t + 1.05); lp.frequency.exponentialRampToValueAtTime(520, t + 1.3);
+        g1.gain.setValueAtTime(0.035, t + 2.05); g1.gain.exponentialRampToValueAtTime(0.003, t + 2.3);
+        lp.frequency.setValueAtTime(520, t + 2.05); lp.frequency.exponentialRampToValueAtTime(220, t + 2.3);
+        g1.gain.setValueAtTime(0.003, t + 3.2); g1.gain.exponentialRampToValueAtTime(0.0001, t + 3.7);
+        out(g1); thud(t + 1.28, 0.12); thud(t + 2.28, 0.1); });
+      let stage = 0; const runs = [];
+      function sq(y, d) { const p = E('path', { class: 'f', d: 'M0 0 q4 -5 8 0 t8 0', opacity: 0 }, g); p.style.strokeWidth = 1.1; let st = null;
+        return wait(d).then(() => tween(1500, (k, t) => { let x = 10 + 370 * k; const lim = stage === 0 ? 400 : stage === 1 ? 194 : 194;
+          const lim2 = stage === 0 ? 400 : 249; const L = (x > 200 && x < 252 && stage >= 1) ? lim2 : lim;
+          if (x > L && st == null) st = t; if (st != null) x = Math.min(x, L);
+          const f = st != null ? Math.max(0, 1 - (t - st) * 5) : 1;
+          p.setAttribute('transform', 'translate(' + x + ' ' + y + ')'); p.setAttribute('opacity', 0.85 * Math.min(1, t * 6) * f); }, lin)).then(() => p.remove()); }
+      for (let i = 0; i < 14; i++) runs.push(sq(100 + (i * 23) % 44, i * 150));
+      const door = (el, x, from, to) => tween(300, k => el.setAttribute('transform', 'rotate(' + (from + (to - from) * k) + ' ' + x + ' 95)'), eio);
+      await wait(1000); await door(d1, 210, -78, 0); stage = 1;
+      await wait(700); await door(d2, 265, -78, 0); stage = 2;
+      const calm = E('rect', { class: 'ff', x: 271, y: 31, width: 116, height: 178, opacity: 0 }, c.fx);
+      await tween(1200, (k, t) => calm.setAttribute('opacity', 0.16 * Math.sin(Math.PI * t)), lin);
+      await Promise.all(runs);
+      await Promise.all([tween(1200, k => d1.setAttribute('transform', 'rotate(' + (-78 * k) + ' 210 95)')), wait(250).then(() => tween(1200, k => d2.setAttribute('transform', 'rotate(' + (-78 * k) + ' 265 95)')))]);
+    } });
+  add(2, { id: 'plant', title: 'Noisy plant at the far end',
+    cap: 'Air-handling units, chillers, pumps and lifts belong at the other end of the building, not on the other side of a studio wall. Toilets, kitchens and drainage pipes stay off studio walls. Tap to hear the hum fall away with distance.',
+    svg: () => '<rect class="gf" x="10" y="50" width="380" height="150"/><path class="l k" d="M10 50 H390 M10 200 H390 M10 50 V200 M390 50 V200"/>' + floor(4, 396, 200) +
+      '<path class="l" d="M100 50 V200 M190 50 V200 M270 50 V200"/>' +
+      '<g data-k="fan"><circle class="l" cx="55" cy="96" r="22"/><path class="l" d="M55 74 Q66 90 55 96 Q44 102 55 118 M33 96 Q49 85 55 96 Q61 107 77 96"/></g><circle class="l w" cx="55" cy="96" r="4"/>' +
+      '<rect class="l w" x="22" y="140" width="66" height="48" rx="2"/><path class="l t" d="M30 150 H80 M30 158 H80 M30 166 H80 M30 174 H80"/>' +
+      '<path class="l" d="M118 50 V200"/><path class="l t" d="M124 50 V200"/><path class="l w" d="M134 178 h22 q0 14 -11 14 q-11 0 -11 -14 z M138 178 v-14 h14 v14"/>' +
+      '<path class="l t" d="M205 120 h50 M205 150 h50"/>' + person(330, 200, 54) + '<path class="l" d="M360 200 V160 L352 152"/>',
+    defs: id => '<clipPath id="c-' + id + '"><rect x="11" y="51" width="378" height="148"/></clipPath>',
+    play: async c => {
+      const fan = c.k('fan'); const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
+      S((ctx, t) => { const h = ctx.createGain(); [[100, 0.5], [200, 0.28], [300, 0.12], [400, 0.05]].forEach(p => { const o = ctx.createOscillator(); o.frequency.value = p[0]; const og = ctx.createGain(); og.gain.value = p[1]; o.connect(og); og.connect(h); o.start(t); o.stop(t + 3.6); });
+        const n = noise(t, 3.5), lp = filt('lowpass', 1500), ng = ctx.createGain(); ng.gain.value = 0.25; chain(n, lp, ng, h);
+        /* level follows the wavefront: loud at the plant, almost nothing by the studio */
+        h.gain.setValueAtTime(0.0001, t); h.gain.exponentialRampToValueAtTime(0.16, t + 0.2);
+        h.gain.setValueAtTime(0.16, t + 0.5); h.gain.exponentialRampToValueAtTime(0.004, t + 3.0); h.gain.exponentialRampToValueAtTime(0.0001, t + 3.4);
+        lp.frequency.setValueAtTime(1500, t + 0.5); lp.frequency.exponentialRampToValueAtTime(260, t + 3.0); out(h); });
+      let spin = true; const t0 = performance.now();
+      (function rot(n) { fan.setAttribute('transform', 'rotate(' + ((n - t0) * 0.5) + ' 55 96)'); if (spin) requestAnimationFrame(rot); })(t0);
+      const arcs = [];
+      for (let i = 0; i < 6; i++) arcs.push(wait(i * 330).then(() => { const p = E('path', { class: 'f', d: 'M0 -40 Q16 0 0 40', opacity: 0 }, g);
+        return tween(2600, (k, t) => { const x = 82 + 300 * k; const a = Math.exp(-(x - 82) / 70); p.setAttribute('transform', 'translate(' + x + ' 125) scale(' + (0.7 + 0.5 * k) + ')'); p.setAttribute('opacity', 0.9 * a * Math.min(1, t * 8)); p.style.strokeWidth = 0.6 + 1.8 * a; }, lin).then(() => p.remove()); }));
+      await Promise.all(arcs);
+      const calm = E('circle', { class: 'f', cx: 330, cy: 150, r: 10, opacity: 0 }, c.fx);
+      await tween(900, (k, t) => { calm.setAttribute('r', 10 + 18 * k); calm.setAttribute('opacity', 0.6 * Math.sin(Math.PI * t)); }, eo);
+      spin = false;
+    } });
+
+  add(2, { id: 'loadin', title: 'Load-in has its own route',
+    cap: 'A clear path with wide doors from the street to the live room, so the piano, drum kits and flight cases never pass through the control room or the lounge.',
+    svg: () => '<rect class="h" x="6" y="214" width="388" height="22"/><path class="l" d="M6 214 H394"/>' +
+      '<path class="l k" d="M50 210 H15 V15 H385 V210 H95"/>' + room(25, 25, 210, 112) + room(245, 25, 130, 92) + room(245, 125, 130, 78) + room(130, 147, 105, 56) +
+      '<path class="l d" data-k="route" d="M72 236 L72 172 Q72 150 80 140 Q96 110 150 82"/>' +
+      '<line data-k="dA" class="l k" x1="50" y1="137" x2="72" y2="137"/><line data-k="dB" class="l k" x1="95" y1="137" x2="73" y2="137"/>' +
+      '<line data-k="dC" class="l k" x1="50" y1="210" x2="72" y2="210"/><line data-k="dD" class="l k" x1="95" y1="210" x2="73" y2="210"/>' +
+      '<path class="l d" d="M136 72 H174 Q190 72 190 88 Q190 104 174 104 L158 104 Q148 104 144 96 L136 96 Z"/>' +
+      '<rect class="l w" x="285" y="60" width="54" height="16" rx="2"/>' + head(312, 90) + '<rect class="l w" x="270" y="160" width="80" height="20" rx="7"/>' + head(290, 148),
+    play: async c => {
+      const route = c.k('route'); const D = ['dA', 'dB', 'dC', 'dD'].map(k => c.k(k));
+      const L = route.getTotalLength();
+      const trail = E('path', { class: 'f', d: route.getAttribute('d') }, c.fx); trail.style.strokeWidth = 1.4; trail.style.strokeDasharray = L; trail.style.strokeDashoffset = L;
+      const piano = E('g', { opacity: 0 }, c.fx); E('path', { class: 'ff', d: 'M-15 -9 H5 Q15 -9 15 1 Q15 12 4 12 L-4 12 Q-9 12 -11 7 L-15 7 Z', opacity: 0.85 }, piano);
+      S((ctx, t) => { whoosh(t + 0.1, 2.6, 300, 1200, 0.045); whoosh(t + 0.45, 0.4, 1400, 2400, 0.018); whoosh(t + 1.55, 0.4, 1400, 2400, 0.018);
+        chime(t + 2.8, 392, 0, 0.045); chime(t + 3.0, 587.33, 0, 0.04); });
+      function doors(open, i0) { D.slice(i0, i0 + 2).forEach((d, j) => { const hx = +d.getAttribute('x1'), hy = +d.getAttribute('y1'); d.setAttribute('transform', 'rotate(' + (j ? open * 80 : -open * 80) + ' ' + hx + ' ' + hy + ')'); }); }
+      await tween(2800, (k, t) => { const p = route.getPointAtLength(L * k), q = route.getPointAtLength(Math.min(L, L * k + 1));
+        const ang = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI;
+        piano.setAttribute('transform', 'translate(' + p.x + ' ' + p.y + ') rotate(' + (ang + 90) + ')');
+        trail.style.strokeDashoffset = L * (1 - k);
+        const yS = Math.max(0, 1 - Math.abs(p.y - 210) / 24), yI = Math.max(0, 1 - Math.abs(p.y - 137) / 24);
+        doors(eio(Math.min(1, yS * 1.6)), 2); doors(eio(Math.min(1, yI * 1.6)), 0);
+        piano.setAttribute('opacity', Math.min(1, t * 6)); }, eio);
+      doors(0, 0); doors(0, 2);
+      const glow = E('circle', { class: 'f', cx: 163, cy: 88, r: 12, opacity: 0 }, c.fx);
+      await tween(1000, (k, t) => { glow.setAttribute('r', 12 + 18 * k); glow.setAttribute('opacity', 0.7 * (1 - t)); }, eo);
+      await tween(700, k => { piano.setAttribute('opacity', 1 - k); trail.setAttribute('opacity', 1 - k); });
+    } });
+
+  add(2, { id: 'gross', title: 'Net and gross: the space the silence lives in',
+    cap: 'Live room, booths and control add up to roughly 150–200 m² net. Add isolation shells, sound locks, machine room, lounge, lobby and corridors, and the whole suite lands at 300–450 m² gross. Gross is often 1.6 to 2.2 times the net.',
+    svg: () => {
+      const B = [[120, 72, 90, 58], [120, 135, 28, 22], [152, 135, 28, 22], [184, 135, 26, 22], [215, 72, 65, 85]];
+      return B.map((b, i) => '<g data-k="nb' + i + '"><rect class="l t" data-shell="1" x="' + (b[0] - 5) + '" y="' + (b[1] - 5) + '" width="' + (b[2] + 10) + '" height="' + (b[3] + 10) + '" opacity="0"/><rect class="w" x="' + b[0] + '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '"/><rect class="l" x="' + b[0] + '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '"/></g>').join('') +
+        '<g data-k="extra" opacity="0">' + room(70, 52, 34, 62) + room(70, 120, 34, 62) + room(306, 52, 30, 52) + '<rect class="l" x="306" y="110" width="14" height="14"/><rect class="l" x="108" y="166" width="14" height="14"/><path class="l d" d="M108 186 H300 M300 186 V60"/></g>' +
+        '<rect class="l d" data-k="outline" x="116" y="68" width="168" height="93"/>';
+    },
+    lab: () => '<text class="lbl" data-k="t1" x="200" y="222" text-anchor="middle">150–200 m² net</text><text class="lbl" data-k="t2" x="200" y="222" text-anchor="middle" opacity="0">300–450 m² gross · often 1.6–2.2 × net</text>',
+    play: async c => {
+      const N = [0, 1, 2, 3, 4].map(i => c.k('nb' + i)), ex = c.k('extra'), ol = c.k('outline');
+      const t1 = c.lab.querySelector('[data-k="t1"]'), t2 = c.lab.querySelector('[data-k="t2"]');
+      const C0 = [[165, 101], [134, 146], [166, 146], [197, 146], [247, 114]];
+      S((ctx, t) => { tone(82.41, { t: t, a: 1.3, hold: 0.8, r: 1.4, peak: 0.06, wet: 0.5, partials: [[1, 1], [1.5, 0.45], [2, 0.3]] }); whoosh(t, 2.0, 260, 900, 0.03, { wet: 0.3 });
+        chime(t + 2.0, 659.25, -0.2, 0.035); chime(t + 2.12, 987.77, 0.2, 0.03); });
+      function spread(k) { N.forEach((g, i) => { g.setAttribute('transform', 'translate(' + ((C0[i][0] - 200) * 0.14 * k) + ' ' + ((C0[i][1] - 114) * 0.18 * k) + ')'); g.querySelector('[data-shell]').setAttribute('opacity', k); }); }
+      function grow(k) { ex.setAttribute('opacity', k); ol.setAttribute('x', 116 - 54 * k); ol.setAttribute('y', 68 - 24 * k); ol.setAttribute('width', 168 + 116 * k); ol.setAttribute('height', 93 + 56 * k); t1.setAttribute('opacity', Math.max(0, 1 - 2 * k)); t2.setAttribute('opacity', Math.max(0, 2 * k - 1)); }
+      await tween(1000, k => spread(k));
+      await tween(1000, k => grow(k));
+      const fill = E('rect', { class: 'ff', x: 62, y: 44, width: 284, height: 149, opacity: 0 }, c.fx);
+      await tween(1400, (k, t) => fill.setAttribute('opacity', 0.14 * Math.sin(Math.PI * t)), lin);
+      await wait(900);
+      await tween(900, k => { spread(1 - k); grow(1 - k); });
+    } });
+
+  /* ---------- Build cards ---------- */
+  const speaker = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6 H5 L9 3 V13 L5 10 H2 Z" fill="currentColor"/><path d="M11.5 5.5 Q13.5 8 11.5 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
+  const counters = { 1: 0, 2: 0 };
+  scenes.forEach(sc => {
+    const grid = root.querySelector('[data-grid="' + sc.page + '"]');
+    const n = ++counters[sc.page];
+    const art = document.createElement('article'); art.className = 'sx-card'; art.dataset.id = sc.id;
+    art.innerHTML =
+      '<button type="button" class="sx-fig" aria-label="Play: ' + sc.title + '">' +
+        '<svg viewBox="0 0 400 240" xmlns="' + NS + '" preserveAspectRatio="xMidYMid meet"><defs>' + (sc.defs ? sc.defs(sc.id) : '') + '</defs>' +
+        '<g class="base" id="b-' + sc.id + '">' + sc.svg() + '</g>' +
+        '<g class="lab">' + (sc.lab ? sc.lab() : '') + '</g><g class="fx"></g></svg>' +
+        '<span class="sx-hint">' + speaker + '<span class="ht">Tap to hear</span></span>' +
+      '</button>' +
+      '<div class="sx-cap"><h3><span class="n">' + String(n).padStart(2, '0') + '</span>' + sc.title + '</h3><p>' + sc.cap + '</p>' +
+        (sc.state ? '<p class="state">' + sc.state[0] + '</p>' : '') + '</div>';
+    grid.appendChild(art);
+    const svg = art.querySelector('svg');
+    /* sketch variant: a second, slightly offset pen pass of the static drawing */
+    const base = svg.querySelector('.base'), dbl = base.cloneNode(true);
+    dbl.removeAttribute('id'); dbl.setAttribute('class', 'dbl sk'); dbl.setAttribute('transform', 'translate(0.8 0.6)'); dbl.setAttribute('aria-hidden', 'true');
+    dbl.querySelectorAll('[data-k], .gf, .w, .h, .s').forEach(e => e.remove());
+    base.after(dbl);
+    const ctx = { id: sc.id, svg: svg, fx: svg.querySelector('.fx'), lab: svg.querySelector('.lab'),
+      k: name => svg.querySelector('.base [data-k="' + name + '"]'),
+      setState: i => { const s = art.querySelector('.state'); if (s) s.textContent = sc.state[i]; } };
+    let busy = false;
+    art.querySelector('.sx-fig').addEventListener('click', async () => {
+      if (busy) return; busy = true; art.classList.add('playing');
+      try { await sc.play(ctx); } catch (e) { console.warn(e); }
+      ctx.fx.innerHTML = ''; art.classList.remove('playing'); busy = false;
+    });
+  });
+
+  /* ---------- Page, variant and mute controls ---------- */
+  function setPage(p) {
+    p = String(p);
+    root.querySelectorAll('.sx-page').forEach(el => el.classList.toggle('active', el.dataset.page === p));
+    root.querySelectorAll('.sx-seg button[data-page]').forEach(b => { const on = b.dataset.page === p; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); });
+    const scr = document.getElementById('screen-suite'); if (scr) scr.scrollTop = 0;
+  }
+  root.querySelectorAll('.sx-seg button[data-page]').forEach(b => b.addEventListener('click', () => setPage(b.dataset.page)));
+  root.querySelectorAll('[data-page-go]').forEach(b => b.addEventListener('click', () => setPage(b.dataset.pageGo)));
+  function setVariant(v) {
+    root.classList.toggle('v-sketch', v === 'sketch'); root.classList.toggle('v-graphic', v === 'graphic');
+    root.querySelectorAll('[data-var]').forEach(x => x.classList.toggle('active', x.dataset.var === v));
+  }
+  root.querySelectorAll('[data-var]').forEach(b => b.addEventListener('click', () => setVariant(b.dataset.var)));
+  const muteBtn = document.getElementById('sx-mute');
+  function paintMute() {
+    muteBtn.setAttribute('aria-pressed', A.muted); muteBtn.setAttribute('aria-label', A.muted ? 'Turn sound on' : 'Mute sound');
+    muteBtn.innerHTML = A.muted
+      ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6 H5 L9 3 V13 L5 10 H2 Z" fill="currentColor"/><path d="M11 6 L15 10 M15 6 L11 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Sound off'
+      : speaker + 'Sound on';
+    root.querySelectorAll('.sx-hint .ht').forEach(h => h.textContent = A.muted ? 'Tap to see' : 'Tap to hear');
+  }
+  muteBtn.addEventListener('click', () => {
+    A.muted = !A.muted; try { localStorage.setItem('capc-mute', A.muted ? '1' : '0'); } catch (e) {}
+    if (A.ctx) { const t = A.ctx.currentTime; A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(A.muted ? 0 : 0.55, t, 0.05); }
+    paintMute();
+  });
+  paintMute();
+  /* deep links for review: #suite-2, #graphic */
+  const h = location.hash;
+  if (/suite|graphic|sketch/.test(h)) {
+    if (/graphic/.test(h)) setVariant('graphic');
+    if (/suite-2/.test(h)) setPage(2);
+    const chap = document.querySelector('.chapter[data-screen="suite"]'); if (chap) chap.click();
+  }
+  /* swipe between pages on touch */
+  let x0 = null, y0 = null;
+  root.addEventListener('touchstart', e => { if (e.target.closest('.plan-wrap')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  root.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 50) setPage(dx < 0 ? 2 : 1); }, { passive: true });
+})();
+</script>
+</body>
+</html>
