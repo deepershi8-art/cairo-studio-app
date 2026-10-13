@@ -1714,8 +1714,7 @@
         const comp = A.ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 3.5; comp.knee.value = 12;
         A.master = A.ctx.createGain(); A.master.gain.value = A.muted ? 0 : 0.55;
         A.master.connect(comp); comp.connect(A.ctx.destination);
-        A.R = { tall: roomIR(2.4, 0.022, 5200, 0.55, 0), small: roomIR(0.42, 0.003, 2600, 0.5, 1), dry: roomIR(0.28, 0.004, 3200, 0.35, 0) };
-        A.rev = A.R.tall; A.revS = A.R.dry;
+        A.IR = {}; A.R = {};
         const len = A.ctx.sampleRate * 2; A.nbuf = A.ctx.createBuffer(1, len, A.ctx.sampleRate);
         const d = A.nbuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       }
@@ -1761,102 +1760,79 @@
     const n = noise(t, 0.12), lp = filt('lowpass', 420), g = A.ctx.createGain(); env(g.gain, t, 0.003, 0.05, 0.01, 0.1); chain(n, lp, g); out(g); }
   function chime(t, f, pan, peak) { tone(f, { t: t, a: 0.004, hold: 0.02, r: 1.3, peak: peak || 0.045, pan: pan || 0, wet: 0.45, partials: [[1, 1], [2.76, 0.18], [5.4, 0.05]] }); }
 
-  /* ---------- Realistic sources and rooms (all synthesised) ---------- */
-  /* stereo impulse response: independent L/R noise (decorrelated), exponential decay,
-     high frequencies dying faster than lows, plus side-wall early reflections; boxy=1 adds a
-     dense flutter of close-wall reflections for a small room */
-  function roomIR(rt, pre, lpHz, level, boxy) {
-    const c = A.ctx, sr = c.sampleRate, len = Math.floor(sr * (rt + pre + 0.1)), b = c.createBuffer(2, len, sr);
-    const er = boxy ? [[0.004, 0.5], [0.0072, 0.42], [0.0109, 0.36], [0.0145, 0.3], [0.019, 0.24], [0.024, 0.18]]
-                    : [[0.011, 0.32], [0.017, 0.26], [0.026, 0.2], [0.037, 0.15], [0.049, 0.11]];
-    for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); let y = 0;
-      const p0 = Math.floor(sr * pre);
-      for (let i = p0; i < len; i++) { const t = (i - p0) / sr, e = Math.exp(-6.9 * t / rt);
-        const a = Math.min(0.95, Math.exp(-2 * Math.PI * (lpHz * Math.exp(-t * 2.2 / rt) + 300) / sr) );
-        y = (1 - a) * (Math.random() * 2 - 1) + a * y; d[i] = y * e * 3; }
-      er.forEach(r => { const i = Math.floor(sr * (r[0] * (ch ? 1.13 : 0.91))); if (i < len) d[i] += r[1] * (ch ? 1 : -1); });
-    }
-    const cv = c.createConvolver(); cv.buffer = b; const g = c.createGain(); g.gain.value = level;
-    cv.connect(g); g.connect(A.master); return cv;
+  /* ---------- Real recordings and measured rooms (see CREDITS.md) ----------
+     Instruments: Salamander grand piano, tonejs-instruments (bass, guitars, violin, cello),
+     VSCO-2 CE (snare, cymbals, bass drum), Wikimedia Commons (oud, qanun, voice, restaurant
+     crowd, air-conditioner, trolley wheels, Marshall cab IR). Rooms: Aachen Impulse Response
+     database, binaural/stereo measurements (booth, office, meeting room, lecture hall, Aula Carolina). */
+  const SAMPLES = ['piano_C2', 'piano_E2', 'piano_F2', 'piano_G2', 'piano_B2', 'piano_C3', 'piano_E3', 'piano_G3', 'piano_Gs3', 'piano_C4', 'piano_E4', 'piano_A4',
+    'bass_E1', 'bass_G1', 'bass_As1', 'bass_Cs2', 'bass_E2', 'egtr_E2', 'egtr_A2', 'egtr_C3', 'agtr_E3', 'agtr_G3', 'agtr_B3', 'agtr_D4',
+    'cello_C2', 'cello_G2', 'cello_C3', 'violin_G4', 'violin_A4', 'violin_C5', 'violin_E5', 'snare', 'snare2', 'crash', 'cymbal', 'kick',
+    'oud', 'oud_pluck', 'qanun', 'vocal', 'crowd', 'castors', 'hvac'];
+  const IRS = { booth: 'ir_booth', small: 'ir_small', low: 'ir_low', live: 'ir_live', hall: 'ir_hall', cab: 'ir_cab' };
+  const SMP = {};
+  function loadAudio() {
+    if (A.ready) return A.ready;
+    const c = A.ctx, get = n => fetch('audio/' + n).then(r => { if (!r.ok) throw n; return r.arrayBuffer(); }).then(b => new Promise((ok, no) => c.decodeAudioData(b, ok, no)));
+    const jobs = SAMPLES.map(n => get(n + '.mp3').then(b => { SMP[n] = b; }).catch(() => {}));
+    Object.keys(IRS).forEach(k => jobs.push(get(IRS[k] + '.wav').then(b => { const cv = c.createConvolver(); cv.buffer = b; A.IR[k] = cv;
+      if (k !== 'cab') { const g = c.createGain(); g.gain.value = { booth: 0.8, small: 0.7, low: 0.7, live: 0.6, hall: 0.55 }[k]; cv.connect(g); g.connect(A.master); } }).catch(() => {})));
+    A.ready = Promise.all(jobs).then(() => { A.R = { booth: A.IR.booth, dry: A.IR.booth, small: A.IR.small, low: A.IR.low, live: A.IR.live, hall: A.IR.hall, tall: A.IR.hall }; });
+    return A.ready;
   }
-  function out2(node, o) { /* out() with a named room */
+  function out2(node, o) {
     o = o || {}; const c = A.ctx; let n = node;
     if (o.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = o.pan; n.connect(p); n = p; }
     if (o.into) { n.connect(o.into); return n; }
     if (o.dry !== 0) { const dg = c.createGain(); dg.gain.value = o.dry == null ? 1 : o.dry; n.connect(dg); dg.connect(A.master); }
-    if (o.wet) { const s = c.createGain(); s.gain.value = o.wet; n.connect(s); s.connect(A.R[o.room || 'tall']); }
+    if (o.wet && A.R && A.R[o.room || 'tall']) { const s = c.createGain(); s.gain.value = o.wet; n.connect(s); s.connect(A.R[o.room || 'tall']); }
     return n;
   }
-  /* grand piano: inharmonic partials (stiff strings), paired detuned strings, felt-hammer knock,
-     faster decay for upper partials and a brightness that fades as the note sustains */
-  function piano(f, t, o) {
-    o = o || {}; const c = A.ctx, B = 0.00035 * Math.pow(f / 130, 0.6), dur = o.dur || 2.6, pk = o.peak || 0.08;
-    const g = c.createGain(); g.gain.value = 1; g.gain.setValueAtTime(1, t + dur); g.gain.setTargetAtTime(0.0001, t + dur, 0.18);
-    const lp = filt('lowpass', Math.min(9000, f * 26), 0.5); lp.frequency.setValueAtTime(Math.min(9000, f * 26), t); lp.frequency.setTargetAtTime(Math.min(4000, f * 7), t + 0.02, 0.7);
-    const top = Math.min(12, Math.floor(7000 / f));
-    for (let n = 1; n <= top; n++) { const fn = n * f * Math.sqrt(1 + B * n * n);
-      const amp = 0.4 * pk * Math.pow(n, -1.1) * (0.55 + 0.45 * Math.abs(Math.sin(n * Math.PI * 0.12))), tau = 2.6 * Math.pow(130 / f, 0.35) / (1 + 0.45 * (n - 1));
-      [-1, 1].slice(0, n <= 4 ? 2 : 1).forEach(sgn => { const os = c.createOscillator(); os.frequency.value = fn * (1 + sgn * 0.0006);
-        const pg = c.createGain(); pg.gain.setValueAtTime(0.0001, t); pg.gain.exponentialRampToValueAtTime(amp * (n <= 4 ? 0.6 : 1), t + 0.004);
-        pg.gain.setTargetAtTime(0.0001, t + 0.004, tau); os.connect(pg); pg.connect(lp); os.start(t); os.stop(t + dur + 1.2); }); }
-    const nz = noise(t, 0.06), hb = filt('bandpass', Math.min(3200, f * 6), 0.9), hg = c.createGain(); env(hg.gain, t, 0.001, pk * 0.35, 0.004, 0.035); chain(nz, hb, hg, lp);
-    lp.connect(g); return out2(g, o);
+  /* play one recording; rate re-pitches it, stop/rel shape the end like a released key or damped string */
+  function smp(name, t, o) {
+    o = o || {}; const c = A.ctx, b = SMP[name]; if (!b) return null;
+    const src = c.createBufferSource(); src.buffer = b; src.playbackRate.value = o.rate || 1;
+    if (o.loop) { src.loop = true; if (o.loopStart) { src.loopStart = o.loopStart; src.loopEnd = b.duration; } }
+    const g = c.createGain(); g.gain.setValueAtTime(o.gain == null ? 0.5 : o.gain, t);
+    if (o.stop != null) g.gain.setTargetAtTime(0.0001, t + o.stop, o.rel || 0.1);
+    let n = src; (o.fx || []).forEach(f => { n.connect(f); n = f; }); n.connect(g);
+    src.start(t, o.offset || 0); src.stop(t + (o.stop != null ? o.stop + (o.rel || 0.1) * 6 : (o.dur || b.duration / (o.rate || 1))));
+    return out2(g, o);
   }
+  const NOTES = { C: 0, Cs: 1, D: 2, Ds: 3, E: 4, F: 5, Fs: 6, G: 7, Gs: 8, A: 9, As: 10, B: 11 };
+  function hz(nm) { const m = nm.match(/^([A-G]s?)(\d)$/); return 440 * Math.pow(2, (NOTES[m[1]] + 12 * (+m[2] + 1) - 69) / 12); }
+  function nearest(prefix, f) { let best = null, bd = 1e9; SAMPLES.forEach(n => { if (n.indexOf(prefix + '_') !== 0 || !SMP[n]) return; const d = Math.abs(Math.log2(hz(n.split('_')[1]) / f)); if (d < bd) { bd = d; best = n; } });
+    return best ? [best, f / hz(best.split('_')[1])] : [null, 1]; }
+  function note(prefix, f, t, o) { const nb = nearest(prefix, f); if (!nb[0]) return null; return smp(nb[0], t, Object.assign({}, o, { rate: nb[1] })); }
+  /* grand piano (Salamander): peak ~0.05 in the old units maps to a gentle sample gain */
+  function piano(f, t, o) { o = o || {}; return note('piano', f, t, Object.assign({}, o, { gain: (o.peak || 0.06) * 5, stop: o.dur || 2.6, rel: 0.25 })); }
   function chordP(fs, t, o) { fs.forEach((f, i) => piano(f, t + i * (o.spread || 0.012), Object.assign({}, o, { pan: o.pans ? o.pans[i] : o.pan, peak: (o.peak || 0.06) * (o.weights ? o.weights[i] : 1) }))); }
-  /* plucked string by Karplus-Strong, generated into a buffer: bass guitar, oud, qanun, guitar */
-  const ksCache = {};
-  function ksBuf(f, dur, damp, bright) {
-    const key = [f, dur, damp, bright].join(); if (ksCache[key]) return ksCache[key];
-    const c = A.ctx, sr = c.sampleRate, len = Math.floor(sr * dur), b = c.createBuffer(1, len, sr), d = b.getChannelData(0), N = Math.max(2, Math.round(sr / f));
-    let y = 0; for (let i = 0; i < N; i++) { y = bright * (Math.random() * 2 - 1) + (1 - bright) * y; d[i] = y; }
-    for (let i = N; i < len; i++) d[i] = damp * 0.5 * (d[i - N] + d[i - N - 1 < 0 ? 0 : i - N - 1]);
-    let m = 0; for (let i = 0; i < len; i++) m = Math.max(m, Math.abs(d[i])); for (let i = 0; i < len; i++) d[i] /= m || 1;
-    return (ksCache[key] = b);
-  }
-  function pluck(f, t, o) {
-    o = o || {}; const c = A.ctx, src = c.createBufferSource(); src.buffer = ksBuf(f, o.dur || 2, o.damp || 0.996, o.bright == null ? 0.7 : o.bright);
-    const g = c.createGain(); g.gain.setValueAtTime(o.peak || 0.1, t); if (o.stop) g.gain.setTargetAtTime(0.0001, t + o.stop, 0.08);
-    let n = src; if (o.body) { const bp = filt('peaking', o.body, 1.2); bp.gain.value = 6; n.connect(bp); n = bp; }
-    if (o.drive) { const ws = c.createWaveShaper(), cu = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; cu[i] = Math.tanh(x * o.drive); } ws.curve = cu; n.connect(ws); n = ws;
-      const lp = filt('lowpass', 2600, 0.8); n.connect(lp); n = lp; }
-    n.connect(g); src.start(t); src.stop(t + (o.dur || 2)); return out2(g, o);
-  }
-  /* bowed string: two slightly detuned saws, delayed vibrato, body resonances, bow attack */
-  function bowed(f, t, dur, o) {
-    o = o || {}; const c = A.ctx, g = c.createGain(); env(g.gain, t, o.a || 0.12, o.peak || 0.03, Math.max(0.01, dur - (o.a || 0.12)), o.r || 0.25);
-    const lp = filt('lowpass', Math.min(5200, f * 14), 0.6), b1 = filt('peaking', 480, 1.5), b2 = filt('peaking', 2900, 2); b1.gain.value = 5; b2.gain.value = 4;
-    const vib = c.createOscillator(); vib.frequency.value = 5.4; const vg = c.createGain(); vg.gain.setValueAtTime(0, t); vg.gain.linearRampToValueAtTime(f * 0.004, t + 0.35); vib.connect(vg);
-    [-0.0025, 0.0025].forEach(dt => { const os = c.createOscillator(); os.type = 'sawtooth'; os.frequency.value = f * (1 + dt); vg.connect(os.frequency); os.connect(lp); os.start(t); os.stop(t + dur + (o.r || 0.25) + 0.1); });
-    vib.start(t); vib.stop(t + dur + 0.5); chain(lp, b1, b2, g); out2(g, o); return g;
-  }
-  function snare(t, o) { const c = A.ctx; o = o || {};
-    const n = noise(t, 0.3), bp = filt('bandpass', 1900, 0.7), gg = c.createGain(); env(gg.gain, t, 0.002, 0.16, 0.01, 0.17); chain(n, bp, gg); out2(gg, o);
-    const os = c.createOscillator(); os.frequency.setValueAtTime(205, t); os.frequency.exponentialRampToValueAtTime(170, t + 0.1); const og = c.createGain(); env(og.gain, t, 0.002, 0.12, 0.01, 0.14); os.connect(og); os.start(t); os.stop(t + 0.3); out2(og, o); }
-  /* mains hum (50 Hz and its harmonics) plus fan noise: the sound of machines and plant */
-  function machine(t, dur, o) { const c = A.ctx, bus = c.createGain(); bus.gain.value = 1;
-    [[50, 0.55], [100, 0.5], [150, 0.22], [200, 0.12], [300, 0.05]].forEach(p => { const os = c.createOscillator(); os.frequency.value = p[0]; const og = c.createGain(); og.gain.value = p[1]; os.connect(og); og.connect(bus); os.start(t); os.stop(t + dur + 0.1); });
-    const n = noise(t, dur), bp = filt('bandpass', 700, 0.4), ng = c.createGain(); ng.gain.value = o && o.fan != null ? o.fan : 0.5;
-    const lfo = c.createOscillator(); lfo.frequency.value = 23; const lg = c.createGain(); lg.gain.value = 0.12; lfo.connect(lg); lg.connect(ng.gain); lfo.start(t); lfo.stop(t + dur);
-    chain(n, bp, ng, bus); return bus; }
-  /* crowd murmur: several formant 'voices' wandering in pitch over a soft noise bed */
-  function babble(t, dur) { const c = A.ctx, bus = c.createGain(); bus.gain.value = 1;
-    for (let v = 0; v < 5; v++) { const os = c.createOscillator(); os.type = 'sawtooth'; const f0 = 110 + v * 37;
-      os.frequency.setValueAtTime(f0, t); for (let k = 0.25; k < dur; k += 0.25) os.frequency.linearRampToValueAtTime(f0 * (0.85 + Math.random() * 0.35), t + k);
-      const f1 = filt('bandpass', 500 + v * 120, 5), f2 = filt('bandpass', 1300 + v * 160, 6), vg = c.createGain();
-      const am = c.createOscillator(); am.frequency.value = 3 + v * 0.7; const ag = c.createGain(); ag.gain.value = 0.5; vg.gain.value = 0.5; am.connect(ag); ag.connect(vg.gain);
-      os.connect(f1); os.connect(f2); f1.connect(vg); f2.connect(vg); vg.connect(bus); os.start(t); am.start(t); os.stop(t + dur); am.stop(t + dur); }
-    const n = noise(t, dur), bp = filt('bandpass', 600, 0.8), ng = c.createGain(); ng.gain.value = 0.25; chain(n, bp, ng, bus); return bus; }
-
+  /* plucked strings: bass guitar below 110 Hz, electric guitar through a driven Marshall cab when o.drive, otherwise acoustic guitar */
+  function pluck(f, t, o) { o = o || {}; const c = A.ctx;
+    if (o.drive) { const ws = c.createWaveShaper(), cu = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; cu[i] = Math.tanh(x * o.drive); } ws.curve = cu;
+      const fx = [filt('highpass', 90), ws]; if (A.IR.cab) { const cab = c.createConvolver(); cab.buffer = A.IR.cab.buffer; fx.push(cab); } else fx.push(filt('lowpass', 3000));
+      return note('egtr', f, t, Object.assign({}, o, { gain: (o.peak || 0.07) * 4, fx: fx, stop: o.stop || 1.2, rel: 0.12 })); }
+    if (f < 110) return note('bass', f, t, Object.assign({}, o, { gain: (o.peak || 0.2) * 2.2, stop: o.stop || 1.5, rel: 0.08 }));
+    return note('agtr', f, t, Object.assign({}, o, { gain: (o.peak || 0.07) * 6, stop: o.stop || o.dur || 1.5, rel: 0.2 })); }
+  /* bowed strings: violin from G3 up, cello below */
+  function bowed(f, t, dur, o) { o = o || {}; const g = (o.peak || 0.03) * 16;
+    return note(f >= 190 ? 'violin' : 'cello', f, t, Object.assign({}, o, { gain: g, stop: dur, rel: o.r ? o.r / 3 : 0.12 })); }
+  function snare(t, o) { o = o || {}; return smp(Math.random() < 0.5 ? 'snare' : 'snare2', t, Object.assign({ gain: 0.45 }, o)); }
+  /* machine / plant noise: a real air-conditioner recording plus the 50 Hz mains hum of transformers and pumps */
+  function machine(t, dur, o) { const c = A.ctx, b = c.createGain(); b.gain.value = 1;
+    smp('hvac', t, { gain: 6, loop: true, dur: dur, into: b });
+    [[50, 0.3], [100, 0.36], [150, 0.12]].forEach(p => { const os = c.createOscillator(); os.frequency.value = p[0]; const og = c.createGain(); og.gain.value = p[1]; os.connect(og); og.connect(b); os.start(t); os.stop(t + dur + 0.1); });
+    return b; }
+  /* lobby chatter: a real restaurant crowd recording */
+  function babble(t, dur) { const b = bus(); smp('crowd', t, { gain: 1.2, loop: true, dur: dur, into: b }); return b; }
+  /* a heavy door closing: a muted bass-drum hit, low-passed */
+  function thud(t, peak) { smp('kick', t, { gain: (peak || 0.1) * 4, stop: 0.18, rel: 0.05, fx: [filt('lowpass', 180)] }); }
   function bus() { const g = A.ctx.createGain(); g.gain.value = 1; return g; }
   /* comb filter: the direct sound plus a strong reflection a few ms later (a low ceiling, a near wall) */
   function comb(node, ms, gain) { const c = A.ctx, d = c.createDelay(0.1), gg = c.createGain(), sum = c.createGain(); d.delayTime.value = ms / 1000; gg.gain.value = gain;
     node.connect(sum); node.connect(d); d.connect(gg); gg.connect(sum); return sum; }
-  /* a session in progress: a soft oud and bass figure, returned as a bus so it can be stopped */
-  function session(t, dur, o) { const b = bus(); out2(b, o);
-    const fig = [146.83, 220, 293.66, 220, 174.61, 261.63, 349.23, 261.63];
-    for (let k = 0, i = 0; k < dur; k += 0.26, i++) { pluck(fig[i % 8], t + k, { dur: 0.9, damp: 0.995, bright: 0.6, peak: 0.05, body: 300, pan: 0.15, into: b });
-      if (i % 4 === 0) pluck(fig[i % 8] / 4, t + k, { dur: 1.1, damp: 0.998, bright: 0.4, peak: 0.12, stop: 0.9, pan: 0, into: b }); }
-    return b; }
+  /* a session in progress: the oud recording (re-pitched a semitone up to sit in key), returned as a bus so it can be stopped */
+  function session(t, dur, o) { const b = bus(); out2(b, o); smp('oud', t, { gain: 0.45, rate: 1.0595, loop: true, dur: dur, into: b, pan: 0.1 }); return b; }
   function label(fx, x, y, txt) { const e = E('text', { class: 'lbl', x: x, y: y, 'text-anchor': 'middle', opacity: 0 }, fx); e.textContent = txt; fade(e, 0, 1, 300); return e; }
 
   /* ---------- Animation helpers (requestAnimationFrame, eased) ---------- */
@@ -1922,7 +1898,7 @@
         const lid = E('rect', { class: 'h', x: 41, y: 31, width: 298, height: 0 }, c.fx), cl = E('path', { class: 'f', d: 'M41 112 H339', opacity: 0 }, c.fx); cl.style.strokeWidth = 2.6;
         const lb = label(c.fx, 190, 100, 'low ceiling · small volume');
         await tween(450, k => { lid.setAttribute('height', 81 * k); cl.setAttribute('opacity', k); });
-        S((x, t) => { const b = bus(); out2(comb(b, 2.6, 0.8), { dry: 0.85, wet: 0.7, room: 'small' });
+        S((x, t) => { const b = bus(); const hs = filt('highshelf', 3000); hs.gain.value = 2; b.connect(hs); out2(comb(hs, 4.1, 0.8), { dry: 0.7, wet: 1.0, room: 'low' });
           chordP(N, t, { dur: 0.9, peak: 0.07, pans: pans.map(p => p * 0.25), weights: W, spread: 0.018, into: b }); });
         await Promise.all([0, 110, 220, 330, 440].map(d => ring(g0, 244, 140, 3, 95, 420, 0.9, { delay: d, w: 1.4, ease: lin, op: t => 0.9 * (1 - t) })).concat([
           tween(900, (k, t) => cl.setAttribute('opacity', 0.4 + 0.6 * Math.abs(Math.sin(t * Math.PI * 6))), lin)]));
@@ -1934,7 +1910,7 @@
       const lines = []; for (let i = 0; i < 6; i++) {
         const y = 185 - i * 26; const p = E('path', { class: 'f', d: 'M20 ' + y + ' C 90 ' + (y - 8) + ', 160 ' + (y + 8) + ', 230 ' + y + ' S 360 ' + (y - 6) + ', 420 ' + y, opacity: 0 }, g);
         p.style.strokeWidth = 0.7; lines.push(p); }
-      S((x, t) => { chordP(N, t, { dur: 2.2, peak: 0.07, pans: pans, weights: W, wet: 0.9, room: 'tall', dry: 0.8, spread: 0.018 }); });
+      S((x, t) => { chordP(N, t, { dur: 2.6, peak: 0.12, pans: pans, weights: W, wet: 1.1, room: 'hall', dry: 0.6, spread: 0.018 }); });
       await tween(1900, k => { air.setAttribute('y', 204 - 173 * k); air.setAttribute('height', 173 * k);
         lines.forEach((p, i) => { const on = Math.max(0, Math.min(1, k * 6 - i)); p.setAttribute('opacity', 0.55 * on); p.setAttribute('transform', 'translate(' + (-30 + 30 * k) + ' 0)'); }); });
       await tween(800, k => lines.forEach(p => p.setAttribute('transform', 'translate(' + (8 * k) + ' 0)')), lin);
@@ -1966,8 +1942,8 @@
       const w = E('path', { class: 'f', d: d }, c.fx); w.style.strokeWidth = 2.2;
       const dim = E('path', { class: 'f', d: 'M62 222 H345 M62 216 V228 M345 216 V228', opacity: 0 }, c.fx); dim.style.strokeWidth = 1;
       const tip = E('circle', { class: 'ff', r: 3.2, cx: 62, cy: 150 }, c.fx);
-      S((x, t) => { pluck(41.2, t, { dur: 3.2, damp: 0.9985, bright: 0.45, peak: 0.34, stop: 2.4, pan: -0.55, wet: 0.25, room: 'tall' });
-        tone(41.2, { t: t, a: 0.01, hold: 0.6, r: 1.6, peak: 0.12, pan: -0.55, partials: [[1, 1], [2, 0.5]] }); });
+      S((x, t) => { pluck(41.2, t, { peak: 0.34, stop: 2.6, pan: -0.55, wet: 0.35, room: 'live' });
+ });
       const L = w.getTotalLength(); w.style.strokeDasharray = L; w.style.strokeDashoffset = L;
       await tween(2000, k => { w.style.strokeDashoffset = L * (1 - k); const p = w.getPointAtLength(L * k); tip.setAttribute('cx', p.x); tip.setAttribute('cy', p.y); dim.setAttribute('opacity', Math.max(0, k * 1.6 - 0.6)); }, eio);
       await tween(1000, k => { w.setAttribute('opacity', 1 - k); tip.setAttribute('opacity', 1 - k); dim.setAttribute('opacity', 1 - k * 0.6); }, lin);
@@ -1993,11 +1969,13 @@
         const dot = E('circle', { class: 'ff', cx: xa, cy: cy, r: 3 }, c.fx);
         const halo = E('circle', { class: 'f', cx: xa, cy: cy, r: 6, opacity: 0 }, c.fx); halo.style.strokeWidth = 1;
         await tween(380, k => { band.setAttribute('opacity', 0.14 * k); pu.setAttribute('opacity', 0.85 * k); pd.setAttribute('opacity', 0.85 * k); });
-        S((ctx, t) => { /* the same six-note bass line; small room = some notes boom, some vanish, boxy; large = even */
-          const small = x0 < 100, notes = [41.2, 49, 55, 61.74, 73.42, 82.41], lvl = small ? [0.5, 0.12, 1.6, 0.08, 1.2, 0.3] : [0.9, 0.85, 1, 0.9, 0.95, 0.9];
-          notes.forEach((f, i) => { const tt = t + i * (ms / 1000) / 6;
-            pluck(f, tt, { dur: 1.2, damp: small ? 0.999 : 0.9975, bright: 0.45, peak: 0.2 * lvl[i], stop: small && lvl[i] > 1 ? 0.75 : 0.4, pan: small ? -0.6 : 0.6, wet: small ? 0.5 : 0.3, room: small ? 'small' : 'tall' });
-            tone(f, { t: tt, a: 0.008, hold: small && lvl[i] > 1 ? 0.6 : 0.25, r: small && lvl[i] > 1 ? 0.7 : 0.25, peak: 0.07 * lvl[i], pan: small ? -0.6 : 0.6, partials: [[1, 1], [2, 0.4]] }); });
+        S((ctx, t) => { /* the same six-note bass line on a real bass guitar.
+             small room (about 4.5 x 3.6 x 2.7 m): axial modes at 38, 48, 64 and 76 Hz ring as narrow peaks, while the
+             listening spot sits in nulls near 55 and 82 Hz; large room: modes dense and low, so the line stays even */
+          const small = x0 < 100, notes = [41.2, 49, 55, 61.74, 73.42, 82.41], b = bus();
+          let n = b; if (small) [[38, 9, 10], [48, 12, 8], [64, 9, 9], [76, 8, 9], [55, -18, 6], [82.4, -16, 6]].forEach(m => { const f = filt('peaking', m[0], m[2]); f.gain.value = m[1]; n.connect(f); n = f; });
+          out2(n, { pan: small ? -0.6 : 0.6, dry: 1, wet: small ? 0.6 : 0.35, room: small ? 'small' : 'live' });
+          notes.forEach((f, i) => pluck(f, t + i * (ms / 1000) / 6, { peak: 0.2, stop: 0.42, into: b }));
         });
         await tween(ms, (k, t) => { const x = xa + (xb - xa) * k, v = gfun(x);
           dot.setAttribute('cx', x); halo.setAttribute('cx', x); dot.setAttribute('r', 2.4 + 5 * v);
@@ -2027,16 +2005,16 @@
         glow.remove(); ps.forEach(p => p.remove());
       }
       if (c.want(0)) { c.phase(0);
-        S((ctx, t) => { const n = noise(t, 0.9), hp = filt('highpass', 5200), g = ctx.createGain(); env(g.gain, t, 0.002, 0.13, 0.02, 0.55); chain(n, hp, g);
-          const dl = ctx.createDelay(0.1); dl.delayTime.value = 0.0065; const fb = ctx.createGain(); fb.gain.value = 0.62; const bp = filt('bandpass', 2600, 0.8);
-          g.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(bp); out2(g, { pan: -0.6 }); out2(bp, { dry: 0.6, pan: -0.45 }); snare(t + 0.5, { pan: -0.5, wet: 0.6, room: 'small' }); });
+        S((ctx, t) => { const b = bus(); smp('crash', t, { gain: 0.4, stop: 1.6, rel: 0.25, into: b }); snare(t + 0.5, { into: b });
+          const d1 = ctx.createDelay(0.1); d1.delayTime.value = 0.0058; const fb = ctx.createGain(); fb.gain.value = 0.55; const g1 = ctx.createGain(); g1.gain.value = 0.8;
+          b.connect(d1); d1.connect(fb); fb.connect(d1); d1.connect(g1); const sum = bus(); b.connect(sum); g1.connect(sum);
+          out2(sum, { pan: -0.55, dry: 0.75, wet: 0.9, room: 'low' }); });
         const ceilL = E('path', { class: 'f', d: 'M20 105 H190', opacity: 0 }, c.fx); ceilL.style.strokeWidth = 2.6;
         tween(700, (k, t) => ceilL.setAttribute('opacity', 0.9 * Math.sin(Math.PI * t)), lin).then(() => ceilL.remove());
         await rays([100, 157], [[126, 105, 148, 133], [86, 105, 148, 133], [112, 105, 148, 133]], 240, 0.95, 13); await wait(300); }
       if (c.want(1)) { c.phase(1);
-        S((ctx, t2) => { const n2 = noise(t2, 1.4), hp2 = filt('highpass', 5200), g2 = ctx.createGain(); env(g2.gain, t2, 0.002, 0.11, 0.02, 0.95); chain(n2, hp2, g2);
-          const d2 = ctx.createDelay(0.2); d2.delayTime.value = 0.034; const dg = ctx.createGain(); dg.gain.value = 0.28; g2.connect(d2); d2.connect(dg);
-          out2(g2, { wet: 0.6, pan: 0.6 }); out2(dg, { wet: 0.45, pan: 0.35 }); snare(t2 + 0.5, { pan: 0.5, wet: 0.8, room: 'tall' }); });
+        S((ctx, t2) => { const b = bus(); smp('crash', t2, { gain: 0.4, stop: 2.8, rel: 0.4, into: b }); snare(t2 + 0.5, { into: b });
+          out2(b, { pan: 0.55, dry: 0.6, wet: 1.1, room: 'hall' }); });
         const ceilR = E('path', { class: 'f', d: 'M210 25 H385', opacity: 0 }, c.fx); ceilR.style.strokeWidth = 1.6;
         tween(1200, (k, t) => ceilR.setAttribute('opacity', 0.35 * Math.sin(Math.PI * t)), lin).then(() => ceilR.remove());
         await rays([290, 157], [[318, 25, 338, 133], [262, 25, 338, 133]], 700, 0.55, 9); }
@@ -2050,19 +2028,19 @@
     play: async c => {
       const pan = [-0.75, -0.3, 0.3, 0.75], P = [[90, 176], [155, 186], [234, 186], [298, 176]];
       function play4(T, w, spread) { const o = (x) => Object.assign(x, w);
-        bowed(659.25, T, 1.6, o({ pan: pan[0] * spread, peak: 0.018 }));
-        [392, 523.25, 659.25, 783.99].forEach((f, i) => pluck(f, T + i * 0.11, o({ dur: 1.6, damp: 0.995, bright: 0.8, peak: 0.05, pan: pan[1] * spread, body: 1800 })));
-        [261.63, 196, 261.63].forEach((f, i) => pluck(f, T + 0.05 + i * 0.32, o({ dur: 1.4, damp: 0.994, bright: 0.55, peak: 0.07, pan: pan[2] * spread, body: 300 })));
-        bowed(130.81, T, 1.6, o({ pan: pan[3] * spread, peak: 0.026 })); }
+        bowed(659.25, T, 3.0, o({ pan: pan[0] * spread, peak: 0.016 })); bowed(392, T + 1.5, 1.5, o({ pan: pan[0] * spread, peak: 0.014 }));
+        smp('qanun', T, o({ gain: 0.42, stop: 3.0, rel: 0.25, pan: pan[1] * spread }));
+        smp('oud', T + 0.05, o({ gain: 0.42, rate: 1.0595, stop: 3.0, rel: 0.25, pan: pan[2] * spread }));
+        bowed(130.81, T, 3.0, o({ pan: pan[3] * spread, peak: 0.026 })); }
       if (c.want(0)) { c.phase(0); const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
         const lid = E('path', { class: 'f', d: 'M20 110 H380', opacity: 0 }, c.fx); lid.style.strokeWidth = 2.4; fade(lid, 0, 0.9, 300);
         const lb = label(c.fx, 200, 100, 'cramped · close mics');
-        S((ctx, t) => play4(t, { wet: 0.15, room: 'small', dry: 1 }, 1.2));
+        S((ctx, t) => play4(t, { wet: 0.5, room: 'small', dry: 1 }, 1.25));
         await Promise.all(P.map((p, i) => ring(g, p[0], p[1], 3, 34, 700, 0.9, { delay: i * 60, w: 1.3 })).concat(P.map((p, i) => ring(g, p[0], p[1], 3, 34, 700, 0.9, { delay: 600 + i * 60, w: 1.3 }))));
-        await wait(900); await tween(300, k => { lid.setAttribute('opacity', 0.9 * (1 - k)); lb.setAttribute('opacity', 1 - k); }); [lid, lb, g].forEach(e => e.remove()); }
+        await wait(1700); await tween(300, k => { lid.setAttribute('opacity', 0.9 * (1 - k)); lb.setAttribute('opacity', 1 - k); }); [lid, lb, g].forEach(e => e.remove()); }
       if (c.want(1)) { c.phase(1);
       const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
-      S((ctx, t) => play4(t, { wet: 1.1, room: 'tall', dry: 0.45 }, 1));
+      S((ctx, t) => play4(t, { wet: 1.2, room: 'hall', dry: 0.4 }, 1));
       const rs = []; P.forEach((p, i) => { for (let j = 0; j < 2; j++) rs.push(ring(g, p[0], p[1], 4, 110, 1500, 0.75, { delay: i * 80 + j * 260, w: 1.2 })); });
       const merge = [0, 1, 2].map(j => { const e = E('ellipse', { class: 'f', cx: 197, cy: 190, rx: 70, ry: 30, opacity: 0 }, g); e.style.strokeWidth = 1.6 - j * 0.35; return e; });
       const mg = E('circle', { class: 'ff', cx: 200, cy: 52, r: 16, opacity: 0 }, c.fx);
@@ -2081,14 +2059,13 @@
     play: async c => {
       const src = [120, 160];
       if (c.want(0)) { c.phase(0); const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx); const lb = label(c.fx, 240, 50, 'dead, boxy room');
-        S((ctx, t) => { bowed(440, t, 0.45, { a: 0.05, r: 0.06, peak: 0.03, pan: -0.45, dry: 1, wet: 0.35, room: 'small' }); bowed(659.25, t, 0.45, { a: 0.05, r: 0.06, peak: 0.012, pan: -0.45, wet: 0.35, room: 'small' }); });
+        S((ctx, t) => { bowed(440, t, 0.45, { a: 0.05, r: 0.06, peak: 0.03, pan: -0.45, dry: 1, wet: 0.7, room: 'small' }); });
         await Promise.all([0, 140].map(d => ring(g, src[0], src[1], 2, 90, 600, 0.8, { delay: d, w: 1.2, ease: lin, op: t => 0.8 * Math.pow(1 - t, 3) })));
         await wait(900); await fade(lb, 1, 0, 300); lb.remove(); g.remove(); }
       if (c.want(1)) { c.phase(1);
       const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
       const wash = E('rect', { class: 'ff', x: 31, y: 26, width: 338, height: 178, opacity: 0 }, g);
-      S((ctx, t) => { bowed(440, t, 0.45, { a: 0.05, r: 0.08, peak: 0.03, pan: -0.45, dry: 0.9, wet: 1.4, room: 'tall' });
-        bowed(659.25, t, 0.45, { a: 0.05, r: 0.08, peak: 0.012, pan: -0.45, dry: 0.9, wet: 1.4, room: 'tall' }); });
+      S((ctx, t) => { bowed(440, t, 0.45, { r: 0.3, peak: 0.03, pan: -0.45, dry: 0.8, wet: 1.4, room: 'hall' }); });
       const imgs = [[src[0], src[1], 0.9], [60 - src[0], src[1], 0.5], [740 - src[0], src[1], 0.5], [src[0], 50 - src[1], 0.5], [src[0], 410 - src[1], 0.45], [60 - src[0], 50 - src[1], 0.28], [740 - src[0], 50 - src[1], 0.28]];
       const all = [];
       [0, 380].forEach((dly, w) => imgs.forEach(p => all.push(ring(g, p[0], p[1], 2, 460, 2300, p[2], { delay: dly, w: w ? 0.8 : 1.2, ease: lin, op: t => p[2] * (w ? 0.5 : 1) * Math.exp(-t * 2.6) }))));
@@ -2178,17 +2155,15 @@
     defs: id => '<clipPath id="c-' + id + '-0"><rect x="21" y="138" width="116" height="78"/></clipPath><clipPath id="c-' + id + '-1"><rect x="149" y="138" width="108" height="78"/></clipPath><clipPath id="c-' + id + '-2"><rect x="269" y="138" width="110" height="78"/></clipPath>',
     play: async c => {
       const B = [[20, 137, 118, 80, 79, 178], [148, 137, 110, 80, 204, 177], [268, 137, 112, 80, 322, 178]];
-      function voice(ctx, t, o) { const os = ctx.createOscillator(); os.type = 'sawtooth'; os.frequency.value = 220; const lfo = ctx.createOscillator(); lfo.frequency.value = 5; const lg = ctx.createGain(); lg.gain.value = 2.5; lfo.connect(lg); lg.connect(os.frequency);
-        const f1 = filt('bandpass', 760, 7), f2 = filt('bandpass', 1150, 9), g = ctx.createGain(); env(g.gain, t, 0.09, 0.5, 1.2, 0.35); os.connect(f1); os.connect(f2); f1.connect(g); f2.connect(g);
-        os.start(t); lfo.start(t); os.stop(t + 1.8); lfo.stop(t + 1.8); out2(g, o); }
+      function voice(ctx, t, o) { smp('vocal', t, Object.assign({ gain: 0.5, stop: 1.9, rel: 0.2 }, o)); }
       function amp(t, o, k) { [0, 0.5, 1].forEach(d => [110, 164.81, 220].forEach((f, j) => pluck(f, t + d + j * 0.012, Object.assign({ dur: 0.6, damp: 0.996, bright: 0.8, peak: 0.07 * k, drive: 4, stop: 0.42 }, o)))); }
       function gtr(t, o, k) { [329.63, 392, 493.88, 392].forEach((f, j) => pluck(f, t + j * 0.35, Object.assign({ dur: 1.2, damp: 0.996, bright: 0.75, peak: 0.07 * k, body: 2200 }, o))); }
-      const walls = [...c.svg.querySelectorAll('.base rect.s, .dbl rect.s')];
+      const walls = [...c.svg.querySelectorAll('.base rect.s, .base rect.gl, .base rect[y="137"], .dbl rect[y="137"], .base text, .lab text')];
       async function burst(open) { const gs = [], rs = [];
         B.forEach((b, i) => { const g = open ? E('g', {}, c.fx) : E('g', { 'clip-path': 'url(#c-' + c.id + '-' + i + ')' }, c.fx); gs.push(g);
           [0, 300, 600, 900].forEach(d => rs.push(ring(g, b[4], b[5], 3, open ? 150 : 80, 900, 0.85, { delay: d + i * 40, w: 1.3 }))); });
         await Promise.all(rs); gs.forEach(g => g.remove()); }
-      if (c.want(0)) { c.phase(0); walls.forEach(w => w.style.opacity = 0.12); const lb = label(c.fx, 200, 50, 'no booths: the amp bleeds into the vocal mic');
+      if (c.want(0)) { c.phase(0); walls.forEach(w => { w.style.transition = 'opacity .35s'; w.style.opacity = 0; }); const lb = label(c.fx, 200, 50, 'no booths: the amp bleeds into the vocal mic');
         S((ctx, t) => { voice(ctx, t, { pan: -0.65, wet: 0.12, room: 'dry' }); amp(t, { pan: 0, wet: 0.3, room: 'small' }, 1); gtr(t, { pan: 0.65, wet: 0.2, room: 'small' }, 1);
           /* the vocal mic on the left also hears the amp: duller, later, roomier, smeared to the left */
           const bl = bus(); const lp = filt('lowpass', 1800); bl.connect(lp); out2(comb(lp, 5, 0.7), { pan: -0.65, dry: 0.8, wet: 0.5, room: 'small' }); amp(t + 0.012, { into: bl }, 0.8);
@@ -2392,8 +2367,9 @@
         return tween(ms, (k, t) => { const p = path.getPointAtLength(L * k), q = path.getPointAtLength(Math.min(L, L * k + 1));
           pg.setAttribute('transform', 'translate(' + p.x + ' ' + p.y + ') rotate(' + (Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI + 90) + ')');
           trail.style.strokeDashoffset = L * (1 - k); pg.setAttribute('opacity', Math.min(1, t * 6)); if (onStep) onStep(p); }, eio); }
-      function rumble(ctx, t, dur, pk, p0, p1, lpf) { const n = noise(t, dur), lp = filt('lowpass', lpf, 0.8), g1 = ctx.createGain(), pn = ctx.createStereoPanner(); chain(n, lp, g1, pn); pn.connect(A.master);
-        g1.gain.setValueAtTime(0.0001, t); g1.gain.exponentialRampToValueAtTime(pk, t + 0.4); g1.gain.setValueAtTime(pk, t + dur - 0.4); g1.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      function rumble(ctx, t, dur, pk, p0, p1, lpf) { const g1 = ctx.createGain(), pn = ctx.createStereoPanner(); g1.connect(pn); pn.connect(A.master);
+        smp('castors', t, { gain: 1, loop: true, dur: dur, fx: [filt('lowpass', lpf * 4, 0.7)], into: g1 });
+        g1.gain.setValueAtTime(0.0001, t); g1.gain.exponentialRampToValueAtTime(pk * 4, t + 0.4); g1.gain.setValueAtTime(pk * 4, t + dur - 0.4); g1.gain.exponentialRampToValueAtTime(0.0001, t + dur);
         pn.pan.setValueAtTime(p0, t); pn.pan.linearRampToValueAtTime(p1, t + dur); }
       const desk = [312, 72];
       if (c.want(0)) { c.phase(0);
@@ -2437,7 +2413,7 @@
       if (c.want(0)) { c.phase(0); const lb = label(c.fx, 200, 40, 'net only: no shells, no locks');
         S((ctx, t) => { chord(t + 0.3, { wet: 0.4, room: 'small' });
           /* flanking noise through shared walls: traffic rumble, a neighbour's voices, a lift motor */
-          const n = noise(t, 2.8), lp = filt('lowpass', 300), g1 = ctx.createGain(); env(g1.gain, t, 0.4, 0.07, 1.8, 0.5); chain(n, lp, g1); out2(g1, { pan: -0.5 });
+          const g1 = ctx.createGain(); env(g1.gain, t, 0.4, 0.3, 1.8, 0.5); smp('castors', t, { gain: 1, loop: true, dur: 2.9, fx: [filt('lowpass', 260)], into: g1 }); out2(g1, { pan: -0.5 });
           const bb = babble(t, 2.8), lp2 = filt('lowpass', 700), g2 = ctx.createGain(); env(g2.gain, t, 0.4, 0.05, 1.8, 0.5); chain(bb, lp2, g2); out2(g2, { pan: 0.6 });
           const m = machine(t, 2.8, { fan: 0.2 }), g3 = ctx.createGain(); env(g3.gain, t, 0.4, 0.02, 1.8, 0.5); m.connect(g3); out2(g3, { pan: 0.2 }); });
         const runs = []; for (let i = 0; i < 10; i++) { const side = i % 2, y = 70 + (i * 17) % 90; const p = E('path', { class: 'f', d: 'M0 0 q4 -5 8 0 t8 0', opacity: 0 }, c.fx); p.style.strokeWidth = 1.1;
@@ -2481,7 +2457,9 @@
       setState: i => { const s = art.querySelector('.state'); if (s) s.textContent = sc.state[i]; } };
     let busy = false;
     art.querySelector('.sx-fig').addEventListener('click', async ev => {
-      if (busy) return; busy = true; const o = ev.target.closest('[data-only]'); ctx.only = o ? +o.dataset.only : null; art.classList.add('playing');
+      if (busy) return; busy = true; const hint = art.querySelector('.sx-hint .ht');
+      if (ac() && !A.ready) { hint.textContent = 'Loading sound…'; art.classList.remove('playing'); }
+      if (A.ctx) { try { await loadAudio(); } catch (e) {} hint.textContent = A.muted ? 'Tap to see' : 'Tap to hear'; } const o = ev.target.closest('[data-only]'); ctx.only = o ? +o.dataset.only : null; art.classList.add('playing');
       try { await sc.play(ctx); } catch (e) { console.warn(e); }
       ctx.fx.innerHTML = ''; ctx.phase(-1); art.classList.remove('playing'); busy = false;
     });
