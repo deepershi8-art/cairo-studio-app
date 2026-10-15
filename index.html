@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"><link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cairo Audio Production Centre</title>
 <link href="fonts/fonts.css" rel="stylesheet">
@@ -644,6 +644,8 @@
   .sx-ab { position: absolute; left: 10px; top: 9px; display: inline-flex; gap: 0.3rem; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; z-index: 2; }
   .sx-ab span { padding: 0.28rem 0.6rem; border-radius: 100px; border: 1px solid currentColor; opacity: 0.5; cursor: pointer; transition: all .35s var(--ease); }
   .sx-ab span.on { opacity: 1; background: var(--brass); border-color: var(--brass); color: #fff; transform: scale(1.06); }
+  .sx-data { margin-top: 6px; border-radius: 6px; overflow: hidden; } .sx-data canvas { display: block; width: 100%; aspect-ratio: 8 / 3; }
+  .v-sketch .sx-data { background: #fbf6ec; border: 1px solid rgba(109,83,48,.25); } .v-graphic .sx-data { background: rgba(255,255,255,.03); border: 1px solid rgba(176,141,87,.25); }
   .v-sketch .sx-ab { color: #6d5330; } .v-graphic .sx-ab { color: var(--brass); }
   .sx-cap .hear { margin-top: 0.45rem; font-size: 0.76rem; line-height: 1.45; font-style: italic; color: var(--brass); }
   .sx-cap .state { margin-top: 0.4rem; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brass); }
@@ -1715,6 +1717,7 @@
         A.master = A.ctx.createGain(); A.master.gain.value = A.muted ? 0 : 0.55;
         A.master.connect(comp); comp.connect(A.ctx.destination);
         A.IR = {}; A.R = {};
+        A.clean = A.ctx.createGain(); A.clean.gain.value = A.muted ? 0 : 1; A.clean.connect(A.ctx.destination);
         const len = A.ctx.sampleRate * 2; A.nbuf = A.ctx.createBuffer(1, len, A.ctx.sampleRate);
         const d = A.nbuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       }
@@ -1835,6 +1838,326 @@
   function session(t, dur, o) { const b = bus(); out2(b, o); smp('oud', t, { gain: 0.45, rate: 1.0595, loop: true, dur: dur, into: b, pan: 0.1 }); return b; }
   function label(fx, x, y, txt) { const e = E('text', { class: 'lbl', x: x, y: y, 'text-anchor': 'middle', opacity: 0 }, fx); e.textContent = txt; fade(e, 0, 1, 300); return e; }
 
+  /* ---------- Page 1 size cards: physical room model + offline renders (see briefs/size-cards-implementation.md) ---------- */
+  /* ---- room physics (pure functions; also run in Node for verification) ---- */
+  const PH = (function () {
+    const C0 = 343, FS = 44100, NIR = 1 << 17;
+    const ROOMS = {
+      S: { key: 'S', L: [6.0, 5.0, 2.7], name: 'Constrained room', label: '6.0 × 5.0 × 2.7 m · 30 m² · 81 m³' },
+      F: { key: 'F', L: [10.0, 9.5, 5.2], name: 'Flagship live room', label: '10.0 × 9.5 × 5.2 m · 95 m² · 494 m³' },
+      M: { key: 'M', L: [7.5, 8.0, 3.2], name: '60 m² alternative', label: '7.5 × 8.0 × 3.2 m · 60 m² · 192 m³' } };
+    /* absorption coefficients per band [<250 Hz, mid, >4 kHz]; 'std' is the same treatment assumption in both rooms */
+    const TREAT = {
+      std: { name: 'same studio treatment', walls: [0.18, 0.30, 0.38], floor: [0.08, 0.10, 0.14], ceil: [0.35, 0.55, 0.60] },
+      dry: { name: 'dry: absorbers and curtains deployed', walls: [0.45, 0.80, 0.85], floor: [0.10, 0.15, 0.20], ceil: [0.55, 0.85, 0.90] },
+      live: { name: 'live: reflective panel faces turned out', walls: [0.12, 0.18, 0.20], floor: [0.06, 0.08, 0.10], ceil: [0.18, 0.28, 0.32] } };
+    const vol = r => r.L[0] * r.L[1] * r.L[2];
+    function sabine(r, tr) { const [x, y, z] = r.L, Sw = 2 * (x * z + y * z), Sf = x * y;
+      return [0, 1, 2].map(b => 0.161 * vol(r) / (Sw * tr.walls[b] + Sf * tr.floor[b] + Sf * tr.ceil[b])); }
+    function axial(r, fmax) { return r.L.map(L => { const a = []; for (let n = 1; n * C0 / (2 * L) <= fmax; n++) a.push(+(n * C0 / (2 * L)).toFixed(1)); return a; }); }
+    function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 * 2 - 1; }; }
+    /* image-source method (Allen & Berkley) for a shoebox; frequency-independent reflection factor sqrt(1-alpha_mid) per surface */
+    function ism(r, tr, s, m, tmax) {
+      const L = r.L, Rm = C0 * tmax, bw = Math.sqrt(1 - tr.walls[1]), bf = Math.sqrt(1 - tr.floor[1]), bc = Math.sqrt(1 - tr.ceil[1]), out = [];
+      const N = L.map(l => Math.ceil(Rm / (2 * l)) + 1);
+      for (let nx = -N[0]; nx <= N[0]; nx++) for (let u = 0; u < 2; u++) {
+        const dx = (1 - 2 * u) * s[0] + 2 * nx * L[0] - m[0], ox = Math.abs(nx - u) + Math.abs(nx); if (Math.abs(dx) > Rm) continue;
+        for (let ny = -N[1]; ny <= N[1]; ny++) for (let v = 0; v < 2; v++) {
+          const dy = (1 - 2 * v) * s[1] + 2 * ny * L[1] - m[1], oy = Math.abs(ny - v) + Math.abs(ny); if (dx * dx + dy * dy > Rm * Rm) continue;
+          for (let nz = -N[2]; nz <= N[2]; nz++) for (let w = 0; w < 2; w++) {
+            const dz = (1 - 2 * w) * s[2] + 2 * nz * L[2] - m[2], fz = Math.abs(nz - w), cz = Math.abs(nz);
+            const d = Math.sqrt(dx * dx + dy * dy + dz * dz); if (d > Rm) continue;
+            const ord = ox + oy + fz + cz, g = Math.pow(bw, ox + oy) * Math.pow(bf, fz) * Math.pow(bc, cz) / Math.max(d, 0.25);
+            const kind = ord === 0 ? 'Direct' : ord > 1 ? 'Higher-order (' + ord + ')' : fz ? 'Floor' : cz ? 'Ceiling' : ox ? 'End wall' : 'Side wall';
+            out.push({ t: d / C0, d: d, g: g, ord: ord, kind: kind, v: [dx / d, dy / d, dz / d] }); } } }
+      return out.sort((a, b) => a.t - b.t);
+    }
+    function modeList(r, fmax) { const L = r.L, out = [];
+      for (let a = 0; a * C0 / (2 * L[0]) <= fmax; a++) for (let b = 0; b * C0 / (2 * L[1]) <= fmax; b++) for (let c = 0; c * C0 / (2 * L[2]) <= fmax; c++) {
+        if (!a && !b && !c) continue; const f = C0 / 2 * Math.sqrt((a / L[0]) ** 2 + (b / L[1]) ** 2 + (c / L[2]) ** 2); if (f > fmax) continue;
+        out.push({ n: [a, b, c], f: f, eps: (a ? 2 : 1) * (b ? 2 : 1) * (c ? 2 : 1) }); }
+      return out; }
+    const psi = (md, r, p) => Math.cos(md.n[0] * Math.PI * p[0] / r.L[0]) * Math.cos(md.n[1] * Math.PI * p[1] / r.L[1]) * Math.cos(md.n[2] * Math.PI * p[2] / r.L[2]);
+    function fft(re, im, inv) { const n = re.length;
+      for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+      for (let len = 2; len <= n; len <<= 1) { const ang = 2 * Math.PI / len * (inv ? 1 : -1), wr = Math.cos(ang), wi = Math.sin(ang);
+        for (let i = 0; i < n; i += len) { let cr = 1, ci = 0; for (let k = 0; k < len / 2; k++) { const a = i + k, b = a + len / 2, xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
+          re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi; const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t; } } }
+      if (inv) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; } }
+    /* one source -> one microphone impulse response:
+       early part = image sources up to 100 ms; late part = noise with band-wise exponential decay (Sabine RT per band),
+       level-matched to the image-source energy in 60-100 ms and cross-faded there; below ~130 Hz the response is replaced
+       by a modal sum (all room modes up to 220 Hz, damping from the low-band RT), level-matched at the crossover */
+    function micIR(r, tr, s, m, seed, opt) {
+      opt = opt || {}; const n = NIR, rt = sabine(r, tr), list = ism(r, tr, s, m, 0.1), e = new Float64Array(n);
+      const aim = m[3], pat = p => aim ? 0.5 + 0.5 * (p.v[0] * aim[0] + p.v[1] * aim[1] + p.v[2] * aim[2]) : 1; /* cardioid pickup when the mic has an aim vector */
+      list.forEach(p => { const x = p.t * FS, i = Math.floor(x), f = x - i, gg = p.g * pat(p); if (i + 1 < n) { e[i] += gg * (1 - f); e[i + 1] += gg * f; } });
+      if (opt.directOnly) { const d = new Float64Array(n), p = list[0], x = p.t * FS, i = Math.floor(x), f = x - i; d[i] = p.g * pat(p) * (1 - f); d[i + 1] = p.g * pat(p) * f; return { ir: d, list: list, rt: rt }; }
+      const R = rng(seed), al = Math.exp(-2 * Math.PI * 250 / FS), ah = Math.exp(-2 * Math.PI * 4000 / FS), k = rt.map(x => 6.9 / x), tail = new Float64Array(n);
+      let lo = 0, l4 = 0; for (let i = 0; i < n; i++) { const w = R(), t = i / FS; lo = (1 - al) * w + al * lo; l4 = (1 - ah) * w + ah * l4;
+        tail[i] = lo * Math.exp(-k[0] * t) + (l4 - lo) * Math.exp(-k[1] * t) + (w - l4) * Math.exp(-k[2] * t); }
+      const a0 = Math.floor(0.06 * FS), a1 = Math.floor(0.1 * FS); let Ei = 0, Et = 0; for (let i = a0; i < a1; i++) { Ei += e[i] * e[i]; Et += tail[i] * tail[i]; }
+      const sc = Math.sqrt(Ei / Et), full = new Float64Array(n);
+      for (let i = 0; i < n; i++) { const w = i < a0 ? 0 : i >= a1 ? 1 : (i - a0) / (a1 - a0); full[i] = e[i] * (1 - w) + tail[i] * sc * w; }
+      /* modal low end */
+      const modes = modeList(r, 220), dl = 6.9 / rt[0], md = new Float64Array(n), nmax = Math.min(n, Math.floor(9.2 / dl * FS)), V = vol(r), dec = Math.exp(-dl / FS);
+      modes.forEach(mo => { const A = mo.eps * psi(mo, r, s) * psi(mo, r, m) / V; if (Math.abs(A) < 1e-9) return;
+        const w = 2 * Math.PI * mo.f / FS, cr = Math.cos(w) * dec, ci = Math.sin(w) * dec; let zr = A, zi = 0;
+        for (let i = 0; i < nmax; i++) { md[i] += zr; const t = zr * cr - zi * ci; zi = zr * ci + zi * cr; zr = t; } });
+      const fr = Float64Array.from(full), fi = new Float64Array(n), mr = Float64Array.from(md), mi = new Float64Array(n); fft(fr, fi); fft(mr, mi);
+      const bin = f => Math.round(f * n / FS); let E1 = 0, E2 = 0; for (let b = bin(100); b <= bin(160); b++) { E1 += fr[b] ** 2 + fi[b] ** 2; E2 += mr[b] ** 2 + mi[b] ** 2; }
+      const km = Math.sqrt(E1 / E2);
+      for (let b = 0; b <= n / 2; b++) { const f = b * FS / n, wl = f <= 100 ? 1 : f >= 160 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * (f - 100) / 60);
+        const xr = fr[b] * (1 - wl) + km * mr[b] * wl, xi = fi[b] * (1 - wl) + km * mi[b] * wl; fr[b] = xr; fi[b] = xi; if (b > 0 && b < n / 2) { fr[n - b] = xr; fi[n - b] = -xi; } }
+      fft(fr, fi, true); const ir = new Float64Array(n); const f0 = Math.floor(n * 0.85);
+      for (let i = 0; i < n; i++) ir[i] = fr[i] * (i < f0 ? 1 : 0.5 + 0.5 * Math.cos(Math.PI * (i - f0) / (n - f0)));
+      return { ir: ir, list: list, rt: rt, modes: modes };
+    }
+    function response(ir, f0, f1, npts) { const n = ir.length, re = Float64Array.from(ir), im = new Float64Array(n); fft(re, im);
+      const mag = new Float64Array(n / 2); for (let b = 0; b < n / 2; b++) mag[b] = re[b] ** 2 + im[b] ** 2; const out = [];
+      for (let i = 0; i < npts; i++) { const f = f0 * Math.pow(f1 / f0, i / (npts - 1)), lo = Math.floor(f * Math.pow(2, -1 / 24) * n / FS), hi = Math.ceil(f * Math.pow(2, 1 / 24) * n / FS);
+        let s = 0; for (let b = lo; b <= hi; b++) s += mag[b]; out.push([f, 10 * Math.log10(s / (hi - lo + 1) + 1e-20)]); }
+      return out; }
+    function rt60(ir) { let tot = 0; const n = ir.length, sch = new Float64Array(n); for (let i = n - 1; i >= 0; i--) { tot += ir[i] * ir[i]; sch[i] = tot; }
+      const db = i => 10 * Math.log10(sch[i] / sch[0] + 1e-30); let i5 = 0, i25 = 0; for (let i = 0; i < n; i++) { if (!i5 && db(i) < -5) i5 = i; if (db(i) < -25) { i25 = i; break; } }
+      return { rt: 3 * (i25 - i5) / FS, sch: sch }; }
+    /* ITU-R BS.1770 K-weighting + gated integrated loudness */
+    function biq(x, b, a) { const y = new Float64Array(x.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+      for (let i = 0; i < x.length; i++) { const v = b[0] * x[i] + b[1] * x1 + b[2] * x2 - a[1] * y1 - a[2] * y2; x2 = x1; x1 = x[i]; y2 = y1; y1 = v; y[i] = v; } return y; }
+    function kw(x) { let G = 3.999843853973347, Q = 0.7071752369554196, fc = 1681.974450955533, A = Math.pow(10, G / 40), w = 2 * Math.PI * fc / FS, al = Math.sin(w) / (2 * Q), cs = Math.cos(w);
+      let a0 = (A + 1) - (A - 1) * cs + 2 * Math.sqrt(A) * al;
+      const b1 = [A * ((A + 1) + (A - 1) * cs + 2 * Math.sqrt(A) * al) / a0, -2 * A * ((A - 1) + (A + 1) * cs) / a0, A * ((A + 1) + (A - 1) * cs - 2 * Math.sqrt(A) * al) / a0],
+        a1 = [1, 2 * ((A - 1) - (A + 1) * cs) / a0, ((A + 1) - (A - 1) * cs - 2 * Math.sqrt(A) * al) / a0];
+      Q = 0.5003270373238773; fc = 38.13547087602444; w = 2 * Math.PI * fc / FS; al = Math.sin(w) / (2 * Q); cs = Math.cos(w); a0 = 1 + al;
+      const b2 = [(1 + cs) / 2 / a0, -(1 + cs) / a0, (1 + cs) / 2 / a0], a2 = [1, -2 * cs / a0, (1 - al) / a0];
+      return biq(biq(x, b1, a1), b2, a2); }
+    function lufs(L, R) { const l = kw(L), r = kw(R), B = Math.floor(0.4 * FS), H = Math.floor(0.1 * FS), z = [];
+      for (let i = 0; i + B <= l.length; i += H) { let s = 0; for (let j = i; j < i + B; j++) s += l[j] * l[j] + r[j] * r[j]; z.push(s / B); }
+      const ld = q => -0.691 + 10 * Math.log10(q); let g = z.filter(q => ld(q) > -70); if (!g.length) return -99;
+      const rel = ld(g.reduce((a, b) => a + b, 0) / g.length) - 10; g = g.filter(q => ld(q) > rel); return ld(g.reduce((a, b) => a + b, 0) / g.length); }
+    return { C0, FS, NIR, ROOMS, TREAT, vol, sabine, axial, ism, micIR, response, rt60, lufs, modeList };
+  })();
+
+  /* ---- Page 1 size cards: configuration, offline rendering, data panels (brief: briefs/size-cards-brief.md) ---- */
+  const SIZE = (function () {
+    const { FS, NIR, ROOMS, TREAT } = PH;
+    const rel = (r, p) => [p[0] * r.L[0], p[1] * r.L[1], p[2]];
+    const add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+    /* notes: [sample prefix, frequency or sample name, start s, gain, stop s, release s, rate] */
+    function N(prefix, f, t, gain, stop, rel_, opt) { return Object.assign({ prefix: prefix, f: f, t: t, gain: gain, stop: stop, rel: rel_ || 0.2 }, opt || {}); }
+    /* microphone pairs: ORTF-style near-coincident cardioids, 0.17 m apart, each aimed 55° off the -x axis toward the sources; left mic at -y (listener's left) */
+    const OA = 55 * Math.PI / 180, pair = (c, z) => [[c[0], c[1] - 0.085, z, [-Math.cos(OA), -Math.sin(OA), 0]], [c[0], c[1] + 0.085, z, [-Math.cos(OA), Math.sin(OA), 0]]];
+    const CARDS = {
+      air: { kind: 'early', dur: 5.8, label: 'Piano chord: low strings 0.5 m left of centre, treble 0.5 m right; ORTF cardioid pair 1.5 m away at 1.6 m height',
+        state: i => { const r = ROOMS[i ? 'F' : 'S'], P = [i ? 3.5 : 2.1, r.L[1] / 2, 1.0];
+          return { room: r, tr: TREAT.std, mics: pair([P[0] + 1.5, P[1]], 1.6), src: [
+            { name: 'piano bass strings', pos: add3(P, [0, -0.5, 0]), notes: [N('piano', 65.41, 0.15, 0.32, 4.6, 0.35), N('piano', 98, 0.15, 0.26, 4.6, 0.35), N('piano', 130.81, 0.15, 0.26, 4.6, 0.35)] },
+            { name: 'piano treble strings', pos: add3(P, [0, 0.5, 0]), notes: [N('piano', 164.81, 0.15, 0.24, 4.6, 0.35), N('piano', 196, 0.15, 0.22, 4.6, 0.35), N('piano', 261.63, 0.15, 0.22, 4.6, 0.35), N('piano', 329.63, 0.15, 0.2, 4.6, 0.35)] }] }; } },
+      wave: { kind: 'bass', dur: 5.6, ruler: true, mono: true, mark: [41.2], label: 'Bass cabinet near the left end wall, listening position at the same relative place in each room (one mono measurement point)',
+        state: i => { const r = ROOMS[i ? 'F' : 'S'];
+          return { room: r, tr: TREAT.std, mics: [rel(r, [0.35, 0.42, 1.2])], src: [{ name: 'bass guitar, open low E', pos: rel(r, [0.12, 0.3, 0.4]), notes: [N('bass', 41.2, 0.1, 0.8, 4.6, 0.3)] }] }; } },
+      modes: { kind: 'bass', dur: 5.4, plan: true, mono: true, sweep: [38, 85, 0.3, 4.8], label: 'Test-tone sweep 38–85 Hz, loudspeaker at the left wall, measurement point at the same relative position in each room',
+        state: i => { const r = ROOMS[i ? 'F' : 'S'];
+          return { room: r, tr: TREAT.std, mics: [rel(r, [0.7, 0.42, 1.2])], src: [{ name: 'sine sweep 38→85 Hz', pos: rel(r, [0.08, 0.5, 0.4]), notes: [{ sweep: true, t: 0.3, gain: 0.5 }] }] }; } },
+      height: { kind: 'early', dur: 5.6, focus: 'Ceiling', label: 'Snare at 0.7 m, crash at 1.3 m; overhead pair at 1.9 m, 0.5 m in front of the kit (same heights in both rooms)',
+        state: i => { const r = ROOMS[i ? 'F' : 'S'], P = [r.L[0] * 0.4, r.L[1] / 2, 0.7];
+          return { room: r, tr: TREAT.std, mics: pair([P[0] + 0.5, P[1]], 1.9), src: [
+            { name: 'snare', pos: P, notes: [N('snare', 'snare', 0.15, 0.7, null)] },
+            { name: 'crash cymbal', pos: [P[0], P[1] + 0.5, 1.3], notes: [N('crash', 'crash', 1.3, 0.55, 3.7, 0.5)] }] }; } },
+      blend: { kind: 'section', dur: 5.8, label: 'Violin, qanun, oud, cello left to right as drawn; ORTF cardioid pair in front',
+        state: i => { const r = ROOMS[i ? 'F' : 'S'], sp = i ? 1.7 : 0.85, x = i ? 3.2 : 1.8, yc = r.L[1] / 2, mx = x + (i ? 3.0 : 1.4), mz = i ? 2.6 : 1.8;
+          const ys = [-1.5, -0.5, 0.5, 1.5].map(k => yc + k * sp);
+          return { room: r, tr: TREAT.std, mics: pair([mx, yc], mz), src: [
+            { name: 'violin', short: 'Vn', pos: [x, ys[0], 1.2], notes: [N('violin', 659.25, 0.1, 0.5, 4.9, 0.3)] },
+            { name: 'qanun', short: 'Qa', pos: [x, ys[1], 0.8], notes: [N('raw', 'qanun', 0.8, 0.5, 4.4, 0.3)] },
+            { name: 'oud', short: 'Ou', pos: [x, ys[2], 0.9], notes: [N('raw', 'oud', 1.5, 0.5, 3.9, 0.3, { rate: 1.0595 })] },
+            { name: 'cello', short: 'Vc', pos: [x, ys[3], 0.7], notes: [N('cello', 130.81, 2.2, 0.55, 3.0, 0.3)] }] }; } },
+      bloom: { kind: 'early', dur: 4.2, schroeder: true, label: 'Short piano chord (released after 0.35 s); same piano and microphone arrangement as card 1',
+        state: i => { const r = ROOMS[i ? 'F' : 'S'], P = [i ? 3.5 : 2.1, r.L[1] / 2, 1.0];
+          return { room: r, tr: TREAT.std, mics: pair([P[0] + 1.5, P[1]], 1.6), src: [
+            { name: 'piano', pos: P, notes: [130.81, 164.81, 196, 261.63].map(f => N('piano', f, 0.15, 0.3, 0.35, 0.06)) }] }; } },
+      vary: { kind: 'early', dur: 5.8, same: true, label: 'Same 95 m² room, same positions: two snare hits, then a cello and violin chord',
+        state: i => { const r = ROOMS.F, P = [3.5, r.L[1] / 2, 0.7];
+          return { room: r, tr: i ? TREAT.live : TREAT.dry, mics: pair([P[0] + 2.0, P[1]], 1.8), src: [
+            { name: 'snare', pos: P, notes: [N('snare', 'snare', 0.15, 0.7, null), N('snare', 'snare2', 0.65, 0.7, null)] },
+            { name: 'strings', pos: [P[0], P[1] + 1.0, 1.0], notes: [N('cello', 130.81, 1.5, 0.5, 2.6, 0.35), N('violin', 392, 1.5, 0.35, 2.6, 0.35)] }] }; } },
+      trim: { kind: 'trim', dur: 5.6, label: 'Bass amp left, piano right, ORTF cardioid pair in front; same treatment assumption in both rooms',
+        state: i => { const r = ROOMS[i ? 'F' : 'M'], x = i ? 3.4 : 2.5, yc = r.L[1] / 2, mx = x + (i ? 2.4 : 1.8);
+          return { room: r, tr: TREAT.std, mics: pair([mx, yc], 1.8), src: [
+            { name: 'bass', short: 'B', pos: [x, yc - (i ? 1.6 : 1.1), 0.5], notes: [N('bass', 55, 0.15, 0.6, 0.45, 0.1), N('bass', 55, 0.65, 0.6, 0.3, 0.1), N('bass', 82.41, 0.95, 0.6, 0.9, 0.15), N('bass', 55, 2.35, 0.6, 1.6, 0.25)] },
+            { name: 'piano', short: 'P', pos: [x, yc + (i ? 1.4 : 1.0), 1.0], notes: [220, 277.18, 329.63, 440].map(f => N('piano', f, 0.15, 0.2, 1.8, 0.3)).concat([220, 277.18, 329.63, 440].map(f => N('piano', f, 2.35, 0.2, 2.2, 0.35))) }] }; } } };
+
+    let sweepBuf = null;
+    function sweep(a, b, dur) { if (sweepBuf) return sweepBuf; const n = Math.floor(dur * FS), buf = new AudioBuffer({ length: n, numberOfChannels: 1, sampleRate: FS }), d = buf.getChannelData(0), K = Math.log(b / a);
+      for (let i = 0; i < n; i++) { const t = i / FS, ph = 2 * Math.PI * a * dur / K * (Math.exp(t / dur * K) - 1), env = Math.min(1, t / 0.15, (dur - t) / 0.3); d[i] = 0.5 * Math.sin(ph) * env; }
+      return (sweepBuf = buf); }
+    function bufFor(nt, cfg) { if (nt.sweep) return [sweep(cfg.sweep[0], cfg.sweep[1], cfg.sweep[3] - cfg.sweep[2]), 1];
+      if (nt.prefix === 'raw' || typeof nt.f === 'string') return [SMP[typeof nt.f === 'string' ? nt.f : nt.prefix], nt.rate || 1];
+      const nb = nearest(nt.prefix, nt.f); return [SMP[nb[0]], nb[1]]; }
+    function irBuffer(irs) { const b = new AudioBuffer({ length: NIR, numberOfChannels: 2, sampleRate: FS }); b.copyToChannel(Float32Array.from(irs[0]), 0); b.copyToChannel(Float32Array.from(irs[irs.length > 1 ? 1 : 0]), 1); return b; }
+    async function renderSrc(src, irs, dur, cfg) {
+      const oc = new OfflineAudioContext(2, Math.round(dur * FS), FS), cv = oc.createConvolver(); cv.normalize = false; cv.buffer = irBuffer(irs); cv.connect(oc.destination);
+      src.notes.forEach(nt => { const bb = bufFor(nt, cfg); if (!bb[0]) return; const s = oc.createBufferSource(); s.buffer = bb[0]; s.playbackRate.value = bb[1];
+        const g = oc.createGain(); g.gain.setValueAtTime(nt.gain, nt.t); if (nt.stop != null) g.gain.setTargetAtTime(0, nt.t + nt.stop, nt.rel / 3); s.connect(g); g.connect(cv); s.start(nt.t); });
+      const o = await oc.startRendering(); return [o.getChannelData(0).slice(), o.getChannelData(1).slice()]; }
+    function envDb(x, y, step) { const h = Math.floor(step * FS), out = []; for (let i = 0; i + h <= x.length; i += h) { let s = 0; for (let j = i; j < i + h; j++) s += (x[j] * x[j] + y[j] * y[j]) / 2; out.push(10 * Math.log10(s / h + 1e-12)); } return out; }
+    const cache = {}; const LOG = (window.__sizeLog = window.__sizeLog || {});
+    async function prepare(id) {
+      if (cache[id]) return cache[id]; const cfg = CARDS[id], st = [];
+      for (let i = 0; i < 2; i++) {
+        const S = cfg.state(i), seed = 7 + i * 101, dur = cfg.dur; let L = new Float32Array(Math.round(dur * FS)), R = new Float32Array(L.length);
+        const stems = [], irsMain = [], early = [];
+        for (let k = 0; k < S.src.length; k++) { const src = S.src[k];
+          const irs = S.mics.map((m, mi) => PH.micIR(S.room, S.tr, src.pos, m, seed + k * 13 + mi));
+          if (k === 0) irsMain.push(...irs);
+          const out = await renderSrc(src, irs.map(x => x.ir), dur, cfg); stems.push(out);
+          for (let j = 0; j < L.length; j++) { L[j] += out[0][j]; R[j] += out[1][j]; }
+          early.push(irs[0].list); await new Promise(r => setTimeout(r, 0)); }
+        /* direct-only render of the first source (for the 'Direct signal' lane) */
+        const dIR = S.mics.map(m => PH.micIR(S.room, S.tr, S.src[0].pos, m, 0, { directOnly: true }).ir);
+        const dOut = await renderSrc(S.src[0], dIR, Math.min(dur, 2.5), cfg);
+        const lu = PH.lufs(L, R); st.push({ S: S, L: L, R: R, stems: stems, irs: irsMain, early: early[0], dOut: dOut, lufsRaw: lu, dur: dur }); }
+      /* loudness matching: both states to -20 LUFS (BS.1770 integrated, gated); then one common gain if a peak would pass -3 dBFS */
+      let gains = st.map(s => Math.pow(10, (-20 - s.lufsRaw) / 20)), pk = 0;
+      st.forEach((s, i) => { for (let j = 0; j < s.L.length; j++) pk = Math.max(pk, Math.abs(s.L[j] * gains[i]), Math.abs(s.R[j] * gains[i])); });
+      const head = pk > 0.708 ? 0.708 / pk : 1; gains = gains.map(g => g * head);
+      st.forEach((s, i) => { const g = gains[i], n = s.L.length, f0 = n - Math.floor(0.25 * FS);
+        for (let j = 0; j < n; j++) { const w = j < f0 ? 1 : 0.5 + 0.5 * Math.cos(Math.PI * (j - f0) / (n - f0)); s.L[j] *= g * w; s.R[j] *= g * w; }
+        s.stems.forEach(o => { for (let j = 0; j < n; j++) { o[0][j] *= g; o[1][j] *= g; } }); s.dOut.forEach(ch => { for (let j = 0; j < ch.length; j++) ch[j] *= g; });
+        s.gain = g; s.lufs = PH.lufs(s.L, s.R); s.env = envDb(s.L, s.R, 0.01); s.stemEnv = s.stems.map(o => envDb(o[0], o[1], 0.02));
+        s.pans = s.stems.map(o => { let el = 0, er = 0; for (let j = 0; j < n; j++) { el += o[0][j] * o[0][j]; er += o[1][j] * o[1][j]; } return 10 * Math.log10((er + 1e-12) / (el + 1e-12)); });
+        const ir0 = s.irs[0].ir; s.rtMeas = PH.rt60(ir0); s.resp = PH.response(ir0, 20, 200, 160);
+        s.dILD = s.S.mics.length < 2 ? s.S.src.map(() => 0) : s.S.src.map(src => { const g = s.S.mics.map(m => { const p = PH.ism(s.S.room, s.S.tr, src.pos, m, 0.05)[0], a = m[3]; return p.g * (a ? 0.5 + 0.5 * (p.v[0] * a[0] + p.v[1] * a[1] + p.v[2] * a[2]) : 1); }); return 20 * Math.log10(g[1] / g[0]); });
+        s.modesAx = PH.axial(s.S.room, 120); s.rtModel = s.irs[0].rt;
+        let peak = 0; for (let j = 0; j < n; j++) peak = Math.max(peak, Math.abs(s.L[j]), Math.abs(s.R[j])); s.peak = peak; });
+      const d0 = st.map(s => s.early[0].t), lg = { label: cfg.label, gainDiff_dB: +(20 * Math.log10(gains[1] / gains[0])).toFixed(2) };
+      st.forEach((s, i) => { lg[i ? 'with' : 'without'] = { room: s.S.room.label, treatment: s.S.tr.name, rt60_sabine_model_s: s.rtModel.map(x => +x.toFixed(2)), rt60_T20_from_IR_s: +s.rtMeas.rt.toFixed(2),
+        axial_modes_Hz: s.modesAx, direct_ms: +(d0[i] * 1000).toFixed(2),
+        first_reflections: s.early.slice(1, 7).map(p => ({ kind: p.kind, delay_after_direct_ms: +((p.t - d0[i]) * 1000).toFixed(2), rel_level_dB: +(20 * Math.log10(p.g / s.early[0].g)).toFixed(1) })),
+        lufs_before: +s.lufsRaw.toFixed(2), lufs_after: +s.lufs.toFixed(2), peak_dBFS: +(20 * Math.log10(s.peak)).toFixed(2), stem_pan_dB_RminusL: s.pans.map(x => +x.toFixed(1)),
+        direct_ILD_dB_RminusL: s.S.mics.length < 2 ? null : s.S.src.map(src => { const g = s.S.mics.map(m => { const p = PH.ism(s.S.room, s.S.tr, src.pos, m, 0.05)[0], a = m[3]; return p.g * (a ? 0.5 + 0.5 * (p.v[0] * a[0] + p.v[1] * a[1] + p.v[2] * a[2]) : 1); }); return +(20 * Math.log10(g[1] / g[0])).toFixed(1); }) }; });
+      LOG[id] = lg; return (cache[id] = { cfg: cfg, st: st });
+    }
+
+    /* ---------------- drawing ---------------- */
+    function colors(c) { const cs = getComputedStyle(c.svg.closest('.sx-fig')); return { ink: cs.getPropertyValue('--ink').trim() || '#222', fx: cs.getPropertyValue('--fx').trim() || '#a77' }; }
+    function txt(g, s, x, y, o) { o = o || {}; g.font = (o.b ? '600 ' : '') + (o.size || 12) + 'px system-ui, sans-serif'; g.textAlign = o.a || 'left'; g.fillStyle = o.col; g.globalAlpha = o.al == null ? 1 : o.al; g.fillText(s, x, y); g.globalAlpha = 1; }
+    function frame(g, x, y, w, h, col, title) { g.strokeStyle = col; g.globalAlpha = 0.35; g.lineWidth = 1; g.strokeRect(x, y, w, h); g.globalAlpha = 1; if (title) txt(g, title, x + 6, y + 14, { col: col, b: 1, size: 11 }); }
+    function wave(g, data, i0, i1, x, y, w, h, col, sc, reveal) { g.strokeStyle = col; g.lineWidth = 1; g.beginPath(); const n = i1 - i0, px = Math.max(1, Math.floor(w * (reveal == null ? 1 : reveal)));
+      for (let p = 0; p < px; p++) { let mn = 0, mx = 0; const a = i0 + Math.floor(p * n / w), b = i0 + Math.floor((p + 1) * n / w);
+        for (let j = a; j < b; j++) { const v = data[j] || 0; if (v < mn) mn = v; if (v > mx) mx = v; } g.moveTo(x + p + 0.5, y + h / 2 - mx * sc * h / 2); g.lineTo(x + p + 0.5, y + h / 2 - mn * sc * h / 2 + 0.5); } g.stroke(); }
+    function lanes(g, P, s, t, col, x0, y0, w, cfg) {
+      const W0 = 0.002, W1 = 0.062, d0 = s.early[0].t, on = (s.S.src[0].notes[0].t || 0) + d0, i0 = Math.floor((on - W0) * FS), i1 = Math.floor((on + W1) * FS);
+      const rev = Math.max(0, Math.min(1, t / 1.0)); const dir = s.dOut[0]; let mx = 1e-9; for (let j = i0; j < i1; j++) mx = Math.max(mx, Math.abs(s.L[j] || 0)); const sc = 0.9 / mx;
+      const lh = 62; [['Direct signal', 0], ['Reflected signals', 1], ['Combined signal', 2]].forEach(L => frame(g, x0, y0 + L[1] * (lh + 6), w, lh, col.ink, L[0]));
+      wave(g, dir, i0, i1, x0, y0 + 8, w, lh - 8, col.ink, sc, rev);
+      /* individual reflections: the direct waveform delayed by each calculated path difference and scaled by its calculated level */
+      let refl = s.early.slice(1).sort((a, b) => b.g - a.g).slice(0, 5); const fk = cfg.focus && s.early.find(p => p.kind === cfg.focus); if (fk && refl.indexOf(fk) < 0) refl[4] = fk; refl = refl.sort((a, b) => a.t - b.t); const tx = tt => x0 + (tt + W0) / (W0 + W1) * w;
+      refl.forEach((p, k) => { const dt = p.t - d0, sh = Math.floor(dt * FS), gg = p.g / s.early[0].g, foc = cfg.focus && p.kind === cfg.focus;
+        const y = y0 + lh + 6 + 8, arr = new Float32Array(i1 - i0); for (let j = 0; j < arr.length; j++) arr[j] = (dir[i0 + j - sh] || 0) * gg;
+        if (rev * (W0 + W1) >= dt + W0) { g.globalAlpha = foc ? 1 : 0.55; wave(g, arr, 0, arr.length, x0, y, w, lh - 8, foc ? col.fx : col.ink, sc, rev); g.globalAlpha = 1;
+          g.strokeStyle = foc ? col.fx : col.ink; g.globalAlpha = foc ? 1 : 0.4; g.beginPath(); g.moveTo(tx(dt), y0 + lh + 6); g.lineTo(tx(dt), y0 + 2 * lh + 6); g.stroke(); g.globalAlpha = 1;
+          txt(g, p.kind + ' +' + (dt * 1000).toFixed(1) + ' ms', x0 + w - 4, y0 + lh + 6 + 20 + k * 9.5, { col: foc ? col.fx : col.ink, size: 9, b: foc, a: 'right' }); } });
+      wave(g, s.L, i0, i1, x0, y0 + 2 * (lh + 6) + 8, w, lh - 8, col.fx, sc, rev);
+      const ya = y0 + 3 * (lh + 6) - 2; for (let ms = 0; ms <= 60; ms += 10) { const x = tx(ms / 1000); g.fillStyle = col.ink; g.globalAlpha = 0.5; g.fillRect(x, ya - 4, 1, 4); g.globalAlpha = 1; txt(g, ms + '', x, ya + 9, { col: col.ink, size: 9, a: ms === 60 ? 'right' : 'center' }); } txt(g, 'ms after the direct sound', x0 + w / 2, ya + 19, { col: col.ink, size: 9, a: 'center', al: 0.7 });
+      txt(g, 'first 60 ms of the attack, drawn slowed down', x0 + w, y0 - 4, { col: col.ink, size: 9, a: 'right', al: 0.7 }); }
+    function decay(g, s, t, col, x0, y0, w, h, cfg) { frame(g, x0, y0, w, h, col.ink, 'Decay envelope (rendered output, dB)');
+      const T = s.dur, px = tt => x0 + tt / T * w, py = db => y0 + 20 + (-db / 60) * (h - 34), top = Math.max(...s.env);
+      for (let db = 0; db <= 60; db += 20) { g.fillStyle = col.ink; g.globalAlpha = 0.25; g.fillRect(x0, py(-db), w, 1); g.globalAlpha = 1; txt(g, '−' + db, x0 + w - 3, py(-db) - 2, { col: col.ink, size: 9, a: 'right', al: 0.6 }); }
+      g.strokeStyle = col.fx; g.lineWidth = 1.4; g.beginPath(); s.env.forEach((v, k) => { const tt = k * 0.01; if (tt > t) return; const y = py(Math.max(-60, v - top)); k ? g.lineTo(px(tt), y) : g.moveTo(px(tt), y); }); g.stroke();
+      if (cfg.schroeder) { const sch = s.rtMeas.sch, n = sch.length; g.setLineDash([4, 3]); g.strokeStyle = col.ink; g.beginPath(); const st0 = s.S.src[0].notes[0].t;
+        for (let p = 0; p < w; p++) { const tt = p / w * T - st0; if (tt < 0 || tt * FS >= n) continue; const db = 10 * Math.log10(sch[Math.floor(tt * FS)] / sch[0] + 1e-12); g.lineTo(px(tt + st0), py(Math.max(-60, db))); } g.stroke(); g.setLineDash([]);
+        txt(g, 'dashed: energy decay of the room response · RT60 ≈ ' + s.rtMeas.rt.toFixed(2) + ' s (time to fall 60 dB, not "until silent")', x0 + 6, y0 + h - 6, { col: col.ink, size: 9 }); }
+      for (let k = 0; k <= T; k++) txt(g, k + ' s', px(k), y0 + h + 10, { col: col.ink, size: 9, a: 'center', al: 0.6 });
+      g.fillStyle = col.fx; g.fillRect(px(Math.min(t, T)), y0 + 16, 1.5, h - 18); }
+    function respPlot(g, s, t, col, x0, y0, w, h, cfg, other) { frame(g, x0, y0, w, h, col.ink, 'Illustrative frequency response (room model, at the listening point)');
+      const fx = f => x0 + Math.log(f / 20) / Math.log(10) * w, mx = Math.max(...s.resp.map(p => p[1])), py = db => y0 + 22 + (Math.min(0, Math.max(-36, db - mx)) / -36) * (h - 40);
+      [20, 30, 40, 50, 60, 80, 100, 150, 200].forEach(f => { txt(g, f + '', fx(f), y0 + h + 10, { col: col.ink, size: 9, a: 'center', al: 0.6 }); g.fillStyle = col.ink; g.globalAlpha = 0.15; g.fillRect(fx(f), y0 + 18, 1, h - 20); g.globalAlpha = 1; });
+      txt(g, 'Hz', x0 + w, y0 + h + 10, { col: col.ink, size: 9, a: 'right' });
+      s.modesAx.forEach(ax => ax.forEach(f => { if (f > 200) return; g.fillStyle = col.ink; g.globalAlpha = 0.5; g.fillRect(fx(f), y0 + h - 8, 1, 8); g.globalAlpha = 1; }));
+      txt(g, 'ticks: axial modes', x0 + 6, y0 + h - 10, { col: col.ink, size: 9, al: 0.7 });
+      if (other) { const om = Math.max(...other.resp.map(q => q[1])); g.globalAlpha = 0.3; g.strokeStyle = col.ink; g.beginPath(); other.resp.forEach((p, k) => k ? g.lineTo(fx(p[0]), py(p[1] - om + mx)) : g.moveTo(fx(p[0]), py(p[1] - om + mx))); g.stroke(); g.globalAlpha = 1; }
+      g.strokeStyle = col.fx; g.lineWidth = 1.6; g.beginPath(); s.resp.forEach((p, k) => k ? g.lineTo(fx(p[0]), py(p[1])) : g.moveTo(fx(p[0]), py(p[1]))); g.stroke();
+      const at = f => s.resp.reduce((a, p) => Math.abs(p[0] - f) < Math.abs(a[0] - f) ? p : a)[1];
+      (cfg.mark || []).forEach(f => { g.fillStyle = col.fx; g.fillRect(fx(f), y0 + 18, 1.5, h - 20); g.beginPath(); g.arc(fx(f), py(at(f)), 4, 0, 7); g.fill();
+        txt(g, f + ' Hz: ' + (at(f) - mx).toFixed(0) + ' dB re peak', fx(f) + 6, py(at(f)) - 6, { col: col.fx, size: 10, b: 1 }); });
+      if (cfg.sweep) { const a = cfg.sweep[0], b = cfg.sweep[1], t0 = cfg.sweep[2], t1 = cfg.sweep[3], u = Math.max(0, Math.min(1, (t - t0) / (t1 - t0))), f = a * Math.pow(b / a, u);
+        g.fillStyle = col.fx; g.globalAlpha = 0.18; g.fillRect(fx(a), y0 + 18, fx(b) - fx(a), h - 20); g.globalAlpha = 1;
+        if (t > t0 && t < t1 + 0.2) { g.fillRect(fx(f), y0 + 18, 1.5, h - 20); g.beginPath(); g.arc(fx(f), py(at(f)), 4.5, 0, 7); g.fill(); txt(g, f.toFixed(0) + ' Hz now', fx(f) + 6, y0 + 32, { col: col.fx, size: 10, b: 1 }); } }
+      if (other) txt(g, 'faint line: the other room', x0 + w - 6, y0 + h - 10, { col: col.ink, size: 9, a: 'right', al: 0.6 }); }
+    function plan(g, r, srcs, mics, col, x0, y0, ppm, o) { o = o || {}; const w = r.L[1] * ppm, h = r.L[0] * ppm;
+      g.strokeStyle = col.ink; g.lineWidth = o.active ? 2 : 1; g.globalAlpha = o.active ? 1 : 0.45; g.strokeRect(x0, y0, w, h);
+      /* drawing convention: x (towards the microphones) to the right... rotate so left/right on screen = listener left/right: screen x = y_room, screen y = x_room */
+      g.globalAlpha = 1; txt(g, r.L[1].toFixed(1) + ' m wide × ' + r.L[0].toFixed(1) + ' m deep', x0 + w / 2, y0 - 4, { col: col.ink, size: 9, a: 'center', al: o.active ? 1 : 0.5 });
+      (o.extra || []).forEach(p => { g.setLineDash([2, 2]); g.strokeStyle = col.ink; g.globalAlpha = 0.6; g.beginPath(); g.arc(x0 + p[0] * ppm, y0 + p[1] * ppm, 5, 0, 7); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; });
+      srcs.forEach(sv => { const X = x0 + sv.pos[1] * ppm, Y = y0 + sv.pos[0] * ppm; g.fillStyle = col.fx; g.globalAlpha = o.active ? 1 : 0.5; g.beginPath(); g.arc(X, Y, 4.5, 0, 7); g.fill(); g.globalAlpha = 1; if (sv.short) txt(g, sv.short, X, Y - 7, { col: col.ink, size: 9, a: 'center' }); });
+      mics.forEach(m => { const X = x0 + m[1] * ppm, Y = y0 + m[0] * ppm; g.strokeStyle = col.ink; g.globalAlpha = o.active ? 1 : 0.5; g.beginPath(); g.moveTo(X, Y - 4); g.lineTo(X - 3.5, Y + 3); g.lineTo(X + 3.5, Y + 3); g.closePath(); g.stroke(); g.globalAlpha = 1; });
+      return [w, h]; }
+    function draw(c, P, i, t) {
+      const cv = c.cv, g = cv.getContext('2d'), W = cv.width, H = cv.height, col = colors(c), cfg = P.cfg, s = P.st[i]; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.scale(W / 800, W / 800);
+      txt(g, (i ? 'WITH · ' : 'WITHOUT · ') + s.S.room.name, 10, 16, { col: col.fx, b: 1, size: 13 });
+      txt(g, s.S.room.label + ' · ' + s.S.tr.name + ' · RT60 (Sabine, mid) ' + s.rtModel[1].toFixed(2) + ' s', 790, 16, { col: col.ink, size: 11, a: 'right' });
+      txt(g, 'Synthetic model from the stated geometry (image sources + modal low end + statistical tail) — illustrative, not a measurement of the future studio', 10, 31, { col: col.ink, size: 9, al: 0.65 });
+      const k = cfg.kind;
+      if (k === 'early') { lanes(g, P, s, t, col, 10, 50, 380, cfg); decay(g, s, t, col, 405, 50, 385, 118, cfg); respPlot(g, s, t, col, 405, 186, 385, 88, cfg, P.st[1 - i]); }
+      else if (k === 'bass') { const r = s.S.room;
+        if (cfg.ruler) { const ppm = 24, x0 = 18, y0 = 62; g.strokeStyle = col.ink; g.lineWidth = 1.5; g.strokeRect(x0, y0, r.L[0] * ppm, r.L[2] * ppm); txt(g, 'room length ' + r.L[0].toFixed(1) + ' m · height ' + r.L[2].toFixed(1) + ' m (section, to scale)', x0, y0 - 6, { col: col.ink, size: 10 });
+          const yr = y0 + r.L[2] * ppm + 26, lam = 343 / 41.2; g.strokeStyle = col.fx; g.beginPath(); for (let p = 0; p <= lam * ppm; p++) { const y = yr - 9 * Math.sin(2 * Math.PI * p / (lam * ppm)); p ? g.lineTo(x0 + p, y) : g.moveTo(x0, y); } g.stroke();
+          g.fillStyle = col.ink; g.fillRect(x0, yr + 14, lam * ppm, 1); g.fillRect(x0, yr + 10, 1, 8); g.fillRect(x0 + lam * ppm, yr + 10, 1, 8); txt(g, 'one wavelength of 41.2 Hz = 8.3 m (same scale)', x0, yr + 28, { col: col.ink, size: 10 }); }
+        if (cfg.plan) { const ppm = 17, x0 = 30, y0 = 58; plan(g, r, s.S.src, s.S.mics, col, x0, y0, ppm, { active: true }); txt(g, '● loudspeaker  ▵ measurement point (top-down, to scale)', 30, y0 + r.L[0] * ppm + 14, { col: col.ink, size: 9 }); }
+        const ax = s.modesAx; txt(g, 'Axial modes (Hz) — length: ' + ax[0].slice(0, 5).join(', '), 18, 266, { col: col.ink, size: 10 }); txt(g, 'width: ' + ax[1].slice(0, 5).join(', ') + ' · height: ' + ax[2].slice(0, 4).join(', '), 18, 280, { col: col.ink, size: 10 });
+        respPlot(g, s, t, col, 405, 50, 385, 200, cfg, P.st[1 - i]); }
+      else if (k === 'section') { const r = s.S.room, ppm = 22; const sz = plan(g, r, s.S.src, s.S.mics, col, 20, 58, ppm, { active: true });
+        txt(g, 'top-down, to scale · ● musicians  ▵ microphones', 20, 58 + sz[1] + 14, { col: col.ink, size: 9 });
+        const x0 = 405, y0 = 50, w = 385; frame(g, x0, y0, w, 44, col.ink, 'Stereo stage (direct-sound level difference R−L at the mic pair)'); g.fillStyle = col.ink; g.fillRect(x0 + 20, y0 + 30, w - 40, 1); txt(g, 'L', x0 + 12, y0 + 34, { col: col.ink, size: 10 }); txt(g, 'R', x0 + w - 12, y0 + 34, { col: col.ink, size: 10, a: 'right' });
+        s.dILD.forEach((pd, q) => { const X = x0 + w / 2 + Math.max(-1, Math.min(1, pd / 12)) * (w / 2 - 22); g.fillStyle = col.fx; g.beginPath(); g.arc(X, y0 + 30, 4.5, 0, 7); g.fill(); txt(g, s.S.src[q].short, X, y0 + 22, { col: col.ink, size: 9, a: 'center' }); });
+        const T = s.dur; s.stemEnv.forEach((e, q) => { const y = y0 + 54 + q * 40, top = Math.max(...s.env); frame(g, x0, y, w, 34, col.ink); txt(g, s.S.src[q].name + ' · first reflection +' + ((s.stemFirst ? s.stemFirst[q] : 0)).toFixed(1) + ' ms', x0 + 6, y + 12, { col: col.ink, size: 9 });
+          g.strokeStyle = col.fx; g.beginPath(); e.forEach((v, kk) => { const tt = kk * 0.02; if (tt > t) return; const yy = y + 32 - Math.max(0, (v - top + 50) / 50) * 26; kk ? g.lineTo(x0 + tt / T * w, yy) : g.moveTo(x0, yy); }); g.stroke(); });
+        g.fillStyle = col.fx; g.fillRect(x0 + Math.min(t, T) / T * w, y0 + 54, 1.5, 4 * 40 - 6); }
+      else if (k === 'trim') { const ppm = 15; P.st.forEach((q, j) => { const x0 = j ? 165 : 18, y0 = 66, act = j === i; const ex = j ? [[q.S.src[0].pos[1] - 2.2, q.S.src[0].pos[0] + 2.2], [q.S.src[1].pos[1] + 1.8, q.S.src[1].pos[0] + 2.6], [q.S.room.L[1] * 0.5, q.S.room.L[0] * 0.8]] : [];
+          plan(g, q.S.room, q.S.src, q.S.mics, col, x0, y0, ppm, { active: act, extra: ex });
+          const ys = y0 + q.S.room.L[0] * ppm + 14, f1 = q.early.find(p => p.ord === 1);
+          txt(g, (j ? 'WITH 95 m²' : 'WITHOUT 60 m²'), x0, ys, { col: act ? col.fx : col.ink, size: 10, b: act });
+          ['L', 'W', 'H'].forEach((ax, a) => txt(g, 'axial ' + ax + ' < 80 Hz: ' + q.modesAx[a].filter(f => f < 80).join(' / '), x0, ys + 11 + a * 10, { col: col.ink, size: 8 }));
+          txt(g, '1st refl. +' + ((f1.t - q.early[0].t) * 1000).toFixed(1) + ' ms (' + f1.kind.toLowerCase() + ')', x0, ys + 41, { col: col.ink, size: 8 }); txt(g, 'RT60 (mid) ' + q.rtModel[1].toFixed(2) + ' s', x0, ys + 51, { col: col.ink, size: 8 });
+          if (j) txt(g, 'dashed: further positions that fit', x0, ys + 61, { col: col.ink, size: 8, al: 0.7 }); });
+        decay(g, s, t, col, 405, 50, 385, 118, cfg); respPlot(g, s, t, col, 405, 186, 385, 88, cfg, P.st[1 - i]); }
+    }
+    function idle(c, msg) { const cv = c.cv, g = cv.getContext('2d'), col = colors(c); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height); g.scale(cv.width / 800, cv.width / 800);
+      txt(g, msg || 'Tap the drawing: the card renders both rooms from their geometry, then plays WITHOUT and WITH.', 400, 140, { col: col.ink, size: 13, a: 'center', al: 0.7 }); }
+    async function play(c, id, hooks) {
+      idle(c, 'Rendering both rooms from their geometry…'); await new Promise(r => setTimeout(r, 30));
+      const P = await prepare(id);
+      P.st.forEach(s => { if (!s.stemFirst) s.stemFirst = s.stems.map(() => { const f = s.early.find(p => p.ord === 1); return f ? (f.t - s.early[0].t) * 1000 : 0; }); });
+      if (P.cfg.kind === 'section') P.st.forEach((s, i) => { const S = P.cfg.state(i); s.stemFirst = S.src.map(src => { const l = PH.ism(S.room, S.tr, src.pos, S.mics[0], 0.05); return (l[1].t - l[0].t) * 1000; }); });
+      for (let i = 0; i < 2; i++) { if (!c.want(i)) continue; c.phase(i); if (hooks && hooks.state) hooks.state(c, i);
+        const s = P.st[i], ac_ = A.ctx, b = ac_.createBuffer(2, s.L.length, FS); b.copyToChannel(s.L, 0); b.copyToChannel(s.R, 1);
+        const src = ac_.createBufferSource(); src.buffer = b; src.connect(A.clean); const t0 = ac_.currentTime + 0.06; src.start(t0); SIZE.current = window.SIZEcur = src;
+        await new Promise(res => { src.onended = res; (function f() { const t = ac_.currentTime - t0; draw(c, P, i, Math.max(0, t)); if (t < s.dur + 0.05) requestAnimationFrame(f); })(); });
+        draw(c, P, i, s.dur); const li = i; c.redraw = () => draw(c, P, li, P.st[li].dur); SIZE.current = null; await wait(300); }
+      if (hooks && hooks.reset) hooks.reset(c);
+    }
+    return { CARDS, prepare, play, idle, draw };
+  })();
+
+  const SIZEHOOK = {
+    air: { state: (c, i) => { const ts = c.lab.querySelectorAll('text'); ts[0].textContent = i ? '5.2 m' : '2.7 m'; ts[1].textContent = i ? '10.0 × 9.5 m · 494 m³' : '6.0 × 5.0 m · 81 m³';
+        c.fx.innerHTML = ''; if (!i) { E('rect', { class: 'h', x: 41, y: 31, width: 298, height: 83 }, c.fx); const l = E('path', { class: 'f', d: 'M41 114 H339' }, c.fx); l.style.strokeWidth = 2.4; } },
+      reset: c => { const ts = c.lab.querySelectorAll('text'); ts[0].textContent = '5 m+'; ts[1].textContent = '90–100 m² net'; } },
+    vary: (function () {
+      function turn(c, live) { const Pn = []; for (let i = 0; i < 6; i++) Pn.push(c.k('p' + i)); const cur = c.k('curtain');
+        Pn.forEach((p, i) => p.setAttribute('transform', 'rotate(' + (live ? 0 : 180) + ' ' + (55 + i * 50) + ' 62)'));
+        const s = live ? 0.14 : 1; cur.setAttribute('transform', 'translate(0 46) scale(1 ' + s + ') translate(0 -46)'); c.setState(live ? 1 : 0); }
+      return { state: (c, i) => turn(c, i === 1), reset: c => turn(c, false) }; })(),
+    trim: (function () {
+      function setSize(c, s, a) { const R = c.k('room'), area = c.lab.querySelector('[data-k="area"]'), clip = c.svg.querySelector('#c-' + c.id + ' rect');
+        const w = 320 * s, h = 180 * s, x = 200 - w / 2, y = 118 - h / 2;
+        R.querySelectorAll('rect').forEach(r => { r.setAttribute('x', x); r.setAttribute('y', y); r.setAttribute('width', w); r.setAttribute('height', h); });
+        clip.setAttribute('x', x + 1); clip.setAttribute('y', y + 1); clip.setAttribute('width', w - 2); clip.setAttribute('height', h - 2);
+        area.setAttribute('x', x + w - 10); area.setAttribute('y', y + h - 8); area.textContent = a; }
+      return { state: (c, i) => i ? setSize(c, 1, '95 m²') : setSize(c, Math.sqrt(60 / 95), '60 m²'), reset: c => setSize(c, 1, '95 m²') }; })()
+  };
+
   /* ---------- Animation helpers (requestAnimationFrame, eased) ---------- */
   const eio = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const eo = t => 1 - Math.pow(1 - t, 3);
@@ -1881,7 +2204,7 @@
   const scenes = [];
   function add(page, o) { o.page = page; scenes.push(o); }
   /* PAGE 1 · Volume of air ------------------------------------------- */
-  add(1, { id: 'air', hear: 'You hear, without: the piano chord under a low ceiling: squeezed into the middle, boxy and short, with a hard ceiling reflection that colours the tone. With: the same chord in the tall room, low notes left and high notes right, opening into a natural bloom across both speakers.', title: 'A volume of air',
+  add(1, { id: 'air', hear: 'You hear, without: one piano chord (low notes left, high notes right) in a 6.0 × 5.0 × 2.7 m room: the floor and the 2.7 m ceiling return within 5 ms, so the chord sounds close, boxed and short (about 0.35 s decay). With: the same chord, same level, in a 10.0 × 9.5 × 5.2 m room: the first reflections arrive later and spread wider, and the decay opens out to about 0.65 s.', title: 'A volume of air',
     cap: 'Around 90–100 m² of floor and 5 m or more of clear height. Tap to fill the live room and feel the size of it.',
     svg: () => room(40, 30, 300, 175) + floor(30, 350, 205) +
       '<path class="l t" d="M352 30 H368 M352 205 H368 M360 36 V199 M356 42 L360 34 L364 42 M356 193 L360 201 L364 193"/>' +
@@ -1892,102 +2215,29 @@
     lab: () => '<text class="lbl" x="376" y="122" transform="rotate(-90 376 122)" text-anchor="middle">5 m+</text><text class="lbl" x="190" y="232" text-anchor="middle">90–100 m² net</text>',
     defs: id => '<linearGradient id="g-' + id + '" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#b08d57" stop-opacity="0.34"/><stop offset="1" stop-color="#b08d57" stop-opacity="0.04"/></linearGradient><clipPath id="c-' + id + '"><rect x="41" y="31" width="298" height="173"/></clipPath>',
     play: async c => {
-      const pans = [-0.6, -0.4, -0.15, 0.1, 0.3, 0.55], N = [65.41, 98, 130.81, 164.81, 196, 261.63], W = [1, 0.8, 0.8, 0.7, 0.65, 0.6];
-      if (c.want(0)) { c.phase(0);
-        const g0 = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
-        const lid = E('rect', { class: 'h', x: 41, y: 31, width: 298, height: 0 }, c.fx), cl = E('path', { class: 'f', d: 'M41 112 H339', opacity: 0 }, c.fx); cl.style.strokeWidth = 2.6;
-        const lb = label(c.fx, 190, 100, 'low ceiling · small volume');
-        await tween(450, k => { lid.setAttribute('height', 81 * k); cl.setAttribute('opacity', k); });
-        S((x, t) => { const b = bus(); const hs = filt('highshelf', 3000); hs.gain.value = 2; b.connect(hs); out2(comb(hs, 4.1, 0.8), { dry: 0.7, wet: 1.0, room: 'low' });
-          chordP(N, t, { dur: 0.9, peak: 0.07, pans: pans.map(p => p * 0.25), weights: W, spread: 0.018, into: b }); });
-        await Promise.all([0, 110, 220, 330, 440].map(d => ring(g0, 244, 140, 3, 95, 420, 0.9, { delay: d, w: 1.4, ease: lin, op: t => 0.9 * (1 - t) })).concat([
-          tween(900, (k, t) => cl.setAttribute('opacity', 0.4 + 0.6 * Math.abs(Math.sin(t * Math.PI * 6))), lin)]));
-        await wait(500); await tween(400, k => { lid.setAttribute('height', 81 * (1 - k)); cl.setAttribute('opacity', 1 - k); lb.setAttribute('opacity', 1 - k); });
-        [lid, cl, lb, g0].forEach(e => e.remove()); }
-      if (c.want(1)) { c.phase(1);
-      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
-      const air = E('rect', { x: 41, y: 204, width: 298, height: 0, fill: 'url(#g-' + c.id + ')' }, g);
-      const lines = []; for (let i = 0; i < 6; i++) {
-        const y = 185 - i * 26; const p = E('path', { class: 'f', d: 'M20 ' + y + ' C 90 ' + (y - 8) + ', 160 ' + (y + 8) + ', 230 ' + y + ' S 360 ' + (y - 6) + ', 420 ' + y, opacity: 0 }, g);
-        p.style.strokeWidth = 0.7; lines.push(p); }
-      S((x, t) => { chordP(N, t, { dur: 2.6, peak: 0.12, pans: pans, weights: W, wet: 1.1, room: 'hall', dry: 0.6, spread: 0.018 }); });
-      await tween(1900, k => { air.setAttribute('y', 204 - 173 * k); air.setAttribute('height', 173 * k);
-        lines.forEach((p, i) => { const on = Math.max(0, Math.min(1, k * 6 - i)); p.setAttribute('opacity', 0.55 * on); p.setAttribute('transform', 'translate(' + (-30 + 30 * k) + ' 0)'); }); });
-      await tween(800, k => lines.forEach(p => p.setAttribute('transform', 'translate(' + (8 * k) + ' 0)')), lin);
-      await tween(1100, k => { g.setAttribute('opacity', 1 - k); }); }
+      await SIZE.play(c, 'air', SIZEHOOK.air);
     } });
 
-  add(1, { id: 'wave', hear: 'You hear, without: the bass guitar’s low E (left) in a room too short for it: the fundamental almost cancels and an upper boom takes over. With: the same low E in the large room, full and even.', title: 'Bass notes are physically long',
+  add(1, { id: 'wave', hear: 'You hear, without: one open low E on a bass guitar (41.2 Hz, centred), in a 6.0 × 5.0 × 2.7 m room. At this position the fundamental is weak and the note sounds thin and hollow. With: the same note at the same level in a 10.0 × 9.5 × 5.2 m room, where the 8.3 m wave fits and the fundamental is much fuller.', title: 'Bass notes are physically long',
     cap: 'The lowest note on a standard bass guitar has a wavelength of more than eight metres. Tap to hear it and see it drawn to scale beside a person.',
     svg: () => '<path class="l" d="M10 205 H392"/><rect class="h" x="10" y="205" width="382" height="9"/>' +
       '<rect class="l w" x="18" y="128" width="36" height="77" rx="2"/><circle class="l" cx="36" cy="150" r="9"/><circle class="l" cx="36" cy="182" r="13"/><circle class="l t" cx="36" cy="182" r="5"/>' +
       '<path class="l d" d="M62 150 H345"/>' + person(372, 205, 64),
     lab: () => '<text class="lbl" x="203" y="236" text-anchor="middle">more than 8 m</text>',
     play: async c => {
-      if (c.want(0)) { c.phase(0);
-        const wall = E('rect', { class: 'ff', x: 196, y: 60, width: 6, height: 145, opacity: 0 }, c.fx), lb = label(c.fx, 199, 52, 'wall too close');
-        await fade(wall, 0, 0.8, 300);
-        S((x, t) => { const b = bus(), n = filt('peaking', 41.2, 6), m = filt('peaking', 82.4, 4); n.gain.value = -22; m.gain.value = 10; b.connect(n); n.connect(m); out2(m, { dry: 1, wet: 0.5, room: 'small' });
-          pluck(41.2, t, { dur: 3, damp: 0.9985, bright: 0.45, peak: 0.34, stop: 2.0, pan: -0.55, into: b }); });
-        let fw = '', bw = ''; for (let x = 62; x <= 196; x += 2) { fw += (x === 62 ? 'M' : 'L') + x + ' ' + (150 - 36 * Math.sin(2 * Math.PI * (x - 62) / 283)).toFixed(1) + ' ';
-          bw += (x === 62 ? 'M' : 'L') + x + ' ' + (150 + 36 * Math.sin(2 * Math.PI * (x - 62) / 283)).toFixed(1) + ' '; }
-        const a = E('path', { class: 'f', d: fw }, c.fx), b2 = E('path', { class: 'f', d: bw }, c.fx); a.style.strokeWidth = 2; b2.style.strokeWidth = 1.4; b2.style.opacity = 0;
-        await draw(a, 800); b2.style.opacity = 1; await draw(b2, 600);
-        const flat = E('path', { class: 'f', d: 'M62 150 H196', opacity: 0 }, c.fx); flat.style.strokeWidth = 2.4;
-        await tween(700, k => { a.setAttribute('opacity', 1 - k); b2.setAttribute('opacity', 1 - k); flat.setAttribute('opacity', k); });
-        await wait(500); await tween(400, k => [wall, lb, flat].forEach(e => e.setAttribute('opacity', 1 - k)));
-        [wall, lb, flat, a, b2].forEach(e => e.remove()); }
-      if (c.want(1)) { c.phase(1);
-      let d = ''; for (let x = 62; x <= 345; x += 2) d += (x === 62 ? 'M' : 'L') + x + ' ' + (150 - 36 * Math.sin(2 * Math.PI * (x - 62) / 283)).toFixed(1) + ' ';
-      const w = E('path', { class: 'f', d: d }, c.fx); w.style.strokeWidth = 2.2;
-      const dim = E('path', { class: 'f', d: 'M62 222 H345 M62 216 V228 M345 216 V228', opacity: 0 }, c.fx); dim.style.strokeWidth = 1;
-      const tip = E('circle', { class: 'ff', r: 3.2, cx: 62, cy: 150 }, c.fx);
-      S((x, t) => { pluck(41.2, t, { peak: 0.34, stop: 2.6, pan: -0.55, wet: 0.35, room: 'live' });
- });
-      const L = w.getTotalLength(); w.style.strokeDasharray = L; w.style.strokeDashoffset = L;
-      await tween(2000, k => { w.style.strokeDashoffset = L * (1 - k); const p = w.getPointAtLength(L * k); tip.setAttribute('cx', p.x); tip.setAttribute('cy', p.y); dim.setAttribute('opacity', Math.max(0, k * 1.6 - 0.6)); }, eio);
-      await tween(1000, k => { w.setAttribute('opacity', 1 - k); tip.setAttribute('opacity', 1 - k); dim.setAttribute('opacity', 1 - k * 0.6); }, lin);
-      await fade(dim, 0.4, 0, 500); }
+      await SIZE.play(c, 'wave', null);
     } });
 
-  add(1, { id: 'modes', hear: 'You hear, without: the bass line in the small room (left speaker): some notes boom, others nearly vanish. With: the same line in the large room (right speaker), every note even.', title: 'Too small, and the bass booms',
+  add(1, { id: 'modes', hear: 'You hear, without: a slow sine sweep from 38 to 85 Hz (centred) in the small room. It swells and almost disappears as it passes the room’s modes. With: the same sweep in the large room, where the modes are closer together and the level stays far steadier.', title: 'Too small, and the bass booms',
     cap: 'In a small room long waves pile up between parallel walls: some notes boom, others almost vanish, and it changes as you walk a metre. A larger room spreads them out, so the bass is even. Tap to walk through each room.',
     svg: () => room(20, 60, 140, 130) + room(185, 30, 200, 175) +
       '<rect class="l w" x="24" y="115" width="9" height="20"/><rect class="l w" x="189" y="108" width="9" height="20"/>' +
       '<path class="l d" d="M36 125 H156 M201 117.5 H381"/>' + head(90, 168) + head(285, 185),
     play: async c => {
-      async function run(x0, x1, cy, amp, gfun, ms) {
-        let up = '', back = '', dn = '';
-        for (let x = x0; x <= x1; x += 2) { const v = gfun(x);
-          up += (x === x0 ? 'M' : 'L') + x + ' ' + (cy - amp * v).toFixed(1) + ' ';
-          dn += (x === x0 ? 'M' : 'L') + x + ' ' + (cy + amp * v).toFixed(1) + ' ';
-          back = 'L' + x + ' ' + (cy + amp * v).toFixed(1) + ' ' + back; }
-        const band = E('path', { class: 'ff', d: up + back + 'Z', opacity: 0 }, c.fx);
-        const pu = E('path', { class: 'f', d: up, opacity: 0 }, c.fx), pd = E('path', { class: 'f', d: dn, opacity: 0 }, c.fx);
-        pu.style.strokeWidth = pd.style.strokeWidth = 1.1;
-        const xa = x0 + 8, xb = x1 - 8;
-        const dot = E('circle', { class: 'ff', cx: xa, cy: cy, r: 3 }, c.fx);
-        const halo = E('circle', { class: 'f', cx: xa, cy: cy, r: 6, opacity: 0 }, c.fx); halo.style.strokeWidth = 1;
-        await tween(380, k => { band.setAttribute('opacity', 0.14 * k); pu.setAttribute('opacity', 0.85 * k); pd.setAttribute('opacity', 0.85 * k); });
-        S((ctx, t) => { /* the same six-note bass line on a real bass guitar.
-             small room (about 4.5 x 3.6 x 2.7 m): axial modes at 38, 48, 64 and 76 Hz ring as narrow peaks, while the
-             listening spot sits in nulls near 55 and 82 Hz; large room: modes dense and low, so the line stays even */
-          const small = x0 < 100, notes = [41.2, 49, 55, 61.74, 73.42, 82.41], b = bus();
-          let n = b; if (small) [[38, 9, 10], [48, 12, 8], [64, 9, 9], [76, 8, 9], [55, -18, 6], [82.4, -16, 6]].forEach(m => { const f = filt('peaking', m[0], m[2]); f.gain.value = m[1]; n.connect(f); n = f; });
-          out2(n, { pan: small ? -0.6 : 0.6, dry: 1, wet: small ? 0.6 : 0.35, room: small ? 'small' : 'live' });
-          notes.forEach((f, i) => pluck(f, t + i * (ms / 1000) / 6, { peak: 0.2, stop: 0.42, into: b }));
-        });
-        await tween(ms, (k, t) => { const x = xa + (xb - xa) * k, v = gfun(x);
-          dot.setAttribute('cx', x); halo.setAttribute('cx', x); dot.setAttribute('r', 2.4 + 5 * v);
-          halo.setAttribute('r', 5 + 14 * v); halo.setAttribute('opacity', 0.55 * v * Math.min(1, t * 8, (1 - t) * 8)); }, eio);
-        await tween(450, k => [band, pu, pd, dot, halo].forEach(e => e.setAttribute('opacity', (1 - k) * (e === band ? 0.14 : 0.85))));
-        [band, pu, pd, dot, halo].forEach(e => e.remove());
-      }
-      if (c.want(0)) { c.phase(0); await run(20, 160, 125, 52, x => Math.abs(Math.cos(2 * Math.PI * (x - 20) / 140)), 2700); await wait(250); }
-      if (c.want(1)) c.phase(1); if (c.want(1)) await run(185, 385, 117.5, 70, x => 0.8 + 0.2 * Math.abs(Math.cos(5 * Math.PI * (x - 185) / 200)), 2700);
+      await SIZE.play(c, 'modes', null);
     } });
 
-  add(1, { id: 'height', hear: 'You hear, without: cymbal and snare in the low room (left speaker), harsh and fluttering off the ceiling. With: the same in the tall room (right speaker), opening up and decaying smoothly.', title: 'Drums need height',
+  add(1, { id: 'height', hear: 'You hear, without: snare and crash through an overhead pair (snare centre, crash right) under a 2.7 m ceiling: the ceiling reflection lands about 4 ms after the direct sound and makes the kit harsh and boxy. With: the same hits under a 5.2 m ceiling: the ceiling reflection arrives later and weaker, and the kit opens up.', title: 'Drums need height',
     cap: 'In a low room the cymbals hit the ceiling and come straight back into every microphone, and the kit sounds boxed in. Height lets the sound develop and decay before it returns. Tap: low room, then tall room.',
     svg: () => {
       function kit(o) { return '<circle class="l w" cx="' + (70 + o) + '" cy="189" r="15"/><circle class="l t" cx="' + (70 + o) + '" cy="189" r="6"/>' +
@@ -1996,84 +2246,28 @@
         '<rect class="h" x="210" y="15" width="175" height="10"/><path class="l k" d="M210 25 H385"/><path class="l" d="M210 25 V205 M385 25 V205"/>' + floor(204, 391, 205) + kit(0) + kit(190);
     },
     play: async c => {
-      async function rays(src, pts, ms, op, glowR) {
-        const ps = pts.map(p => { const e = E('path', { class: 'f', d: 'M' + src[0] + ' ' + src[1] + ' L' + p[0] + ' ' + p[1] + ' L' + p[2] + ' ' + p[3], opacity: op }, c.fx); e.style.strokeWidth = 1.5; e.style.strokeDasharray = '0 1000'; return e; });
-        await Promise.all(ps.map((p, i) => wait(i * 70).then(() => draw(p, ms, eo))));
-        const m = pts[0]; const glow = E('circle', { class: 'ff', cx: m[2], cy: m[3], r: glowR, opacity: 0 }, c.fx);
-        await tween(160, k => glow.setAttribute('opacity', op * 0.55 * k), lin);
-        await Promise.all([fade(glow, op * 0.55, 0, 700, eo)].concat(ps.map(p => fade(p, op, 0, 900, eo))));
-        glow.remove(); ps.forEach(p => p.remove());
-      }
-      if (c.want(0)) { c.phase(0);
-        S((ctx, t) => { const b = bus(); smp('crash', t, { gain: 0.4, stop: 1.6, rel: 0.25, into: b }); snare(t + 0.5, { into: b });
-          const d1 = ctx.createDelay(0.1); d1.delayTime.value = 0.0058; const fb = ctx.createGain(); fb.gain.value = 0.55; const g1 = ctx.createGain(); g1.gain.value = 0.8;
-          b.connect(d1); d1.connect(fb); fb.connect(d1); d1.connect(g1); const sum = bus(); b.connect(sum); g1.connect(sum);
-          out2(sum, { pan: -0.55, dry: 0.75, wet: 0.9, room: 'low' }); });
-        const ceilL = E('path', { class: 'f', d: 'M20 105 H190', opacity: 0 }, c.fx); ceilL.style.strokeWidth = 2.6;
-        tween(700, (k, t) => ceilL.setAttribute('opacity', 0.9 * Math.sin(Math.PI * t)), lin).then(() => ceilL.remove());
-        await rays([100, 157], [[126, 105, 148, 133], [86, 105, 148, 133], [112, 105, 148, 133]], 240, 0.95, 13); await wait(300); }
-      if (c.want(1)) { c.phase(1);
-        S((ctx, t2) => { const b = bus(); smp('crash', t2, { gain: 0.4, stop: 2.8, rel: 0.4, into: b }); snare(t2 + 0.5, { into: b });
-          out2(b, { pan: 0.55, dry: 0.6, wet: 1.1, room: 'hall' }); });
-        const ceilR = E('path', { class: 'f', d: 'M210 25 H385', opacity: 0 }, c.fx); ceilR.style.strokeWidth = 1.6;
-        tween(1200, (k, t) => ceilR.setAttribute('opacity', 0.35 * Math.sin(Math.PI * t)), lin).then(() => ceilR.remove());
-        await rays([290, 157], [[318, 25, 338, 133], [262, 25, 338, 133]], 700, 0.55, 9); }
+      await SIZE.play(c, 'height', null);
     } });
 
-  add(1, { id: 'blend', hear: 'You hear, without: violin, qanun, oud and cello close-miked in a cramped room, four separate dry points from far left to far right. With: the same four together in the full room, merging into one section across both speakers.', title: 'A section needs distance to blend',
+  add(1, { id: 'blend', hear: 'You hear, without: violin, qanun, oud and cello from left to right, close in a small room: four separate, dry points. With: the same four players in the large room, recorded from further back, merging into one section while keeping their left-to-right order.', title: 'A section needs distance to blend',
     cap: 'Strings sound like a section, not a row of players, when the instruments merge in the air before they reach the microphones. The same goes for qanun, oud and violins: one living texture.',
     svg: () => room(20, 18, 360, 197) + '<path class="l" d="M200 18 V44"/><rect class="l w" x="195" y="44" width="10" height="16" rx="5"/>' +
       seated(95, 192, 'violin') + seated(160, 204, 'qanun') + seated(240, 204, 'oud') + seated(305, 192, 'cello'),
     defs: id => '<clipPath id="c-' + id + '"><rect x="21" y="19" width="358" height="195"/></clipPath>',
     play: async c => {
-      const pan = [-0.75, -0.3, 0.3, 0.75], P = [[90, 176], [155, 186], [234, 186], [298, 176]];
-      function play4(T, w, spread) { const o = (x) => Object.assign(x, w);
-        bowed(659.25, T, 3.0, o({ pan: pan[0] * spread, peak: 0.016 })); bowed(392, T + 1.5, 1.5, o({ pan: pan[0] * spread, peak: 0.014 }));
-        smp('qanun', T, o({ gain: 0.42, stop: 3.0, rel: 0.25, pan: pan[1] * spread }));
-        smp('oud', T + 0.05, o({ gain: 0.42, rate: 1.0595, stop: 3.0, rel: 0.25, pan: pan[2] * spread }));
-        bowed(130.81, T, 3.0, o({ pan: pan[3] * spread, peak: 0.026 })); }
-      if (c.want(0)) { c.phase(0); const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
-        const lid = E('path', { class: 'f', d: 'M20 110 H380', opacity: 0 }, c.fx); lid.style.strokeWidth = 2.4; fade(lid, 0, 0.9, 300);
-        const lb = label(c.fx, 200, 100, 'cramped · close mics');
-        S((ctx, t) => play4(t, { wet: 0.5, room: 'small', dry: 1 }, 1.25));
-        await Promise.all(P.map((p, i) => ring(g, p[0], p[1], 3, 34, 700, 0.9, { delay: i * 60, w: 1.3 })).concat(P.map((p, i) => ring(g, p[0], p[1], 3, 34, 700, 0.9, { delay: 600 + i * 60, w: 1.3 }))));
-        await wait(1700); await tween(300, k => { lid.setAttribute('opacity', 0.9 * (1 - k)); lb.setAttribute('opacity', 1 - k); }); [lid, lb, g].forEach(e => e.remove()); }
-      if (c.want(1)) { c.phase(1);
-      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
-      S((ctx, t) => play4(t, { wet: 1.2, room: 'hall', dry: 0.4 }, 1));
-      const rs = []; P.forEach((p, i) => { for (let j = 0; j < 2; j++) rs.push(ring(g, p[0], p[1], 4, 110, 1500, 0.75, { delay: i * 80 + j * 260, w: 1.2 })); });
-      const merge = [0, 1, 2].map(j => { const e = E('ellipse', { class: 'f', cx: 197, cy: 190, rx: 70, ry: 30, opacity: 0 }, g); e.style.strokeWidth = 1.6 - j * 0.35; return e; });
-      const mg = E('circle', { class: 'ff', cx: 200, cy: 52, r: 16, opacity: 0 }, c.fx);
-      await wait(250);
-      await tween(2000, (k, t) => { merge.forEach((e, j) => { const kk = Math.max(0, Math.min(1, k * 1.15 - j * 0.08));
-        e.setAttribute('rx', 70 + 160 * kk); e.setAttribute('ry', 30 + 150 * kk); e.setAttribute('opacity', 0.8 * Math.sin(Math.PI * Math.min(1, t * 1.05))); });
-        mg.setAttribute('opacity', 0.35 * Math.max(0, Math.sin(Math.PI * Math.max(0, (t - 0.45) / 0.55)))); }, eo);
-      await Promise.all(rs); mg.remove(); }
+      await SIZE.play(c, 'blend', null);
     } });
-  add(1, { id: 'bloom', hear: 'You hear, without: a short violin note (left) in a dead, boxy room: it stops dead. With: the same note in the live room, and the tail carries on in both speakers.', title: 'The room answers',
+  add(1, { id: 'bloom', hear: 'You hear, without: one short piano chord, released after 0.35 s, in the small room: once the keys lift, the sound is gone in about a third of a second. With: the same chord, same level, in the large room, where the tail carries on for about two thirds of a second in both speakers.', title: 'The room answers',
     cap: 'Reverberation is the way sound lingers after the source stops. A good live room adds a short, flattering bloom, and players play better when the room answers them. Tap to play a note.',
     svg: () => room(30, 25, 340, 180) + floor(24, 376, 205) + person(120, 205, 60) +
       '<ellipse class="l w" cx="106" cy="160" rx="7" ry="4" transform="rotate(-30 106 160)"/><path class="l t" d="M96 168 L124 150"/>' +
       '<path class="l t" d="M300 60 v30 M320 60 v30 M340 60 v30"/>',
     defs: id => '<clipPath id="c-' + id + '"><rect x="31" y="26" width="338" height="178"/></clipPath>',
     play: async c => {
-      const src = [120, 160];
-      if (c.want(0)) { c.phase(0); const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx); const lb = label(c.fx, 240, 50, 'dead, boxy room');
-        S((ctx, t) => { bowed(440, t, 0.45, { a: 0.05, r: 0.06, peak: 0.03, pan: -0.45, dry: 1, wet: 0.7, room: 'small' }); });
-        await Promise.all([0, 140].map(d => ring(g, src[0], src[1], 2, 90, 600, 0.8, { delay: d, w: 1.2, ease: lin, op: t => 0.8 * Math.pow(1 - t, 3) })));
-        await wait(900); await fade(lb, 1, 0, 300); lb.remove(); g.remove(); }
-      if (c.want(1)) { c.phase(1);
-      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
-      const wash = E('rect', { class: 'ff', x: 31, y: 26, width: 338, height: 178, opacity: 0 }, g);
-      S((ctx, t) => { bowed(440, t, 0.45, { r: 0.3, peak: 0.03, pan: -0.45, dry: 0.8, wet: 1.4, room: 'hall' }); });
-      const imgs = [[src[0], src[1], 0.9], [60 - src[0], src[1], 0.5], [740 - src[0], src[1], 0.5], [src[0], 50 - src[1], 0.5], [src[0], 410 - src[1], 0.45], [60 - src[0], 50 - src[1], 0.28], [740 - src[0], 50 - src[1], 0.28]];
-      const all = [];
-      [0, 380].forEach((dly, w) => imgs.forEach(p => all.push(ring(g, p[0], p[1], 2, 460, 2300, p[2], { delay: dly, w: w ? 0.8 : 1.2, ease: lin, op: t => p[2] * (w ? 0.5 : 1) * Math.exp(-t * 2.6) }))));
-      all.push(tween(2800, (k, t) => wash.setAttribute('opacity', 0.2 * Math.min(1, t * 10) * Math.exp(-t * 2.2)), lin));
-      await Promise.all(all); }
+      await SIZE.play(c, 'bloom', null);
     } });
 
-  add(1, { id: 'vary', hear: 'You hear, without: a fixed live room, so the pop snare washes into a long tail. With: the panels close and the snare is tight and dry in the centre, then they open and a string chord blooms wide across both speakers.', title: 'One room, many characters',
+  add(1, { id: 'vary', hear: 'You hear, without: the same pop snare (centre) and string chord (spread wide) with the panels and curtains closed: tight and dry. With: the same performance with the panels open: the same room is now live and the tail lasts about three times longer.', title: 'One room, many characters',
     cap: 'Panels that turn from hard to soft, curtains that draw, and movable screens. Tight and dry for a pop rhythm section on Monday; open and live for strings on Tuesday. Tap to turn the room.',
     state: ['Now: tight and dry', 'Now: open and live'],
     svg: () => {
@@ -2088,23 +2282,10 @@
       return s; },
     defs: id => '<clipPath id="c-' + id + '"><rect x="21" y="41" width="358" height="173"/></clipPath>',
     play: async c => {
-      const Pn = []; for (let i = 0; i < 6; i++) Pn.push(c.k('p' + i)); const cur = c.k('curtain');
-      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx), src = [200, 168];
-      async function turn(live) { await tween(900, k => {
-        Pn.forEach((p, i) => { const kk = eio(Math.max(0, Math.min(1, (k * 900 - i * 50) / 600))); const a = live ? 180 - 180 * kk : 180 * kk; p.setAttribute('transform', 'rotate(' + a + ' ' + (55 + i * 50) + ' 62)'); });
-        const s = live ? 1 - 0.86 * eio(k) : 0.14 + 0.86 * eio(k); cur.setAttribute('transform', 'translate(0 46) scale(1 ' + s + ') translate(0 -46)'); }, lin); c.setState(live ? 1 : 0); }
-      function rings(live, n) { return Promise.all([0, 120].slice(0, n).map(d => ring(g, src[0], src[1], 3, 330, live ? 1900 : 700, 0.85, { delay: d, w: 1.3, ease: lin, op: t => live ? 0.85 * Math.exp(-t * 2.2) : 0.85 * Math.pow(1 - t, 3) }))); }
-      if (c.want(0)) { c.phase(0); const lb = label(c.fx, 200, 100, 'fixed room: one character only');
-        S((ctx, t) => { snare(t, { wet: 1.0, room: 'tall', dry: 0.8 }); snare(t + 0.42, { wet: 1.0, room: 'tall', dry: 0.6 }); });
-        await rings(true, 2); await fade(lb, 1, 0, 300); lb.remove(); }
-      if (c.want(1)) { c.phase(1);
-        S((ctx, t) => { snare(t, { wet: 0.25, room: 'dry' }); snare(t + 0.42, { wet: 0.25, room: 'dry', dry: 0.7 }); });
-        await rings(false, 2); await turn(true);
-        S((ctx, t) => { [146.83, 220, 293.66, 369.99].forEach((f, i) => bowed(f, t, 1.2, { peak: 0.02, pan: -0.5 + i * 0.33, wet: 1.2, room: 'tall', dry: 0.6 })); });
-        await rings(true, 1); await turn(false); }
+      await SIZE.play(c, 'vary', SIZEHOOK.vary);
     } });
 
-  add(1, { id: 'trim', hear: 'You hear, without: the bass and piano phrase at 60 m²: booming bass, boxy reflections, narrow image. With: the same phrase at 95 m², wide and even across both speakers.', title: 'Trim it, and it stays trimmed',
+  add(1, { id: 'trim', hear: 'You hear, without: a bass and piano phrase in a trimmed 7.5 × 8.0 × 3.2 m room (60 m²): a narrower image, earlier reflections and a less even low end. With: the same phrase in the full 10.0 × 9.5 × 5.2 m room (95 m²), wider and more even.', title: 'Trim it, and it stays trimmed',
     cap: 'A live room cut from 95 m² to 60 m² looks like an economy on a drawing. In use, the bass always fights, the drums sound boxed in, and the strings sound like a small room. A room’s volume is fixed for its lifetime.',
     svg: () => '<rect class="l d" x="73" y="46.5" width="254" height="143"/><g data-k="room"><rect class="gf" x="40" y="28" width="320" height="180"/><rect class="l k" x="40" y="28" width="320" height="180"/></g>' +
       '<circle class="l w" cx="110" cy="84" r="13"/><circle class="l" cx="130" cy="74" r="7"/><ellipse class="l w" cx="92" cy="70" rx="11" ry="2.6"/>' +
@@ -2113,33 +2294,7 @@
     lab: () => '<text class="lbl big" data-k="area" x="350" y="200" text-anchor="end">95 m²</text>',
     defs: id => '<clipPath id="c-' + id + '"><rect x="41" y="29" width="318" height="178"/></clipPath>',
     play: async c => {
-      const R = c.k('room'), area = c.lab.querySelector('[data-k="area"]'), clip = c.svg.querySelector('#c-' + c.id + ' rect');
-      const g = E('g', { 'clip-path': 'url(#c-' + c.id + ')' }, c.fx);
-      function phrase(ctx, t, small) {
-        const b = bus();
-        if (small) { const pk = filt('peaking', 55, 3); pk.gain.value = 14; b.connect(pk); out2(comb(pk, 4, 0.6), { dry: 0.8, wet: 0.7, room: 'small' }); }
-        else out2(b, { dry: 0.85, wet: 0.8, room: 'tall' });
-        const W = small ? 0.15 : 1;
-        [[55, 0], [55, 0.45], [82.41, 0.7]].forEach(n => pluck(n[0], t + n[1], { dur: 1.2, damp: 0.998, bright: 0.45, peak: 0.16, stop: 0.4, pan: -0.3 * W, into: b }));
-        [220, 277.18, 329.63, 440].forEach((f, i) => piano(f, t + i * 0.015, { dur: 1.1, peak: 0.035, pan: (-0.3 + i * 0.25) * W, into: b }));
-      }
-      const s1 = Math.sqrt(60 / 95);
-      function setSize(s) { const w = 320 * s, h = 180 * s, x = 200 - w / 2, y = 118 - h / 2;
-        R.querySelectorAll('rect').forEach(r => { r.setAttribute('x', x); r.setAttribute('y', y); r.setAttribute('width', w); r.setAttribute('height', h); });
-        clip.setAttribute('x', x + 1); clip.setAttribute('y', y + 1); clip.setAttribute('width', w - 2); clip.setAttribute('height', h - 2);
-        area.setAttribute('x', x + w - 10); area.setAttribute('y', y + h - 8); }
-      if (c.want(0)) { c.phase(0);
-        await tween(700, k => { setSize(1 + (s1 - 1) * k); area.textContent = Math.round(95 - 35 * k) + ' m²'; });
-        S((ctx, t) => phrase(ctx, t, true));
-        const flash = E('rect', { class: 'f', x: 73, y: 46.5, width: 254, height: 143, opacity: 0 }, c.fx); flash.style.strokeWidth = 2.6;
-        await Promise.all([0, 160, 320, 480].map(d => ring(g, 200, 118, 4, 170, 520, 0.85, { delay: d, w: 1.4, ease: lin, op: t => 0.85 * (1 - t) })).concat([
-          tween(1400, (k, t) => flash.setAttribute('opacity', 0.75 * Math.abs(Math.sin(t * Math.PI * 4)) * (1 - t)), lin)]));
-        flash.remove(); await wait(300); }
-      if (c.want(1)) { c.phase(1);
-        await tween(800, k => { setSize(s1 + (1 - s1) * k); area.textContent = Math.round(60 + 35 * k) + ' m²'; });
-        S((ctx, t) => phrase(ctx, t, false));
-        await ring(g, 200, 118, 4, 240, 1800, 0.7, { w: 1.3, ease: lin, op: t => 0.7 * Math.exp(-t * 2.4) }); }
-      setSize(1); area.textContent = '95 m²';
+      await SIZE.play(c, 'trim', SIZEHOOK.trim);
     } });
   /* PAGE 2 · Rooms and adjacencies -------------------------------------- */
   add(2, { id: 'booths', hear: 'You hear, without: no booths, so the guitar amp bleeds into the vocal mic on the left and the acoustic on the right, and every side gets a muddy copy of the amp. With: voice left, amp centre, acoustic right, each one clean and separate.', title: 'Booths: two minimum, a third strongly preferred',
@@ -2429,7 +2584,7 @@
 
   /* ---------- Build cards ---------- */
   const speaker = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6 H5 L9 3 V13 L5 10 H2 Z" fill="currentColor"/><path d="M11.5 5.5 Q13.5 8 11.5 10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
-  const counters = { 1: 0, 2: 0 };
+  const counters = { 1: 0, 2: 0 }, ctxs = [];
   scenes.forEach(sc => {
     const grid = root.querySelector('[data-grid="' + sc.page + '"]');
     const n = ++counters[sc.page];
@@ -2440,7 +2595,7 @@
         '<g class="base" id="b-' + sc.id + '">' + sc.svg() + '</g>' +
         '<g class="lab">' + (sc.lab ? sc.lab() : '') + '</g><g class="fx"></g></svg>' +
         '<span class="sx-ab"><span data-only="0">Without</span><span data-only="1">With</span></span><span class="sx-hint">' + speaker + '<span class="ht">Tap to hear</span></span>' +
-      '</button>' +
+      '</button>' + (sc.page === 1 ? '<div class="sx-data"><canvas width="1600" height="600" aria-label="Signal panels rendered from the audio"></canvas></div>' : '') +
       '<div class="sx-cap"><h3><span class="n">' + String(n).padStart(2, '0') + '</span>' + sc.title + '</h3><p>' + sc.cap + '</p>' + (sc.hear ? '<p class="hear">' + sc.hear + '</p>' : '') +
         (sc.state ? '<p class="state">' + sc.state[0] + '</p>' : '') + '</div>';
     grid.appendChild(art);
@@ -2455,6 +2610,7 @@
       only: null, want: i => ctx.only == null || ctx.only === i,
       phase: i => art.querySelectorAll('.sx-ab span').forEach(x => x.classList.toggle('on', +x.dataset.only === i)),
       setState: i => { const s = art.querySelector('.state'); if (s) s.textContent = sc.state[i]; } };
+    ctx.cv = art.querySelector('.sx-data canvas'); if (ctx.cv) { ctx.redraw = () => SIZE.idle(ctx); ctxs.push(ctx); }
     let busy = false;
     art.querySelector('.sx-fig').addEventListener('click', async ev => {
       if (busy) return; busy = true; const hint = art.querySelector('.sx-hint .ht');
@@ -2477,6 +2633,7 @@
   function setVariant(v) {
     root.classList.toggle('v-sketch', v === 'sketch'); root.classList.toggle('v-graphic', v === 'graphic');
     root.querySelectorAll('[data-var]').forEach(x => x.classList.toggle('active', x.dataset.var === v));
+    ctxs.forEach(c => { try { c.redraw(); } catch (e) {} });
   }
   root.querySelectorAll('[data-var]').forEach(b => b.addEventListener('click', () => setVariant(b.dataset.var)));
   const muteBtn = document.getElementById('sx-mute');
@@ -2489,10 +2646,11 @@
   }
   muteBtn.addEventListener('click', () => {
     A.muted = !A.muted; try { localStorage.setItem('capc-mute', A.muted ? '1' : '0'); } catch (e) {}
-    if (A.ctx) { const t = A.ctx.currentTime; A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(A.muted ? 0 : 0.55, t, 0.05); }
+    if (A.ctx) { const t = A.ctx.currentTime; A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(A.muted ? 0 : 0.55, t, 0.05); if (A.clean) { A.clean.gain.cancelScheduledValues(t); A.clean.gain.setTargetAtTime(A.muted ? 0 : 1, t, 0.05); } if (A.muted && window.SIZEcur) try { window.SIZEcur.stop(); } catch (e) {} }
     paintMute();
   });
   paintMute();
+  ctxs.forEach(c => { try { c.redraw(); } catch (e) {} });
   /* deep links for review: #suite-2, #graphic */
   const h = location.hash;
   if (/suite|graphic|sketch/.test(h)) {
