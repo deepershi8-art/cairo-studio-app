@@ -710,9 +710,241 @@
     .sx-grid { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) { .sx-page.active { animation: none; } .sx-hintbar .dot { animation: none; } }
+
+  /* ══ RATEENA SOUND merge (12 Nov 2026) — reimplemented in the Cairo visual language ══ */
+  /* Opening page: the official logo alone */
+  .opening { position: fixed; inset: 0; z-index: 100; background: #0d0d0d; display: flex; align-items: center; justify-content: center; cursor: pointer; outline: none; }
+  .opening[hidden] { display: none; }
+  .opening img { width: min(66vmin, 600px); height: auto; display: block; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+  .opening .op-hint { position: absolute; left: 0; right: 0; bottom: 2.1rem; text-align: center; font-size: 0.58rem; letter-spacing: 0.34em; text-transform: uppercase; color: rgba(176,141,87,0.5); }
+  .opening:focus-visible .op-hint { color: var(--brass); }
+
+  /* Evidence tags */
+  .tag { display: inline-block; font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 100px; border: 1px solid currentColor; line-height: 1.4; white-space: nowrap; }
+  .tag.proposed { color: var(--brass); }
+  .tag.calculated { color: #8fb0c8; }
+  .tag.pending { color: var(--muted); }
+  .on-paper .tag.calculated, .side-panel .tag.calculated, .cp-wrap .tag.calculated { color: #4f6f8c; }
+  .on-paper .tag.pending, .side-panel .tag.pending { color: var(--muted-dark); }
+  .tag.illustrative { color: var(--muted); border-style: dashed; }
+
+  /* Suite keys note */
+  .sx-refnote { font-size: 0.76rem; color: var(--muted); max-width: 72ch; margin: -0.6rem 0 1.4rem; line-height: 1.5; }
+  .sx-refnote b { color: var(--off-white); font-weight: 400; }
+
+  /* Current programme (Suite page 2) */
+  .cp { margin-top: 2.4rem; border-top: 1px solid rgba(176,141,87,0.18); padding-top: 2rem; }
+  .cp-h { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.1rem); color: var(--paper); line-height: 1.15; margin-bottom: 0.4rem; }
+  .cp-lede { color: var(--muted); max-width: 62ch; font-size: 0.9rem; margin-bottom: 1.4rem; }
+  .cp-brief { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: rgba(176,141,87,0.16); border: 1px solid rgba(176,141,87,0.16); border-radius: 2px; }
+  .cp-brief article { background: #18181b; padding: 1.35rem 1.4rem 1.3rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .cp-brief article.wide { grid-column: 1 / -1; }
+  .cp-brief .rn { font-family: "Cormorant Garamond", Georgia, serif; color: var(--brass); font-size: 0.95rem; letter-spacing: 0.06em; }
+  .cp-brief h4 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 1.3rem; color: var(--paper); line-height: 1.2; }
+  .cp-brief p { font-size: 0.86rem; color: rgba(232,228,220,0.72); line-height: 1.6; max-width: 70ch; }
+  .cp-brief .fig { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.45rem; color: var(--paper); }
+  .cp-brief .fig small { display: block; font-family: "DM Sans", sans-serif; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.04em; margin-top: 0.15rem; }
+  .cp-brief .tag { align-self: flex-start; margin-top: auto; }
+  .cp-table-wrap { margin-top: 1.6rem; overflow-x: auto; background: var(--paper); color: var(--near-black); border-radius: 2px; box-shadow: var(--panel-shadow); }
+  .cp-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 560px; }
+  .cp-table th, .cp-table td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid rgba(26,25,23,0.09); }
+  .cp-table th { font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-dark); font-weight: 400; }
+  .cp-table td.n { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.05rem; white-space: nowrap; }
+  .cp-table tfoot td { border-bottom: none; font-weight: 400; }
+  .cp-table caption { caption-side: bottom; text-align: left; padding: 0.6rem 0.9rem 0.8rem; font-size: 0.72rem; color: var(--muted-dark); }
+  .cp-layers { display: flex; border: 1px solid var(--brass-dim); border-radius: 2px; overflow: hidden; }
+  .cp-layers button { padding: 0.55rem 0.9rem; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); min-height: 38px; transition: background .4s var(--ease), color .4s var(--ease); }
+  .cp-layers button[aria-pressed="true"] { background: var(--brass-soft); color: var(--paper); }
+  .sx .cp-row { grid-template-columns: minmax(0, 1fr) 340px; min-height: 0; }
+  .cp-wrap { min-width: 0; }
+  .cp-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+  .cp-svg { display: block; width: 100%; height: auto; max-height: 860px; min-width: 300px; }
+  .cp-svg .wall { fill: #d9d0bc; }
+  .cp-svg .cp-room rect.fl { fill: #f7f3eb; stroke: #b9ae97; stroke-width: 0.025; transition: fill .45s var(--ease); }
+  .cp-svg .cp-room { cursor: pointer; outline: none; }
+  .cp-svg .cp-room:hover rect.fl { fill: #efe6d4; }
+  .cp-svg .cp-room.selected rect.fl { fill: #e6dac0; stroke: var(--brass); stroke-width: 0.06; }
+  .cp-svg .cp-room:focus-visible rect.fl { stroke: var(--brass); stroke-width: 0.08; }
+  .cp-svg text { font-family: "DM Sans", sans-serif; fill: var(--near-black); pointer-events: none; }
+  .cp-svg .nm { font-size: 0.34px; letter-spacing: 0.03px; text-anchor: middle; text-transform: uppercase; }
+  .cp-svg .ar { font-size: 0.26px; fill: rgba(26,25,23,0.6); text-anchor: middle; }
+  .cp-svg .dim path { fill: none; stroke: rgba(26,25,23,0.45); stroke-width: 0.018; }
+  .cp-svg .dim text { font-size: 0.24px; fill: rgba(26,25,23,0.6); text-anchor: middle; }
+  .cp-svg .obj, .cp-svg .door, .cp-svg .note, .cp-svg .scale { pointer-events: none; }
+  .cp-svg .obj { fill: none; stroke: #9a7440; stroke-width: 0.03; }
+  .cp-svg .obj .bd { stroke-dasharray: 0.08 0.07; stroke-opacity: 0.5; }
+  .cp-svg .door { fill: none; stroke: rgba(26,25,23,0.6); stroke-width: 0.025; }
+  .cp-svg .door .cut { stroke: #f3efe6; }
+  .cp-svg .glz .cut { fill: #f3efe6; }
+  .cp-svg .glz .pane { stroke: #4f6f8c; stroke-width: 0.035; fill: none; }
+  .cp-svg .note { font-size: 0.24px; fill: rgba(26,25,23,0.55); letter-spacing: 0.03px; }
+  .cp-svg .scale rect { stroke: rgba(26,25,23,0.6); stroke-width: 0.02; }
+  .cp-svg .scale text { font-size: 0.25px; text-anchor: middle; fill: rgba(26,25,23,0.7); }
+  .cp-svg.no-objects .obj, .cp-svg.no-dims .dim, .cp-svg.no-glazing .glz { display: none; }
+  .cp-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; margin-top: 0.75rem; font-size: 0.66rem; color: var(--muted-dark); letter-spacing: 0.04em; }
+  .cp-legend i { display: inline-block; width: 18px; height: 7px; margin-right: 0.4rem; vertical-align: middle; border-top: 1.5px solid #4f6f8c; border-bottom: 1.5px solid #4f6f8c; }
+  .cp-legend i.wz { border: none; background: #d9d0bc; }
+  .cp-legend i.ob { border: 1px dashed #9a7440; height: 9px; }
+  /* room panel */
+  .cp-panel { padding: 1.6rem 1.4rem; }
+  .cp-tabs { display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0.2rem 0 1.1rem; }
+  .cp-tabs button { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.38rem 0.6rem; border: 1px solid rgba(26,25,23,0.16); border-radius: 100px; color: rgba(26,25,23,0.72); transition: all .35s var(--ease); min-height: 30px; }
+  .cp-tabs button:hover { border-color: var(--brass); }
+  .cp-tabs button[aria-selected="true"] { background: var(--near-black); color: var(--paper); border-color: var(--near-black); }
+  .cp-panel h4 { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.2rem; font-weight: 500; margin: 0.2rem 0 0.5rem; }
+  .cp-panel p, .cp-panel li { font-size: 0.84rem; color: rgba(26,25,23,0.74); line-height: 1.6; }
+  .cp-panel p + p { margin-top: 0.6rem; }
+  .cp-panel ul { list-style: none; margin: 0.5rem 0; display: grid; gap: 0.4rem; }
+  .cp-panel li { padding-left: 0.9rem; position: relative; }
+  .cp-panel li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 4px; height: 4px; border-radius: 50%; background: var(--brass); }
+  .cp-panel .meta-grid { grid-template-columns: 1fr 1fr; }
+  .cp-panel .meta-item span { font-size: 1.05rem; }
+  .cp-panel .meta-item .tag { display: table; margin-top: 0.3rem; font-family: "DM Sans", sans-serif; font-size: 0.56rem; color: var(--brass); }
+  .cp-panel .meta-item .tag.calculated { color: #4f6f8c; }
+  .slot-btn[hidden] { display: none; }
+  .iso-model-board .tag.illustrative { color: var(--muted-dark); }
+  .cp-pending { margin-top: 0.9rem; padding: 0.7rem 0.85rem; border: 1px dashed rgba(26,25,23,0.22); border-radius: 2px; font-size: 0.78rem; color: var(--muted-dark); font-style: italic; }
+  .cp-link { margin-top: 0.9rem; display: inline-flex; gap: 0.4rem; align-items: center; font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--near-black); border: 1px solid var(--near-black); padding: 0.55rem 0.9rem; border-radius: 1px; transition: background .4s var(--ease), color .4s var(--ease); }
+  .cp-link:hover { background: var(--near-black); color: var(--paper); }
+  .cp-modes { width: 100%; border-collapse: collapse; margin: 0.4rem 0; font-size: 0.78rem; }
+  .cp-modes td, .cp-modes th { padding: 0.3rem 0.35rem; border-bottom: 1px solid rgba(26,25,23,0.08); text-align: right; }
+  .cp-modes th { text-align: left; font-weight: 400; color: var(--muted-dark); }
+  .cp-thumb { display: block; width: 100%; margin: 0.4rem 0 0.3rem; border: 1px solid rgba(26,25,23,0.12); border-radius: 2px; }
+  .cp-small { font-size: 0.72rem !important; color: var(--muted-dark) !important; }
+  .cp-concept { margin-top: 1.6rem; background: var(--paper); border-radius: 2px; padding: 1rem; box-shadow: var(--panel-shadow); }
+  .cp-concept img { display: block; width: 100%; height: auto; border-radius: 1px; }
+  .cp-concept figcaption { margin-top: 0.7rem; font-size: 0.76rem; color: var(--muted-dark); line-height: 1.5; }
+  .cp-concept figcaption b { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.05rem; color: var(--near-black); font-weight: 500; display: block; margin-bottom: 0.15rem; }
+  .cp-details { margin-top: 1rem; border: 1px solid rgba(176,141,87,0.2); border-radius: 2px; }
+  .cp-details > summary { cursor: pointer; padding: 0.85rem 1.1rem; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); list-style: none; }
+  .cp-details > summary::-webkit-details-marker { display: none; }
+  .cp-details > summary::after { content: "+"; float: right; color: var(--brass); }
+  .cp-details[open] > summary::after { content: "–"; }
+  .cp-details .cp-dbody { padding: 0 1.1rem 1.2rem; }
+  .cp-details ul { list-style: none; display: grid; gap: 0.55rem; }
+  .cp-details li { font-size: 0.82rem; color: rgba(232,228,220,0.7); line-height: 1.55; padding-left: 1rem; position: relative; max-width: 80ch; }
+  .cp-details li::before { content: "—"; position: absolute; left: 0; color: var(--brass); }
+  .cp-earlier .sx-planhead { margin-top: 0.4rem; }
+
+  /* Image slots */
+  .slot { border-radius: 2px; overflow: hidden; border: 1px solid rgba(26,25,23,0.12); background: #efe9dc; }
+  .slot-view { position: relative; aspect-ratio: 16 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; text-align: center; padding: 1rem;
+    background: repeating-linear-gradient(-38deg, transparent 0 9px, rgba(26,25,23,0.035) 9px 10px); }
+  .slot-view.drag { outline: 1px solid var(--brass); outline-offset: -6px; }
+  .slot-view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #f7f3eb; }
+  .slot-ph { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.02rem; color: #6d5330; }
+  .slot-view small { font-size: 0.66rem; color: var(--muted-dark); }
+  .slot-bar { flex-wrap: wrap; display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.6rem; border-top: 1px solid rgba(26,25,23,0.1); background: #f7f3eb; }
+  .slot-bar .sl { flex: 1; font-size: 0.66rem; color: var(--muted-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .slot-btn { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--near-black); border: 1px solid rgba(26,25,23,0.25); padding: 0.4rem 0.65rem; border-radius: 1px; cursor: pointer; white-space: nowrap; min-height: 30px; display: inline-flex; align-items: center; }
+  .slot-btn:hover, .slot-btn:focus-within { border-color: var(--brass); }
+  .slot-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .slot-err { font-size: 0.66rem; color: #a2442c; padding: 0 0.6rem 0.5rem; background: #f7f3eb; }
+
+  /* Isolation — construction model & techniques (below the six plates) */
+  .isolation { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  .isolation .iso-header, .isolation .iso-more { flex-shrink: 0; }
+  .isolation .iso-body { flex: 1 0 auto; min-height: 500px; }
+  .iso-jump { margin-left: 0.4rem; color: var(--brass); font-size: 0.78rem; border-bottom: 1px solid var(--brass-dim); }
+  .iso-jump:hover { border-color: var(--brass); }
+  .iso-more { margin-top: 3rem; padding-top: 2.2rem; border-top: 1px solid rgba(176,141,87,0.18); }
+  .iso-more > .title { font-size: clamp(1.7rem, 2.6vw, 2.2rem); }
+  .iso-model { margin-top: 1.4rem; display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 1.5rem; }
+  .iso-model .plates { overflow: visible; }
+  .iso-model .plate .pname { line-height: 1.35; }
+  .iso-model-board { background: var(--paper); color: var(--near-black); border-radius: 2px; padding: 1.6rem 1.8rem; box-shadow: var(--panel-shadow); min-width: 0; }
+  .iso-model-board svg { display: block; width: 100%; height: auto; max-height: 380px; }
+  .iso-model-board svg text { font-family: "DM Sans", sans-serif; font-size: 10px; letter-spacing: 0.14em; fill: rgba(26,25,23,0.65); }
+  .iso-model-exp { font-size: 0.9rem; color: rgba(26,25,23,0.75); line-height: 1.6; margin-top: 0.9rem; max-width: 64ch; }
+  .iso-model-exp b { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.15rem; font-weight: 500; color: var(--near-black); }
+  .iso-fine { font-size: 0.72rem; color: var(--muted-dark); line-height: 1.5; margin-top: 0.7rem; max-width: 80ch; }
+  .iso-topics { margin-top: 2rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; }
+  .iso-topic { min-width: 0; background: var(--paper); color: var(--near-black); border-radius: 2px; padding: 1.3rem 1.4rem 1.4rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .iso-topic .roman { font-family: "Cormorant Garamond", Georgia, serif; color: var(--brass); font-size: 0.95rem; }
+  .iso-topic h4 { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.35rem; font-weight: 500; line-height: 1.2; }
+  .iso-topic p { font-size: 0.86rem; color: rgba(26,25,23,0.72); line-height: 1.6; }
+  .iso-topic .slot { margin-top: auto; }
+  .iso-assembly { margin-top: 1.6rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: rgba(176,141,87,0.16); border: 1px solid rgba(176,141,87,0.16); }
+  .iso-assembly div { background: #18181b; padding: 1.1rem 1.2rem; }
+  .iso-assembly h5 { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.1rem; font-weight: 500; color: var(--paper); margin-bottom: 0.4rem; }
+  .iso-assembly p { font-size: 0.8rem; color: rgba(232,228,220,0.68); line-height: 1.55; }
+  .iso-assembly p.pend { margin-top: 0.5rem; color: var(--muted); font-style: italic; }
+  .iso-more .iso-next { margin: 2rem 0 0.5rem; display: flex; justify-content: flex-end; }
+
+  /* 04 Acoustics */
+  .acoustics { background: var(--graphite); }
+  .ac-inner { padding: 2rem 2.5rem 3.5rem; }
+  .ac-inner > .title { font-size: clamp(1.9rem, 3vw, 2.5rem); }
+  .ac-topics { margin: 1.6rem 0 2.4rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem; }
+  .ac-topic { background: var(--paper); color: var(--near-black); border-radius: 2px; padding: 1.2rem 1.3rem; }
+  .ac-topic .roman { font-family: "Cormorant Garamond", Georgia, serif; color: var(--brass); font-size: 0.95rem; }
+  .ac-topic h4 { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.3rem; font-weight: 500; margin: 0.15rem 0 0.4rem; }
+  .ac-topic p { font-size: 0.85rem; color: rgba(26,25,23,0.72); line-height: 1.6; }
+  .cube-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .cube-head h3 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 400; font-size: clamp(1.5rem, 2.4vw, 1.9rem); color: var(--paper); }
+  .cube-head .eyebrow { margin-bottom: 0.5rem; }
+  .cube-btns { display: flex; gap: 0.5rem; }
+  .cube-btns button { padding: 0.6rem 1rem; min-height: 40px; border: 1px solid var(--brass-dim); color: var(--paper); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; border-radius: 1px; transition: background .4s var(--ease), color .4s var(--ease); }
+  .cube-btns button:hover { background: var(--brass); color: var(--graphite); }
+  .cube-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr); gap: 1.4rem; }
+  .cube-stage { background: radial-gradient(ellipse 80% 70% at 50% 45%, #1d1c1f 0%, #101012 75%); border: 1px solid rgba(176,141,87,0.18); border-radius: 2px; padding: 0.6rem; min-width: 0; }
+  .cube-stage canvas { display: block; width: 100%; aspect-ratio: 4 / 3; cursor: grab; touch-action: none; }
+  .cube-stage canvas:active { cursor: grabbing; }
+  .cube-legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; padding: 0.55rem 0.3rem 0.2rem; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--muted); }
+  .cube-legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 0.35rem; }
+  .cube-legend i.n { width: 7px; height: 7px; border-radius: 50%; background: #8fb0c8; }
+  .cube-legend i.a { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid #d0ad72; }
+  .cube-panel { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+  .cube-slider { display: grid; gap: 0.3rem; }
+  .cube-slider span { display: flex; justify-content: space-between; font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .cube-slider b { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.1rem; letter-spacing: 0.02em; color: var(--paper); font-weight: 500; text-transform: none; }
+  .cube-slider input { width: 100%; accent-color: #b08d57; min-height: 28px; }
+  .cube-quality { border: 1px solid rgba(176,141,87,0.25); border-radius: 2px; padding: 0.8rem 0.95rem; background: rgba(243,239,230,0.03); }
+  .cube-quality small { font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .cube-quality strong { display: block; font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.45rem; font-weight: 500; color: var(--paper); margin: 0.1rem 0 0.15rem; }
+  .cube-quality[data-q="Coincident modes"] strong { color: #d98c6a; }
+  .cube-quality[data-q="Some clustering"] strong { color: #d0ad72; }
+  .cube-quality span { font-size: 0.74rem; color: var(--muted); }
+  .cube-strip { width: 100%; height: auto; display: block; }
+  .cube-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .cube-table th { font-weight: 400; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); padding: 0.25rem; text-align: center; }
+  .cube-table td { padding: 0.18rem; }
+  .cube-table button { width: 100%; padding: 0.4rem 0.2rem; min-height: 34px; border: 1px solid rgba(232,228,220,0.1); border-radius: 1px; color: var(--off-white); font-size: 0.8rem; transition: border-color .3s var(--ease), background .3s var(--ease); }
+  .cube-table button:hover { border-color: var(--brass-dim); }
+  .cube-table button.clustered { border-color: #d0ad72; color: #e6cf9c; }
+  .cube-table button.coincident { border-color: #d98c6a; color: #f0b49a; }
+  .cube-table button.sel { background: rgba(176,141,87,0.2); border-color: var(--brass); }
+  .cube-note { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+  .ac-inner .essay-continue { margin-top: 2.4rem; display: flex; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
+
+  @media (max-width: 1100px) {
+    .sx .cp-row { grid-template-columns: minmax(0, 1fr) 300px; }
+    .cube-layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 900px) {
+    .sx .cp-row { grid-template-columns: 1fr; }
+    .cp-panel.side-panel { max-height: none; }
+    .iso-model { grid-template-columns: 1fr; }
+    .iso-model .plates { flex-direction: row; flex-wrap: wrap; }
+    .ac-topics { grid-template-columns: 1fr; }
+    .ac-inner { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .iso-assembly { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .cp-brief { grid-template-columns: 1fr; }
+    .iso-topics { grid-template-columns: 1fr; }
+    .cp-svg { min-width: 460px; }
+    .isolation .iso-body { min-height: 0; }
+    .ac-inner { padding: 1.4rem 1.1rem 2.5rem; }
+    .isolation { padding-left: 1.1rem; padding-right: 1.1rem; }
+  }
 </style>
 </head>
 <body>
+<div class="opening" id="opening" role="button" tabindex="0" aria-label="RATEENA SOUND — enter the study" hidden>
+  <img src="assets/rateena-official.jpg" alt="RATEENA SOUND official logo" width="1254" height="1254">
+  <span class="op-hint" aria-hidden="true">Tap to enter</span>
+</div>
 <div class="app">
   <nav class="rail" aria-label="Chapters">
     <div class="rail-brand">CAPC · Study</div>
@@ -729,7 +961,7 @@
       <button class="chapter" data-screen="isolation">
         <span class="num">03</span><span class="label">Isolation</span>
       </button>
-      <button class="chapter" aria-disabled="true" tabindex="-1" title="Coming in later stages">
+      <button class="chapter" data-screen="acoustics">
         <span class="num">04</span><span class="label">Acoustics</span>
       </button>
       <button class="chapter" aria-disabled="true" tabindex="-1" title="Coming in later stages">
@@ -1018,9 +1250,11 @@
         <div class="sx-page active" data-page="1" id="sx-p1">
           <p class="sx-lede">The first shock of a true flagship is the volume of air. Small rooms can sound charming; they almost never sound unarguable.</p>
           <div class="sx-keys">
-            <div class="sx-key"><b>90–100 m²</b><span>Live room, net</span></div>
-            <div class="sx-key"><b>5 m+</b><span>Clear height, preferred</span></div>
+            <div class="sx-key"><b>100 m²</b><span>Live room, net · provisional</span></div>
+            <div class="sx-key"><b>4.50 m</b><span>Clear height, proposed</span></div>
+            <div class="sx-key"><b>Up to 25</b><span>Musicians · design target</span></div>
           </div>
+          <p class="sx-refnote">Figures above are the current programme. The eight sound cards below keep their original fixed reference rooms (<b>6.0 × 5.0 × 2.7 m</b> against <b>10.0 × 9.5 × 5.2 m</b>, with a <b>60 m²</b> alternative) so their audio and calculations are unchanged; they illustrate the principle, not the current room.</p>
           <div class="sx-grid" data-grid="1"></div>
           <div class="sx-next"><button type="button" data-page-go="2">Rooms and adjacencies →</button></div>
         </div>
@@ -1028,12 +1262,58 @@
         <div class="sx-page" data-page="2" id="sx-p2">
           <p class="sx-lede">Getting the sizes right is half the job. The other half is placing each room next to the right neighbours.</p>
           <div class="sx-keys">
-            <div class="sx-key"><b>2 + 1</b><span>Booths · third strongly preferred</span></div>
-            <div class="sx-key"><b>~40 m²</b><span>Control room, net</span></div>
-            <div class="sx-key"><b>300–450 m²</b><span>Whole suite, gross</span></div>
+            <div class="sx-key"><b>3 booths</b><span>Percussion 18 · Bass 7.5 · Vocal 7.5 m²</span></div>
+            <div class="sx-key"><b>24.5 m²</b><span>Control room, net</span></div>
+            <div class="sx-key"><b>≈ 245.5 m²</b><span>Net programme · gross TBD</span></div>
           </div>
+          <p class="sx-refnote">Figures above are the current programme. The sound cards below keep their original Stage 1 wording and reference sizes; the current design brief and true-scale plan follow them.</p>
           <div class="sx-grid" data-grid="2"></div>
 
+          <div class="cp" id="cp">
+            <p class="eyebrow">Current programme · owner update, 11 November 2026</p>
+            <h3 class="cp-h">The design brief</h3>
+            <p class="cp-lede">The reasoning behind the flagship’s current room programme. Every figure is provisional and carries its evidence status: Proposed, Calculated, Simulated, Measured or Verified. Nothing here has been simulated, measured or verified yet.</p>
+            <div class="cp-brief" id="cp-brief"></div>
+
+            <div class="cp-table-wrap on-paper">
+              <table class="cp-table" id="cp-table">
+                <thead><tr><th>Room</th><th>Net target</th><th>Reference envelope</th><th>Clear height</th><th>Basis</th></tr></thead>
+                <tbody></tbody>
+                <tfoot></tfoot>
+                <caption>Net targets are Proposed. Envelope areas are Calculated from the reference dimensions. All provisional, before walls, cavities, circulation and services; gross building area is not yet established.</caption>
+              </table>
+            </div>
+
+            <div class="sx-planhead">
+              <h3>The plan · true scale · tap a room</h3>
+              <div class="cp-layers" role="group" aria-label="Plan layers">
+                <button type="button" data-layer="objects" aria-pressed="true">Typical objects</button>
+                <button type="button" data-layer="dims" aria-pressed="true">Dimensions</button>
+                <button type="button" data-layer="glazing" aria-pressed="true">Glazing</button>
+              </div>
+            </div>
+            <div class="suite-plan-row cp-row">
+              <div class="suite-main">
+                <div class="plan-wrap cp-wrap">
+                  <p class="plan-note">One drawing unit = one metre. Rooms are drawn at their real relative sizes, not shrunk to fit. Proposed spatial study, not an approved footprint.</p>
+                  <div class="cp-scroll"><svg class="cp-svg" id="cp-svg" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="True-scale floor plan of the current flagship programme"></svg></div>
+                  <div class="cp-legend" aria-hidden="true"><span><i></i>Proposed double / laminated glazing · no rating specified</span><span><i class="wz"></i>0.30 m wall zone · drawing allowance</span><span><i class="ob"></i>Typical object · not selected equipment</span></div>
+                </div>
+              </div>
+              <aside class="side-panel cp-panel" id="cp-panel" aria-live="polite"></aside>
+            </div>
+
+            <figure class="cp-concept">
+              <img src="assets/flagship-concept-plan.webp" alt="Latest architectural concept plan for the flagship studio" loading="lazy" width="1440" height="960">
+              <figcaption><b>Latest architectural concept – preliminary reference</b>The owner’s concept image. The true-scale plan above follows its arrangement but not its stated overall envelope, which cannot hold the programme (see the notes below).</figcaption>
+            </figure>
+            <details class="cp-details">
+              <summary>Why the drawing differs from the concept · open questions</summary>
+              <div class="cp-dbody"><ul id="cp-notes"></ul></div>
+            </details>
+            <details class="cp-details cp-earlier">
+              <summary>Stage 1 reference plan · earlier size bands (superseded by the current programme)</summary>
+              <div class="cp-dbody">
           <div class="sx-planhead">
             <h3>The plan · tap a room</h3>
             <div class="toggle" role="group" aria-label="Footprint mode">
@@ -1096,6 +1376,9 @@
               </div>
             </aside>
           </div>
+              </div>
+            </details>
+          </div>
           <div class="sx-next">
             <button type="button" data-page-go="1">← Volume of air</button>
             <button type="button" data-goto="isolation">Continue to Isolation →</button>
@@ -1108,7 +1391,7 @@
       <div class="iso-header">
         <p class="eyebrow">Stage 2 · Atelier</p>
         <h2 class="title">Keeping the world out</h2>
-        <p class="iso-lede">Six plates on how sound is stopped — and where it still sneaks through. Plain English for investors, not acousticians.</p>
+        <p class="iso-lede">Six plates on how sound is stopped — and where it still sneaks through. Plain English for investors, not acousticians. <button type="button" class="iso-jump" id="iso-jump">Construction model ↓</button></p>
         <div class="iso-legend" aria-label="Wave path legend">
           <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 8 Q5 2 9 8 Q13 2 17 8" fill="none" stroke="#c47a3a" stroke-width="1.6"/></svg>Airborne</span>
           <span class="leg"><svg class="swatch" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 5 H5 M7 5 H11 M13 5 H17" fill="none" stroke="#5b7c9a" stroke-width="1.8" stroke-linecap="round"/></svg>Structure-borne</span>
@@ -1136,6 +1419,57 @@
           </div>
         </div>
       </div>
+      <div class="iso-more" id="iso-more">
+        <p class="eyebrow">Construction model · Main Live Room proportions</p>
+        <h3 class="title">Building the room inside the room</h3>
+        <p class="iso-lede">Three stages, one fixed view, drawn to the live room’s current proportions. Mass, decoupling, damping and floating construction are complementary techniques inside one Room-in-Room design, not competing grades.</p>
+        <div class="iso-model">
+          <div class="plates" role="group" aria-label="Isolation construction stages" id="iso-stages"></div>
+          <div class="iso-model-board">
+            <div id="iso-model-svg"></div>
+            <p class="iso-model-exp" id="iso-model-exp"></p>
+            <p class="iso-fine" id="iso-model-fine"></p>
+          </div>
+        </div>
+        <div class="iso-topics" id="iso-topics"></div>
+        <div class="iso-assembly" id="iso-assembly"></div>
+        <div class="iso-next"><button class="btn-continue" data-goto="acoustics">Continue to Acoustics →</button></div>
+      </div>
+    </section>
+    <!-- ── 04 ACOUSTICS ── -->
+    <section class="screen acoustics essay-screen" id="screen-acoustics" aria-label="Acoustics">
+      <div class="ac-inner">
+        <p class="eyebrow">Stage 3 · Acoustics</p>
+        <h2 class="title">Shaping the sound inside</h2>
+        <p class="iso-lede">Isolation keeps the world out. Treatment decides how the room itself sounds: through absorption, diffusion and controlled reflection. It does not stop sound leaving the room.</p>
+        <div class="ac-topics" id="ac-topics"></div>
+        <div class="cube" id="cube">
+          <div class="cube-head">
+            <div><p class="eyebrow">Interactive · illustrative</p><h3>Reflections and standing waves</h3></div>
+            <div class="cube-btns"><button type="button" id="cube-play" aria-pressed="false">Pause</button><button type="button" id="cube-reset">Reset to live room</button></div>
+          </div>
+          <div class="cube-layout">
+            <div class="cube-stage">
+              <canvas id="cube-canvas" role="img" aria-label="Wireframe room with a sound source, reflecting rays and a standing wave. Drag to orbit."></canvas>
+              <div class="cube-legend"><span><i style="background:#d0ad72"></i>Direct sound</span><span><i style="background:#8fb0c8"></i>Reflections (incidence = reflection)</span><span><i class="n"></i>Pressure node</span><span><i class="a"></i>Pressure antinode</span><span>Drag to orbit · visual speed, not real time</span></div>
+            </div>
+            <div class="cube-panel">
+              <label class="cube-slider"><span>Length <b id="cube-vL"></b></span><input type="range" id="cube-L" min="3" max="20" step="0.01" aria-label="Length in metres"></label>
+              <label class="cube-slider"><span>Width <b id="cube-vW"></b></span><input type="range" id="cube-W" min="2.5" max="16" step="0.01" aria-label="Width in metres"></label>
+              <label class="cube-slider"><span>Height <b id="cube-vH"></b></span><input type="range" id="cube-H" min="2.4" max="8" step="0.01" aria-label="Height in metres"></label>
+              <div class="cube-quality" id="cube-quality"><small>Spacing · first four axial modes per axis</small><strong></strong><span></span></div>
+              <svg class="cube-strip" id="cube-strip" viewBox="0 0 300 46" role="img" aria-label="Axial mode frequencies on a frequency axis"></svg>
+              <table class="cube-table" id="cube-table"><thead><tr><th>Axis</th><th>n=1</th><th>n=2</th><th>n=3</th><th>n=4</th></tr></thead><tbody></tbody></table>
+              <p class="cube-note">Hz · f = n·c / 2D, c = 343 m/s. Select a value to show its standing wave. Highlighted values are coincident (within 1 %) or clustered (within 5 %) with a mode on another axis; these are teaching thresholds, not a standard.</p>
+              <p class="cube-note"><span class="tag calculated">Calculated</span> rectangular-room approximation: axial modes only, rigid parallel walls, no tangential or oblique modes, no absorption or irregular geometry. <span class="tag illustrative">Illustrative</span> the animation is a teaching picture, not an acoustic simulation.</p>
+            </div>
+          </div>
+        </div>
+        <div class="essay-continue">
+          <button class="btn-continue" data-goto="isolation">← Isolation</button>
+          <button class="btn-continue" data-goto="suite">The flagship suite →</button>
+        </div>
+      </div>
     </section>
 
   <footer class="whisper">Cairo Audio Production Centre · Phase 1 technical study · Not a feasibility report</footer>
@@ -1149,7 +1483,8 @@
     prologue: document.getElementById('screen-prologue'),
     framing: document.getElementById('screen-framing'),
     suite: document.getElementById('screen-suite'),
-    isolation: document.getElementById('screen-isolation')
+    isolation: document.getElementById('screen-isolation'),
+    acoustics: document.getElementById('screen-acoustics')
   };
   const chapters = document.querySelectorAll('.chapter[data-screen]');
 
@@ -1164,9 +1499,10 @@
       if (on) c.setAttribute('aria-current', 'page');
       else c.removeAttribute('aria-current');
     });
-    if (screens[name].classList.contains('essay-screen')) {
+    if (screens[name].classList.contains('essay-screen') || name === 'isolation') {
       screens[name].scrollTop = 0;
     }
+    document.dispatchEvent(new CustomEvent('capc:screen', { detail: name }));
   }
 
   chapters.forEach(c => c.addEventListener('click', () => goTo(c.dataset.screen)));
@@ -2660,9 +2996,509 @@
   }
   /* swipe between pages on touch */
   let x0 = null, y0 = null;
-  root.addEventListener('touchstart', e => { if (e.target.closest('.plan-wrap')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  root.addEventListener('touchstart', e => { if (e.target.closest('.plan-wrap, .cp-panel, .cp-table-wrap')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
   root.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
     if (Math.abs(dx) > 70 && Math.abs(dy) < 50) setPage(dx < 0 ? 2 : 1); }, { passive: true });
+})();
+</script>
+<script>
+/* RATEENA SOUND merge (12 Nov 2026): current programme, true-scale plan, design brief,
+   isolation construction model, image slots, acoustics cube and the logo opening page.
+   Plain JS in the Cairo app's own idiom; no framework. */
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const tag = s => '<span class="tag ' + s.toLowerCase() + '">' + s + '</span>';
+  const f2 = n => n.toFixed(2);
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const C = 343; // m/s
+  const PHI = (1 + Math.sqrt(5)) / 2;
+  const LOW_E = 41.2; // Hz, lowest open string of a four-string bass
+
+  /* ── Opening page: the official logo alone ── */
+  const opening = $('#opening');
+  const startOpening = !location.hash || location.hash === '#' || location.hash === '#prologue';
+  function enter() {
+    if (opening.hidden) return;
+    opening.hidden = true;
+    const b = $('#btn-begin'); if (b) b.focus({ preventScroll: true });
+  }
+  if (startOpening) {
+    opening.hidden = false;
+    opening.focus({ preventScroll: true });
+    opening.addEventListener('click', enter);
+    opening.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); enter(); } });
+  }
+
+  /* ── Image slots (stored on this device only, IndexedDB) ── */
+  const IMG = (function () {
+    let dbp = null;
+    function db() {
+      if (!('indexedDB' in window)) return Promise.reject(new Error('no indexedDB'));
+      if (!dbp) dbp = new Promise((res, rej) => { const q = indexedDB.open('capc-images', 1); q.onupgradeneeded = () => q.result.createObjectStore('images'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+      return dbp;
+    }
+    function tx(mode, fn) { return db().then(d => new Promise((res, rej) => { const t = d.transaction('images', mode), q = fn(t.objectStore('images')); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); })); }
+    return { get: k => tx('readonly', s => s.get(k)), put: (k, v) => tx('readwrite', s => s.put(v, k)), del: k => tx('readwrite', s => s.delete(k)) };
+  })();
+  const TYPES = ['image/png', 'image/jpeg', 'image/webp'], MAX = 15 * 1024 * 1024;
+  function mountSlot(el) {
+    if (el.dataset.mounted) return; el.dataset.mounted = '1';
+    const key = el.dataset.slot, label = el.dataset.label;
+    el.innerHTML = '<div class="slot-view"><span class="slot-ph"></span><small>Drop an image here or use “Add image”. Kept on this device only.</small></div><div class="slot-bar"><span class="sl"></span><label class="slot-btn"><span class="sb">Add image</span><input type="file" accept="image/png,image/jpeg,image/webp"></label><button type="button" class="slot-btn slot-rm" hidden>Remove</button></div>';
+    $('.slot-ph', el).textContent = label + ' – to be added';
+    $('input', el).setAttribute('aria-label', label + ' file');
+    const view = $('.slot-view', el), sl = $('.sl', el), rm = $('.slot-rm', el), sb = $('.sb', el);
+    let url = null;
+    function show(rec) {
+      if (url) { URL.revokeObjectURL(url); url = null; }
+      const old = $('img', view); if (old) old.remove();
+      const err = $('.slot-err', el); if (err) err.remove();
+      if (rec && rec.blob) { url = URL.createObjectURL(rec.blob); const im = new Image(); im.src = url; im.alt = label + ': ' + rec.name; view.appendChild(im); sl.textContent = rec.name + ' · on this device'; rm.hidden = false; sb.textContent = 'Replace'; }
+      else { sl.textContent = label; rm.hidden = true; sb.textContent = 'Add image'; }
+    }
+    function fail(m) { const e = document.createElement('p'); e.className = 'slot-err'; e.textContent = m; const o = $('.slot-err', el); if (o) o.remove(); el.appendChild(e); }
+    function take(file) {
+      if (!file) return; if (TYPES.indexOf(file.type) < 0) return fail('Use a PNG, JPEG or WebP image.'); if (file.size > MAX) return fail('Image is larger than 15 MB.');
+      const rec = { blob: file, name: file.name, date: new Date().toISOString() };
+      IMG.put(key, rec).then(() => show(rec)).catch(() => fail('This browser could not store the image.'));
+    }
+    $('input', el).addEventListener('change', e => { take(e.target.files[0]); e.target.value = ''; });
+    rm.addEventListener('click', () => IMG.del(key).then(() => show(null)).catch(() => {}));
+    view.addEventListener('dragover', e => { e.preventDefault(); view.classList.add('drag'); });
+    view.addEventListener('dragleave', () => view.classList.remove('drag'));
+    view.addEventListener('drop', e => { e.preventDefault(); view.classList.remove('drag'); take(e.dataTransfer.files[0]); });
+    show(null);
+    IMG.get(key).then(rec => { if (rec) show(rec); }).catch(() => {});
+  }
+  function mountSlots(root) { $$('.slot[data-slot]', root).forEach(mountSlot); }
+
+  /* ── Current programme (owner, 11 Nov 2026) ── */
+  const PROG = [
+    { id: 'live', name: 'Main Live Room', short: 'Main Live Room', purpose: 'Ensemble recording. Design target: up to 25 musicians.', area: 100, L: 12, W: 8.33, H: 4.5 },
+    { id: 'control', name: 'Control Room', short: 'Control Room', purpose: 'Monitoring and production, at the centre of the suite with sight lines to every recording space.', area: 24.5, L: 5, W: 4.9, H: 3.6 },
+    { id: 'percussion', name: 'Percussion Isolation Booth', short: 'Percussion', purpose: 'Drums and percussion.', area: 18, L: 4, W: 4.5, H: null },
+    { id: 'bass', name: 'Bass / Rhythm Isolation Booth', short: 'Bass / Rhythm', purpose: 'Bass and rhythm recording.', area: 7.5, L: 3, W: 2.5, H: null },
+    { id: 'vocal', name: 'Vocal Isolation Booth', short: 'Vocal', purpose: 'Vocal recording.', area: 7.5, L: 3, W: 2.5, H: null },
+    { id: 'equipment', name: 'Equipment Room', short: 'Tech', purpose: 'Technical equipment.', area: 8, L: 2, W: 4, H: null, derived: true },
+    { id: 'storage', name: 'Storage Room', short: 'Storage', purpose: 'Equipment and instrument storage.', area: 10, L: 2, W: 5, H: null, derived: true },
+    { id: 'lounge', name: 'Lounge & Services', short: 'Lounge & Services', purpose: 'Lounge, toilets (WC Men and Women) and supporting facilities.', area: 70, L: 12, W: 5.85, H: 3 }
+  ];
+  const byId = id => PROG.find(r => r.id === id);
+  const live = byId('live');
+  const WZ = 0.3; // Proposed drawing allowance, not an engineered wall
+
+  const NOTES = [
+    'The concept image labels the overall envelope 12.00 × 14.18 m, but its vertical bands 8.33 + 5.85 + 5.85 total 20.03 m. These cannot describe the same rectangular footprint.',
+    'The room targets total 245.5 m², more than 12.00 × 14.18 = 170.16 m² before walls, cavities or circulation. The stated overall footprint is therefore not adopted.',
+    'The live room calculates to 99.96 m² against a rounded 100 m² target; the lounge to 70.20 m² against 70 m². Both values are kept.',
+    'The middle row’s 4 m percussion, 5 m control and 3 m booth widths already total 12 m before equipment, storage or partitions, so the drawing widens the middle band rather than shrinking rooms to fake a fit.',
+    'The 5.00 × 4.90 m control envelope gives 24.5 m² only as a rectangle. Angled corners need a dimensioned finished outline before a true net area is known.',
+    'Heights of 4.50 m (live), 3.60 m (control) and 3.00 m (lounge) are Proposed from the concept. Other room heights are not yet specified and none is invented.',
+    'Equipment 2.00 × 4.00 m and storage 2.00 × 5.00 m are area-derived drawing assumptions: only their areas were supplied.',
+    'The 0.30 m wall zones and the 1.20 m access strips are drawing allowances, not engineered wall build-ups or approved circulation, accessibility or escape routes.',
+    'Doors, WC cubicles, furniture and instruments are typical-size references, not approved details or selected equipment. A 2.74 m concert grand is shown in the live room only.',
+    'Glazing positions are proposed. Window widths are typical drawing references; no acoustic rating, glass build-up or frame detail is specified.',
+    'Capacity of up to 25 musicians is the owner’s design target; layout, ventilation and egress for 25 are not yet validated.'
+  ];
+
+  function axial(d, n) { return n * C / (2 * d); }
+  function analyse(D, orders) {
+    orders = orders || 4; const modes = [];
+    ['L', 'W', 'H'].forEach(a => { for (let n = 1; n <= orders; n++) modes.push({ axis: a, n: n, hz: axial(D[a], n), flag: null }); });
+    let co = 0, cl = 0;
+    for (let i = 0; i < modes.length; i++) for (let j = i + 1; j < modes.length; j++) {
+      const a = modes[i], b = modes[j]; if (a.axis === b.axis) continue;
+      const rel = Math.abs(a.hz - b.hz) / Math.min(a.hz, b.hz);
+      const fl = rel <= 0.01 ? 'coincident' : rel <= 0.05 ? 'clustered' : null; if (!fl) continue;
+      if (fl === 'coincident') co++; else cl++;
+      [a, b].forEach(m => { if (!m.flag || fl === 'coincident') m.flag = fl; });
+    }
+    modes.sort((a, b) => a.hz - b.hz);
+    return { modes: modes, co: co, cl: cl, quality: co ? 'Coincident modes' : cl ? 'Some clustering' : 'Even spacing', ratio: [1, D.W / D.H, D.L / D.H] };
+  }
+  window.CAPC_MODES = { axial: axial, analyse: analyse };
+
+  /* design brief */
+  const brief = $('#cp-brief');
+  if (brief) {
+    const r = [1, live.W / live.H, live.L / live.H];
+    brief.innerHTML = [
+      ['I', 'Proportion', '<p>The Main Live Room’s proportions are <em>informed by</em> golden-ratio proportioning, with the aim of spreading room modes more evenly. They are not an exact golden ratio.</p><p class="fig">H : W : L = 1 : ' + f2(r[1]) + ' : ' + f2(r[2]) + '<small>' + f2(live.L) + ' × ' + f2(live.W) + ' × ' + f2(live.H) + ' m · reference φ = ' + PHI.toFixed(3) + ', φ² = ' + (PHI * PHI).toFixed(3) + '</small></p>', 'Calculated'],
+      ['II', 'Ensemble capacity', '<p>The live room is sized for <em>up to 25 musicians</em>. This is the owner’s design target, still to be validated against layout, circulation, ventilation and egress.</p>', 'Proposed'],
+      ['III', 'Length for the low end', '<p>The ' + f2(live.L) + ' m length gives low-frequency wavelengths room to develop. The low E of a bass guitar (≈ ' + LOW_E + ' Hz) has a wavelength of about ' + f2(C / LOW_E) + ' m at c = 343 m/s.</p>', 'Calculated'],
+      ['IV', 'Height for air and clarity', '<p>The ' + f2(live.H) + ' m height is intended to let upper frequencies and early reflections sound natural and comfortable rather than harsh and close. Final behaviour depends on treatment, still to be designed and verified.</p>', 'Proposed'],
+      ['V', 'A central control room', '<p>The control room sits at the centre, with glass to the live room (north), the lounge (south), the percussion booth (west) and the bass/rhythm and vocal booths (east), each window set in an otherwise solid isolating wall. Shown on the plan as proposed double / laminated glazing; no acoustic rating is specified yet.</p>', 'Proposed']
+    ].map((a, i) => '<article' + (i === 4 ? ' class="wide"' : '') + '><span class="rn">' + a[0] + '</span><h4>' + a[1] + '</h4>' + a[2] + tag(a[3]) + '</article>').join('');
+  }
+  const table = $('#cp-table');
+  if (table) {
+    table.tBodies[0].innerHTML = PROG.map(r => '<tr><td>' + r.name + '</td><td class="n">' + r.area + ' m²</td><td>' + f2(r.L) + ' × ' + f2(r.W) + ' m = ' + f2(r.L * r.W) + ' m²</td><td>' + (r.H ? f2(r.H) + ' m' : 'Not yet specified') + '</td><td>' + (r.derived ? 'Area-derived assumption' : 'Concept') + '</td></tr>').join('');
+    const tot = PROG.reduce((s, r) => s + r.area, 0);
+    table.tFoot.innerHTML = '<tr><td>Net programme</td><td class="n">' + tot + ' m²</td><td colspan="3">Provisional · capacity up to 25 musicians (design target) · gross area TBD</td></tr>';
+  }
+  const notes = $('#cp-notes'); if (notes) notes.innerHTML = NOTES.map(n => '<li>' + n + '</li>').join('');
+
+  /* ── True-scale plan ── */
+  function spatial() {
+    const eq = byId('equipment'), p = byId('percussion'), c = byId('control'), b = byId('bass'), v = byId('vocal'), s = byId('storage'), l = byId('lounge'), w = WZ;
+    const px = w + eq.L + w, cx = px + p.L + w, bx = cx + c.L + w, bw = Math.max(b.L, v.L), sx = bx + bw + 2 * w + 1.2;
+    const centre = (px + bx + bw) / 2, top = w, mid = top + live.W + w;
+    const midDepth = Math.max(5.85, eq.W, p.W, c.W, b.W + w + v.W, s.W), ly = mid + midDepth + 2 * w + 1.2;
+    const pl = (r, x, y) => ({ id: r.id, x: x, y: y, w: r.L, d: r.W, r: r });
+    const rooms = [pl(live, centre - live.L / 2, top), pl(eq, w, mid), pl(p, px, mid), pl(c, cx, mid), pl(b, bx, mid), pl(v, bx, mid + b.W + w), pl(s, sx, mid), pl(l, centre - l.L / 2, ly)];
+    return { rooms: rooms, width: Math.max.apply(null, rooms.map(r => r.x + r.w)) + w, height: Math.max.apply(null, rooms.map(r => r.y + r.d)) + w };
+  }
+  const SP = spatial();
+  const R = id => SP.rooms.find(r => r.id === id);
+  const OBJ = [
+    ['live', 1, 2, 1.57, 2.74, 'piano', 'Concert grand 2.74 × 1.57 m'],
+    ['live', 7, 3.7, 2.4, 2.4, 'riser', 'Drum riser 2.4 × 2.4 m'],
+    ['live', 7.3, 4.15, 1.8, 1.5, 'drums', 'Drum kit footprint 1.8 × 1.5 m'],
+    ['live', 10, 2.8, 1, 1, 'person', 'Double-bass player 1 × 1 m (instrument about 1.9 m tall)'],
+    ['live', 4, 2.8, 0.8, 0.8, 'person', 'Musician chair space 0.8 × 0.8 m'], ['live', 5.3, 2.8, 0.8, 0.8, 'person', 'Musician chair space 0.8 × 0.8 m'],
+    ['live', 4, 4.2, 0.8, 0.8, 'person', 'Musician chair space 0.8 × 0.8 m'], ['live', 5.3, 4.2, 0.8, 0.8, 'person', 'Musician chair space 0.8 × 0.8 m'],
+    ['percussion', 0.8, 1.2, 2.4, 2.4, 'riser', 'Drum riser 2.4 × 2.4 m'], ['percussion', 1.1, 1.65, 1.8, 1.5, 'drums', 'Drum kit footprint 1.8 × 1.5 m'],
+    ['bass', 1, 1.1, 1, 1, 'person', 'Player footprint 1 × 1 m'], ['vocal', 1.1, 1.1, 0.8, 0.8, 'person', 'Singer space 0.8 × 0.8 m'],
+    ['control', 1.4, 1.5, 2.2, 1, 'console', 'Console reference 2.2 × 1.0 m'], ['control', 2.175, 2.85, 0.65, 0.65, 'chair', 'Engineer chair, 0.65 m diameter'],
+    ['equipment', 0.2, 1.2, 0.6, 1, 'rack', '19-inch rack enclosure 0.6 × 1.0 m'], ['equipment', 1.1, 1.2, 0.6, 1, 'rack', '19-inch rack enclosure 0.6 × 1.0 m'],
+    ['lounge', 3.4, 2.7, 2.1, 0.9, 'sofa', 'Three-seat sofa 2.1 × 0.9 m']
+  ].map(o => { const r = R(o[0]); return { room: o[0], x: r.x + o[1], y: r.y + o[2], w: o[3], d: o[4], type: o[5], label: o[6] }; });
+  function windows() {
+    const c = R('control'), l = R('lounge'), h = WZ / 2, span = (len, max) => Math.min(len, Math.max(0.6, max - 0.4));
+    return [
+      { id: 'live', room: 'live', label: 'Control room to Main Live Room', x: c.x + (c.w - span(2.4, c.w)) / 2, y: c.y - h, len: span(2.4, c.w), v: false },
+      { id: 'lounge', room: 'lounge', label: 'Control room to circulation / lounge', x: c.x + 0.35, y: c.y + c.d + h, len: span(1.5, c.w / 2 - 0.4), v: false },
+      { id: 'lounge-wall', room: 'lounge', label: 'Lounge wall, aligned for the sight line', x: c.x + 0.35, y: l.y - h, len: span(1.5, c.w / 2 - 0.4), v: false },
+      { id: 'percussion', room: 'percussion', label: 'Control room to Percussion Isolation Booth', x: c.x - h, y: c.y + 1.2, len: span(1.2, c.d - 1.2), v: true },
+      { id: 'bass', room: 'bass', label: 'Control room to Bass / Rhythm Isolation Booth', x: c.x + c.w + h, y: c.y + 0.7, len: span(1.0, R('bass').d - 0.7), v: true },
+      { id: 'vocal', room: 'vocal', label: 'Control room to Vocal Isolation Booth', x: c.x + c.w + h, y: R('vocal').y + 0.4, len: span(1.0, R('vocal').d - 0.4), v: true }
+    ];
+  }
+  const WIN = windows();
+  function bottomDoor(x, y, width, dbl) {
+    width = width || 0.9; const leaf = dbl ? width / 2 : width;
+    let s = '<g class="door"><path class="cut" stroke-width="' + (WZ + 0.06) + '" d="M' + x + ' ' + y + 'H' + (x + width) + '"/><path d="M' + x + ' ' + y + 'V' + (y - leaf) + 'M' + x + ' ' + (y - leaf) + 'A' + leaf + ' ' + leaf + ' 0 0 1 ' + (x + leaf) + ' ' + y + '"/>';
+    if (dbl) s += '<path d="M' + (x + width) + ' ' + y + 'V' + (y - leaf) + 'M' + (x + width) + ' ' + (y - leaf) + 'A' + leaf + ' ' + leaf + ' 0 0 0 ' + (x + width - leaf) + ' ' + y + '"/>';
+    return s + '</g>';
+  }
+  function rightDoor(x, y) {
+    return '<g class="door"><path class="cut" stroke-width="' + (WZ + 0.06) + '" d="M' + x + ' ' + y + 'V' + (y + 0.9) + '"/><path d="M' + x + ' ' + y + 'H' + (x - 0.9) + 'M' + (x - 0.9) + ' ' + y + 'A.9 .9 0 0 0 ' + x + ' ' + (y + 0.9) + '"/></g>';
+  }
+  function objSvg(o) {
+    let g = '<g class="obj"><title>' + esc(o.label) + ' · typical size reference</title><rect class="bd" x="' + o.x + '" y="' + o.y + '" width="' + o.w + '" height="' + o.d + '"/>';
+    const cx = o.x + o.w / 2, cy = o.y + o.d / 2;
+    if (o.type === 'piano') g += '<path d="M' + (o.x + 0.1) + ' ' + (o.y + 0.1) + 'H' + (o.x + o.w - 0.1) + 'V' + (o.y + o.d * 0.55) + 'Q' + (o.x + o.w - 0.1) + ' ' + (o.y + o.d - 0.1) + ' ' + cx + ' ' + (o.y + o.d - 0.1) + 'Q' + (o.x + 0.1) + ' ' + (o.y + o.d - 0.1) + ' ' + (o.x + 0.1) + ' ' + (o.y + o.d * 0.6) + 'Z"/>';
+    else if (o.type === 'drums') [[0.3, 0.35, 0.28], [0.65, 0.3, 0.22], [0.5, 0.7, 0.3], [0.85, 0.7, 0.2]].forEach(k => { g += '<circle cx="' + (o.x + o.w * k[0]) + '" cy="' + (o.y + o.d * k[1]) + '" r="' + k[2] + '"/>'; });
+    else if (o.type === 'person' || o.type === 'chair') g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (Math.min(o.w, o.d) * 0.32) + '"/>';
+    else if (o.type === 'console') { g += '<rect x="' + (o.x + 0.08) + '" y="' + (o.y + 0.1) + '" width="' + (o.w - 0.16) + '" height="' + (o.d - 0.2) + '"/>'; for (let i = 1; i < 8; i++) g += '<path d="M' + (o.x + o.w * i / 8) + ' ' + (o.y + 0.2) + 'V' + (o.y + o.d - 0.2) + '"/>'; }
+    else if (o.type === 'sofa' || o.type === 'rack') g += '<rect x="' + (o.x + 0.12) + '" y="' + (o.y + 0.14) + '" width="' + (o.w - 0.24) + '" height="' + (o.d - 0.24) + '"/>';
+    return g + '</g>';
+  }
+  let selected = 'live', tab = 'Overview';
+  function drawPlan() {
+    const svg = $('#cp-svg'); if (!svg) return;
+    const minX = -1.1, minY = -0.3, W = SP.width + 0.6 - minX, H = SP.height + 2.7 - minY;
+    svg.setAttribute('viewBox', minX + ' ' + minY + ' ' + W + ' ' + H);
+    let s = '';
+    SP.rooms.forEach(a => { s += '<rect class="wall" x="' + (a.x - WZ) + '" y="' + (a.y - WZ) + '" width="' + (a.w + 2 * WZ) + '" height="' + (a.d + 2 * WZ) + '"/>'; });
+    SP.rooms.forEach((a, i) => {
+      const small = a.w <= 3, nm = (String(i + 1).padStart(2, '0') + ' ' + a.r.short).toUpperCase();
+      s += '<g class="cp-room' + (a.id === selected ? ' selected' : '') + '" data-room="' + a.id + '" tabindex="0" role="button" aria-label="' + esc(a.r.name + ', ' + a.r.area + ' square metres target') + '">' +
+        '<rect class="fl" x="' + a.x + '" y="' + a.y + '" width="' + a.w + '" height="' + a.d + '"/>' +
+        '<text class="nm" x="' + (a.x + a.w / 2) + '" y="' + (a.y + 0.6) + '"' + (small ? ' style="font-size:.26px"' : '') + '>' + esc(nm) + '</text>' +
+        '<text class="ar" x="' + (a.x + a.w / 2) + '" y="' + (a.y + 0.98) + '">' + a.r.area + ' m² target</text></g>';
+      s += '<g class="dim"><path d="M' + a.x + ' ' + (a.y + a.d + 0.2) + 'V' + (a.y + a.d + 0.65) + 'M' + a.x + ' ' + (a.y + a.d + 0.5) + 'H' + (a.x + a.w) + 'M' + (a.x + a.w) + ' ' + (a.y + a.d + 0.2) + 'V' + (a.y + a.d + 0.65) + '"/><text x="' + (a.x + a.w / 2) + '" y="' + (a.y + a.d + 0.44) + '">' + f2(a.w) + ' m</text>';
+      if (a.id === 'live' || a.id === 'lounge') s += '<path d="M' + (a.x - 0.5) + ' ' + a.y + 'V' + (a.y + a.d) + 'M' + (a.x - 0.65) + ' ' + a.y + 'H' + (a.x - 0.2) + 'M' + (a.x - 0.65) + ' ' + (a.y + a.d) + 'H' + (a.x - 0.2) + '"/><text transform="translate(' + (a.x - 0.62) + ' ' + (a.y + a.d / 2) + ') rotate(-90)">' + f2(a.d) + ' m</text>';
+      s += '</g>';
+    });
+    OBJ.forEach(o => { s += objSvg(o); });
+    const l = R('lounge');
+    [0, 1].forEach(n => {
+      const x = l.x + 0.4 + n * 1.8, y = l.y + l.d - 1.3;
+      s += '<g class="obj"><title>WC ' + (n ? 'Women' : 'Men') + ' cubicle 1.5 × 0.9 m · typical only; accessibility and services unresolved</title><rect x="' + x + '" y="' + y + '" width="1.5" height=".9"/><ellipse cx="' + (x + 0.38) + '" cy="' + (y + 0.5) + '" rx=".19" ry=".3"/></g><text class="ar" x="' + (x + 1.05) + '" y="' + (y + 0.55) + '" style="font-size:.2px">WC ' + (n ? 'W' : 'M') + '</text>';
+    });
+    SP.rooms.forEach(a => {
+      if (a.id === 'live' || a.id === 'bass' || a.id === 'vocal') s += rightDoor(a.x + a.w + 0.15, a.y + (a.id === 'live' ? a.d - 1.5 : 1.1));
+      else s += bottomDoor(a.id === 'lounge' ? a.x + a.w / 2 - 0.9 : a.x + Math.max(0.1, (a.w - 0.9) / 2), a.y + a.d + 0.15, a.id === 'lounge' ? 1.8 : 0.9, a.id === 'lounge');
+    });
+    s += '<g transform="translate(' + (l.x + l.w - 1.2) + ' ' + (l.y - 0.15) + ') rotate(180)"><title>Proposed 0.90 m lounge-to-studio door</title>' + bottomDoor(0, 0) + '</g>';
+    WIN.forEach(w => {
+      const t = WZ + 0.04;
+      s += '<g class="glz" data-window="' + w.id + '"><title>' + esc(w.label) + ' · proposed double / laminated glazing, about ' + f2(w.len) + ' m wide (typical drawing reference); acoustic rating not specified</title>' +
+        (w.v ? '<rect class="cut" x="' + (w.x - t / 2) + '" y="' + w.y + '" width="' + t + '" height="' + w.len + '"/><path class="pane" d="M' + (w.x - 0.075) + ' ' + w.y + 'V' + (w.y + w.len) + 'M' + (w.x + 0.075) + ' ' + w.y + 'V' + (w.y + w.len) + '"/>'
+             : '<rect class="cut" x="' + w.x + '" y="' + (w.y - t / 2) + '" width="' + w.len + '" height="' + t + '"/><path class="pane" d="M' + w.x + ' ' + (w.y - 0.075) + 'H' + (w.x + w.len) + 'M' + w.x + ' ' + (w.y + 0.075) + 'H' + (w.x + w.len) + '"/>') + '</g>';
+    });
+    s += '<text class="note" text-anchor="middle" x="' + (l.x + l.w / 2) + '" y="' + (l.y + l.d + 1.05) + '">MAIN ENTRANCE · 1.80 m TYPICAL PAIR</text>';
+    const by = SP.height + 1.75;
+    s += '<g class="scale" transform="translate(0 ' + by + ')"><title>Scale bar: 5 metres</title>';
+    for (let i = 0; i < 5; i++) s += '<rect x="' + i + '" y="0" width="1" height=".16" fill="' + (i % 2 ? '#f3efe6' : 'rgba(26,25,23,.6)') + '"/>';
+    for (let i = 0; i <= 5; i++) s += '<text x="' + i + '" y=".48">' + i + (i === 5 ? ' m' : '') + '</text>';
+    s += '</g><text class="note" x="6.4" y="' + (by + 0.2) + '">1 UNIT = 1 m · 0.30 m WALL ZONES · TYPICAL OBJECTS · PROPOSED, NOT FOR CONSTRUCTION</text>';
+    svg.innerHTML = s;
+  }
+  function modesTable(r) {
+    if (!r.H) return '<p class="cp-pending">Clear height not yet specified, so a complete axial-mode reference cannot be calculated.</p>';
+    const rows = [['Length', r.L], ['Width', r.W], ['Height', r.H]].map(a => '<tr><th>' + a[0] + ' ' + f2(a[1]) + ' m</th>' + [1, 2, 3].map(n => '<td>' + axial(a[1], n).toFixed(1) + '</td>').join('') + '</tr>').join('');
+    return '<table class="cp-modes"><thead><tr><th>Axial modes (Hz)</th><td>n=1</td><td>n=2</td><td>n=3</td></tr></thead><tbody>' + rows + '</tbody></table><p class="cp-small">' + tag('Calculated') + ' rectangular-room approximation, f = n·343 / 2D. Not a prediction of how the finished room will sound.</p>';
+  }
+  const TABS = ['Overview', 'Architecture', 'Sound Isolation', 'Internal Acoustics', 'Infrastructure', 'Equipment', 'Documents'];
+  function tabBody(r) {
+    const wins = WIN.filter(w => w.room === r.id || r.id === 'control');
+    switch (tab) {
+      case 'Overview':
+        return '<p>' + esc(r.purpose) + '</p><div class="meta-grid" style="margin-top:1rem">' +
+          '<div class="meta-item"><label>Net target</label><span>' + r.area + ' m²</span> ' + tag('Proposed') + '</div>' +
+          '<div class="meta-item"><label>Reference envelope</label><span>' + f2(r.L) + ' × ' + f2(r.W) + ' m</span></div>' +
+          '<div class="meta-item"><label>Envelope area</label><span>' + f2(r.L * r.W) + ' m²</span> ' + tag('Calculated') + '</div>' +
+          '<div class="meta-item"><label>Clear height</label><span>' + (r.H ? f2(r.H) + ' m' : 'Not yet specified') + '</span> ' + (r.H ? tag('Proposed') : '') + '</div>' +
+          (r.id === 'live' ? '<div class="meta-item" style="grid-column:1/-1"><label>Capacity</label><span>Up to 25 musicians</span> ' + tag('Proposed') + '</div>' : '') +
+          '</div>' + (r.derived ? '<p class="cp-small">Dimensions are an area-derived drawing assumption; only the area was supplied.</p>' : '') +
+          '<div class="slot" data-slot="room:' + r.id + '" data-label="' + esc(r.short) + ' image"></div>';
+      case 'Architecture':
+        return '<h4>Architecture</h4><p>Walls, floor, ceiling, doors and glazing remain subject to developed architecture and engineering coordination. The drawing uses provisional 0.30 m wall zones, not approved wall assemblies.</p><ul><li>Doors drawn as typical 0.90 m leaves' + (r.id === 'lounge' ? ', with a 1.80 m entrance pair' : '') + '; positions and swings are proposed.</li>' +
+          (wins.length ? wins.map(w => '<li>Glazing: ' + esc(w.label) + ', about ' + f2(w.len) + ' m (typical drawing reference).</li>').join('') : '<li>No glazing drawn for this room.</li>') +
+          '</ul>' + (wins.length ? '<p class="cp-small">' + tag('Proposed') + ' double / laminated glazing. No acoustic rating, glass build-up or frame detail is specified.</p>' : '');
+      case 'Sound Isolation':
+        return '<h4>Sound isolation</h4><p>Critical recording spaces are planned around an integrated Room-in-Room / Box-in-Box strategy. Mass, decoupling, damping and room-specific floating construction are complementary techniques.</p><ul><li>Walls: outer and inner leaves, independent framing where feasible, cavity and damping, airtight junctions.</li><li>Floor: room-specific floating construction where the brief needs it; supports chosen from loads and resonance, springs not assumed.</li><li>Ceiling: independent or engineered resilient support coordinated with ducts and lighting.</li></ul><p class="cp-pending">Build-ups, cavity depths and performance targets for this room: pending engineering input.</p><button type="button" class="cp-link" data-cp-goto="isolation">See the construction model →</button>';
+      case 'Internal Acoustics':
+        return '<h4>Internal acoustics</h4><p>Treatment, room modes, bass control, decay and listening or performing conditions need room-specific study. No treatment quantities or achieved performance are asserted.</p>' + modesTable(r) +
+          (r.H ? '<button type="button" class="cp-link" data-cp-cube="' + r.id + '">Explore this room in the acoustics cube →</button>' : '');
+      case 'Infrastructure':
+        return '<h4>Infrastructure</h4><p>HVAC, electrical, audio wiring, data and lighting requirements are awaiting coordinated engineering input.</p><p class="cp-pending">Actual infrastructure study content: pending engineering input.</p>';
+      case 'Equipment': {
+        const objs = OBJ.filter(o => o.room === r.id);
+        return '<h4>Equipment</h4><p>Planned equipment and operating requirements are pending. Drawing objects are typical size references only, not an equipment schedule.</p>' +
+          (objs.length ? '<ul>' + objs.map(o => '<li>' + esc(o.label) + '</li>').join('') + '</ul>' : '<p class="cp-small">No typical objects drawn in this room.</p>') +
+          (r.id === 'live' ? '<p class="cp-small">A 3 × 2.5 m booth leaves 0.26 m beside a 2.74 m grand before clearances, so no piano-booth layout is claimed.</p>' : '');
+      }
+      default:
+        return '<h4>Documents</h4><a href="assets/flagship-concept-plan.webp" target="_blank" rel="noopener"><img class="cp-thumb" src="assets/flagship-concept-plan.webp" alt="Latest architectural concept – preliminary reference" loading="lazy"></a><p class="cp-small">Latest architectural concept – preliminary reference. The true-scale plan does not adopt its stated overall envelope.</p>' +
+          '<div class="slot" data-slot="room:' + r.id + ':doc" data-label="' + esc(r.short) + ' drawing or document image"></div>';
+    }
+  }
+  function renderPanel() {
+    const p = $('#cp-panel'); if (!p) return;
+    const r = byId(selected), idx = PROG.indexOf(r) + 1;
+    p.innerHTML = '<p class="eyebrow">Selected room · ' + String(idx).padStart(2, '0') + '</p><h3 class="side-name">' + esc(r.name) + '</h3>' +
+      '<div class="cp-tabs" role="tablist" aria-label="Room information">' + TABS.map(t => '<button type="button" role="tab" aria-selected="' + (t === tab) + '" data-tab="' + t + '">' + t + '</button>').join('') + '</div>' +
+      '<div role="tabpanel" aria-label="' + esc(tab) + '">' + tabBody(r) + '</div>';
+    mountSlots(p);
+  }
+  function selectRoom(id) {
+    selected = id;
+    $$('#cp-svg .cp-room').forEach(g => g.classList.toggle('selected', g.dataset.room === id));
+    renderPanel();
+  }
+  const svgEl = $('#cp-svg');
+  if (svgEl) {
+    drawPlan(); renderPanel();
+    svgEl.addEventListener('click', e => { const g = e.target.closest('.cp-room'); if (g) selectRoom(g.dataset.room); });
+    svgEl.addEventListener('keydown', e => { const g = e.target.closest('.cp-room'); if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); selectRoom(g.dataset.room); } });
+    $('#cp-panel').addEventListener('click', e => {
+      const t = e.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; renderPanel(); const nb = $('#cp-panel [data-tab="' + tab + '"]'); if (nb) nb.focus(); return; }
+      const g = e.target.closest('[data-cp-goto]'); if (g) { goChapter(g.dataset.cpGoto); if (g.dataset.cpGoto === 'isolation') setTimeout(() => { const m = $('#iso-more'); if (m) m.scrollIntoView({ block: 'start' }); }, 50); return; }
+      const cb = e.target.closest('[data-cp-cube]'); if (cb) { const r = byId(cb.dataset.cpCube); goChapter('acoustics'); if (CUBE) CUBE.set({ L: r.L, W: r.W, H: r.H }); }
+    });
+    $$('.cp-layers button').forEach(b => b.addEventListener('click', () => {
+      const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+      svgEl.classList.toggle('no-' + b.dataset.layer, !on);
+    }));
+  }
+  function goChapter(name) { const c = $('.chapter[data-screen="' + name + '"]'); if (c) c.click(); }
+
+  /* ── Isolation: three-stage construction model and techniques ── */
+  const STAGES = [
+    ['Structural shell', 'The base building provides the outer boundary. Its junctions and flanking paths still need assessment.'],
+    ['Independent inner envelope', 'Add separately supported inner walls and an isolated ceiling strategy. Mass, separation and damping work together; keep junctions airtight and avoid rigid bridges.'],
+    ['Floating construction & continuity', 'Add a room-specific floating-floor concept and complete the seals and service interfaces. Supports are selected from loads and resonance requirements; springs are not assumed.']
+  ];
+  const ROMAN = ['I', 'II', 'III', 'IV'];
+  let stage = 0;
+  function modelSvg() {
+    const L = live.L, W = live.W, H = live.H, al = 0.3, lx = L + 2 * al, wy = W + 2 * al, hz = H + 2 * al;
+    const sc = Math.min(560 / (0.866 * (lx + wy)), 320 / ((lx + wy) * 0.5 + hz));
+    const cx = 350 - ((lx - wy) * 0.866 * sc) / 2, cy = 40 + hz * sc;
+    const pt = (x, y, z) => (cx + (x - y) * 0.866 * sc).toFixed(1) + ',' + (cy + (x + y) * 0.5 * sc - z * sc).toFixed(1);
+    const plane = (z, i) => { i = i || 0; return [[i, i], [lx - i, i], [lx - i, wy - i], [i, wy - i]].map(p => pt(p[0], p[1], z)).join(' '); };
+    const ov = [[0, 0], [lx, 0], [lx, wy], [0, wy]];
+    let s = '<svg viewBox="0 0 700 420" role="img" aria-label="Fixed live-room geometry, construction stage ' + (stage + 1) + ': ' + STAGES[stage][0] + '"><g stroke-linejoin="round">';
+    s += '<polygon points="' + plane(hz) + '" fill="none" stroke="#1a1917" stroke-width="1.6"/><polygon points="' + plane(0) + '" fill="none" stroke="#8a8478" stroke-dasharray="5 7"/>';
+    ov.forEach(p => { s += '<path d="M' + pt(p[0], p[1], 0) + 'L' + pt(p[0], p[1], hz) + '" fill="none" stroke="#1a1917" stroke-width="1.6"/>'; });
+    s += '<text x="40" y="404">STRUCTURAL SHELL</text>';
+    if (stage >= 1) s += '<text x="230" y="404" style="fill:#4f6f8c">INNER WALLS + CEILING STRATEGY</text>';
+    if (stage >= 2) s += '<text x="490" y="404" style="fill:#9a7440">ROOM-SPECIFIC FLOATING FLOOR</text>';
+    if (stage >= 1) {
+      s += '<polygon points="' + plane(H + al, al) + '" fill="#5b7c9a" fill-opacity=".14" stroke="#5b7c9a" stroke-width="1.6"/>';
+      ov.forEach(p => { const ix = p[0] ? lx - al : al, iy = p[1] ? wy - al : al; s += '<path d="M' + pt(ix, iy, al) + 'L' + pt(ix, iy, H + al) + '" fill="none" stroke="#5b7c9a" stroke-width="2.2"/>'; });
+      s += '<polygon points="' + plane(al, al) + '" fill="none" stroke="#5b7c9a" stroke-dasharray="4 5"/>';
+    }
+    if (stage >= 2) s += '<polygon points="' + plane(al, al) + '" fill="#b08d57" fill-opacity=".22" stroke="#9a7440" stroke-width="1.8"/><polygon points="' + plane(al / 2, al) + '" fill="none" stroke="#9a7440"/>';
+    return s + '</g></svg>';
+  }
+  function renderModel() {
+    const box = $('#iso-stages'); if (!box) return;
+    box.innerHTML = STAGES.map((st, i) => '<button type="button" class="plate' + (i === stage ? ' active' : '') + '" data-stage="' + i + '" aria-pressed="' + (i === stage) + '"><span class="roman">' + ROMAN[i] + '</span><span class="pname">' + st[0] + '</span></button>').join('');
+    $('#iso-model-svg').innerHTML = modelSvg();
+    $('#iso-model-exp').innerHTML = '<b>' + STAGES[stage][0] + '</b> — ' + STAGES[stage][1];
+    $('#iso-model-fine').innerHTML = tag('Illustrative') + ' Fixed view and live-room proportions (' + f2(live.L) + ' × ' + f2(live.W) + ' m; H ' + f2(live.H) + ' m). Nested 0.30 m allowances are provisional, not an engineered build-up. A conceptual section, not a construction detail or three soundproofing grades; no universal spring system, common isolated platform or achieved isolation rating is claimed.';
+  }
+  if ($('#iso-stages')) {
+    renderModel();
+    $('#iso-stages').addEventListener('click', e => { const b = e.target.closest('[data-stage]'); if (b) { stage = +b.dataset.stage; renderModel(); const nb = $('#iso-stages [data-stage="' + stage + '"]'); if (nb) nb.focus(); } });
+    const topics = [
+      ['mass', 'Mass', 'Heavier, denser constructions are harder for sound to set into vibration. Mass alone gives diminishing returns, especially at low frequencies.'],
+      ['decoupling', 'Decoupling', 'Separating inner and outer constructions (independent framing, resilient supports and an air cavity) interrupts the structural path. A single rigid bridge can short-circuit it. Damping reduces resonant build-up within the leaves.'],
+      ['floating', 'Floating construction', 'An inner floor, and where required its walls, supported on resilient elements selected for the loads and the frequencies of concern. The support type is an engineering decision; springs are not assumed.'],
+      ['box-in-box', 'Box-in-box (room-in-room)', 'The integrated strategy: an inner room built within the structural shell, combining mass, decoupling, damping, airtightness and floating construction where each critical room needs it.']
+    ];
+    $('#iso-topics').innerHTML = topics.map((t, i) => '<article class="iso-topic on-paper"><span class="roman">' + ROMAN[i] + '</span><h4>' + t[1] + '</h4><p>' + t[2] + '</p><div class="slot" data-slot="isolation:' + t[0] + '" data-label="' + t[1] + ' image"></div></article>').join('');
+    $('#iso-assembly').innerHTML = [
+      ['Walls', 'Outer and inner mass leaves; structurally independent framing where feasible; cavity and damping strategy; airtight perimeter and penetrations.', 'Leaf material, mass, cavity depth, ties, fire details and frequency-dependent performance: pending.'],
+      ['Floor', 'Room-specific floating construction as required by the source and vibration brief. Avoid short-circuiting the resilient support with perimeter or service bridges.', 'Loads, support type, deflection, resonance and thresholds: pending. No springs are specified by default.'],
+      ['Ceiling', 'Independent support or engineered resilient suspension, coordinated with structure, ducts, lighting and wall junctions.', 'Span, hanger specification, mass, clearances and access: pending.']
+    ].map(a => '<div><h5>' + a[0] + ' isolation</h5><p>' + a[1] + '</p><p class="pend">' + a[2] + '</p></div>').join('');
+    mountSlots($('#iso-topics'));
+    const j = $('#iso-jump'); if (j) j.addEventListener('click', () => $('#iso-more').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }));
+  }
+
+  /* ── Acoustics: treatment basics and the wireframe cube ── */
+  const at = $('#ac-topics');
+  if (at) at.innerHTML = [
+    ['Absorption', 'Converts part of the incident sound energy into heat. Porous materials work mainly at mid and high frequencies; low frequencies need deep or resonant absorbers.'],
+    ['Diffusion', 'Scatters reflections in time and direction, keeping energy in the room while softening strong discrete echoes.'],
+    ['Reflection', 'Hard surfaces return sound specularly: the angle of incidence equals the angle of reflection. Controlled reflections add life; parallel hard surfaces can cause flutter echoes and reinforce room modes.']
+  ].map((t, i) => '<article class="ac-topic"><span class="roman">' + ROMAN[i] + '</span><h4>' + t[0] + '</h4><p>' + t[1] + '</p></article>').join('');
+
+  const CUBE = (function () {
+    const cv = $('#cube-canvas'); if (!cv) return null;
+    const ctx = cv.getContext && cv.getContext('2d');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const INIT = { L: live.L, W: live.W, H: live.H };
+    const NAME = { L: 'Length', W: 'Width', H: 'Height' }, IDX = { L: 0, W: 1, H: 2 };
+    const COL = { L: '#e6cf9c', W: '#8fb0c8', H: '#bdb6a8' };
+    const NR = 40, PULSE = 1.6, LIFE = 5.5;
+    const DIRS = []; const ga = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < NR; i++) { const z = 1 - 2 * (i + 0.5) / NR, r = Math.sqrt(1 - z * z); DIRS.push([Math.cos(ga * i) * r, Math.sin(ga * i) * r, z]); }
+    let dims = Object.assign({}, INIT), running = !reduced, active = false, sel = { axis: 'L', n: 1 };
+    const view = { yaw: -0.65, pitch: 0.42 }, st = { rays: [], t: 0, last: -99 }, size = { w: 0, h: 0, dpr: 1 };
+    let frame = 0, lastNow = 0;
+    const D = () => [dims.L, dims.W, dims.H];
+    const src = () => [dims.L * 0.32, dims.W * 0.42, dims.H * 0.38];
+    function resize() { if (!ctx) return; const r = cv.getBoundingClientRect(); size.dpr = Math.min(2, devicePixelRatio || 1); size.w = r.width; size.h = r.height; cv.width = Math.max(1, Math.round(r.width * size.dpr)); cv.height = Math.max(1, Math.round(r.height * size.dpr)); draw(); }
+    function project(p) {
+      const d = D(), rad = 0.5 * Math.hypot(d[0], d[1], d[2]);
+      const x = p[0] - d[0] / 2, y = p[1] - d[1] / 2, z = p[2] - d[2] / 2;
+      const x1 = x * Math.cos(view.yaw) - y * Math.sin(view.yaw), y1 = x * Math.sin(view.yaw) + y * Math.cos(view.yaw);
+      const y2 = y1 * Math.cos(view.pitch) - z * Math.sin(view.pitch), z2 = y1 * Math.sin(view.pitch) + z * Math.cos(view.pitch);
+      const s = 0.43 * Math.min(size.w, size.h * 1.25) / rad, f = rad * 4 / (rad * 4 + y2);
+      return [size.w / 2 + x1 * s * f, size.h / 2 - z2 * s * f, s * f];
+    }
+    function line(a, b) { const p = project(a), q = project(b); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); }
+    function step(dt) {
+      const d = D(), rad = 0.5 * Math.hypot(d[0], d[1], d[2]), speed = rad / 3.2, s0 = src();
+      st.t += dt;
+      if (st.t - st.last >= PULSE) { st.last = st.t; DIRS.forEach(v => st.rays.push({ pos: s0.slice(), dir: v.slice(), path: [s0.slice()], born: st.t, b: 0 })); }
+      st.rays = st.rays.filter(r => st.t - r.born < LIFE);
+      st.rays.forEach(r => {
+        let rem = speed * dt;
+        while (rem > 1e-9) {
+          let tHit = Infinity, ax = -1;
+          for (let k = 0; k < 3; k++) { if (r.dir[k] > 0) { const t = (d[k] - r.pos[k]) / r.dir[k]; if (t < tHit) { tHit = t; ax = k; } } else if (r.dir[k] < 0) { const t = -r.pos[k] / r.dir[k]; if (t < tHit) { tHit = t; ax = k; } } }
+          const mv = Math.min(rem, tHit);
+          for (let k = 0; k < 3; k++) r.pos[k] += r.dir[k] * mv;
+          rem -= mv;
+          if (mv === tHit && ax >= 0) { r.dir[ax] = -r.dir[ax]; r.pos[ax] = Math.min(d[ax], Math.max(0, r.pos[ax])); r.b++; r.path.push(r.pos.slice()); if (r.path.length > 12) r.path.shift(); }
+        }
+      });
+    }
+    function draw() {
+      if (!ctx || !size.w) return;
+      const d = D(), rad = 0.5 * Math.hypot(d[0], d[1], d[2]), speed = rad / 3.2, s0 = src();
+      ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0); ctx.clearRect(0, 0, size.w, size.h);
+      const cs = []; [0, d[0]].forEach(x => [0, d[1]].forEach(y => [0, d[2]].forEach(z => cs.push([x, y, z]))));
+      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(208,173,114,0.85)'; ctx.beginPath();
+      for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) if ([0, 1, 2].filter(k => cs[i][k] !== cs[j][k]).length === 1) line(cs[i], cs[j]);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(143,176,200,0.25)'; ctx.beginPath();
+      for (let m = 1; m < d[0]; m++) line([m, 0, 0], [m, 0.25, 0]);
+      for (let m = 1; m < d[1]; m++) line([0, m, 0], [0.25, m, 0]);
+      ctx.stroke();
+      ctx.globalCompositeOperation = 'lighter';
+      const near = Math.min(s0[0], d[0] - s0[0], s0[1], d[1] - s0[1], s0[2], d[2] - s0[2]);
+      for (let k = 0; k < 4; k++) {
+        const age = st.t - (st.last - k * PULSE), r = age * speed; if (age < 0 || r > near * 1.6) continue;
+        const sp = project(s0); ctx.strokeStyle = 'rgba(230,207,156,' + (0.5 * (1 - r / (near * 1.6))) + ')'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(sp[0], sp[1], r * sp[2], 0, Math.PI * 2); ctx.stroke();
+      }
+      const trail = rad * 0.22;
+      st.rays.forEach(r => {
+        const life = 1 - (st.t - r.born) / LIFE, e = Math.pow(0.72, r.b) * life; if (e < 0.03) return;
+        ctx.strokeStyle = r.b === 0 ? 'rgba(230,207,156,' + e + ')' : 'rgba(143,176,200,' + e + ')'; ctx.lineWidth = 1.3; ctx.beginPath();
+        let prev = r.pos, left = trail; const p0 = project(prev); ctx.moveTo(p0[0], p0[1]);
+        for (let i = r.path.length - 1; i >= 0 && left > 0; i--) {
+          const v = r.path[i], seg = Math.hypot(prev[0] - v[0], prev[1] - v[1], prev[2] - v[2]);
+          const tg = seg > left ? [prev[0] + (v[0] - prev[0]) * left / seg, prev[1] + (v[1] - prev[1]) * left / seg, prev[2] + (v[2] - prev[2]) * left / seg] : v;
+          const p = project(tg); ctx.lineTo(p[0], p[1]); left -= seg; prev = v;
+        }
+        ctx.stroke();
+      });
+      ctx.globalCompositeOperation = 'source-over';
+      const sp = project(s0), gl = ctx.createRadialGradient(sp[0], sp[1], 0, sp[0], sp[1], 14);
+      gl.addColorStop(0, 'rgba(240,220,170,0.95)'); gl.addColorStop(1, 'rgba(240,220,170,0)'); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(sp[0], sp[1], 14, 0, Math.PI * 2); ctx.fill();
+      const ai = IDX[sel.axis], len = d[ai], c0 = [d[0] / 2, d[1] / 2, d[2] / 2], perp = ai === 2 ? 0 : 2, amp = Math.min(d[0], d[1], d[2]) * 0.22, ph = Math.cos(st.t * 2.4);
+      const P = (u, a) => { const p = c0.slice(); p[ai] = u; p[perp] += a; return p; };
+      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(143,176,200,0.35)'; ctx.setLineDash([3, 4]); ctx.beginPath(); line(P(0, 0), P(len, 0));
+      [1, -1].forEach(sg => { for (let i = 0; i <= 80; i++) { const u = i / 80 * len, p = project(P(u, sg * amp * Math.abs(Math.cos(sel.n * Math.PI * u / len)))); if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); } });
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = 'rgba(230,207,156,0.95)'; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let i = 0; i <= 120; i++) { const u = i / 120 * len, p = project(P(u, amp * ph * Math.cos(sel.n * Math.PI * u / len))); if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
+      ctx.stroke();
+      for (let k = 0; k < sel.n; k++) { const p = project(P((2 * k + 1) / (2 * sel.n) * len, 0)); ctx.fillStyle = '#8fb0c8'; ctx.beginPath(); ctx.arc(p[0], p[1], 3.2, 0, Math.PI * 2); ctx.fill(); }
+      for (let k = 0; k <= sel.n; k++) { const p = project(P(k / sel.n * len, 0)); ctx.strokeStyle = '#d0ad72'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(p[0], p[1], 4.2, 0, Math.PI * 2); ctx.stroke(); }
+    }
+    function loop(now) { const dt = Math.min(0.05, (now - lastNow) / 1000 || 0); lastNow = now; step(dt); draw(); frame = requestAnimationFrame(loop); }
+    function sync() { cancelAnimationFrame(frame); frame = 0; if (running && active) { lastNow = performance.now(); frame = requestAnimationFrame(loop); } else draw(); }
+    function panel() {
+      const a = analyse(dims);
+      ['L', 'W', 'H'].forEach(k => { $('#cube-' + k).value = dims[k]; $('#cube-v' + k).textContent = f2(dims[k]) + ' m'; });
+      const q = $('#cube-quality'); q.dataset.q = a.quality; $('strong', q).textContent = a.quality;
+      $('span', q).textContent = a.co + ' coincident · ' + a.cl + ' clustered · H : W : L = 1 : ' + f2(a.ratio[1]) + ' : ' + f2(a.ratio[2]);
+      const top = Math.max.apply(null, a.modes.map(m => m.hz)) * 1.08;
+      let s = '<line x1="0" y1="30" x2="300" y2="30" stroke="rgba(232,228,220,0.25)"/>';
+      a.modes.forEach(m => { const x = (m.hz / top * 300).toFixed(1); s += '<line x1="' + x + '" x2="' + x + '" y1="' + (m.flag ? 6 : 14) + '" y2="30" stroke="' + (m.flag === 'coincident' ? '#d98c6a' : m.flag ? '#d0ad72' : COL[m.axis]) + '" stroke-width="' + (m.flag ? 2 : 1.2) + '"/>'; });
+      [0, 50, 100, 150, 200].filter(v => v < top).forEach(v => { s += '<text x="' + (v / top * 300).toFixed(1) + '" y="43" font-size="8" fill="rgba(232,228,220,0.5)" font-family="DM Sans, sans-serif">' + v + ' Hz</text>'; });
+      $('#cube-strip').innerHTML = s;
+      $('#cube-table tbody').innerHTML = ['L', 'W', 'H'].map(k => '<tr><th style="color:' + COL[k] + '">' + k + '</th>' + a.modes.filter(m => m.axis === k).sort((x, y) => x.n - y.n).map(m => '<td><button type="button" class="' + (m.flag || '') + (sel.axis === k && sel.n === m.n ? ' sel' : '') + '" data-axis="' + k + '" data-n="' + m.n + '" aria-label="Show ' + NAME[k] + ' mode ' + m.n + ', ' + m.hz.toFixed(1) + ' hertz' + (m.flag ? ', ' + m.flag : '') + '">' + m.hz.toFixed(1) + '</button></td>').join('') + '</tr>').join('');
+      cv.setAttribute('aria-label', 'Wireframe room ' + f2(dims.L) + ' by ' + f2(dims.W) + ' by ' + f2(dims.H) + ' metres with a sound source, reflecting rays and the ' + NAME[sel.axis].toLowerCase() + ' axial mode ' + sel.n + ' standing wave. Drag to orbit.');
+    }
+    function reset() { st.rays = []; st.last = -99; if (!running) step(PULSE * 1.4); }
+    function set(nd) { dims = Object.assign({}, nd); reset(); panel(); draw(); }
+    function paintPlay() { const b = $('#cube-play'); b.textContent = running ? 'Pause' : 'Play'; b.setAttribute('aria-pressed', String(!running)); }
+    ['L', 'W', 'H'].forEach(k => $('#cube-' + k).addEventListener('input', e => { dims[k] = +e.target.value; reset(); panel(); draw(); }));
+    $('#cube-table').addEventListener('click', e => { const b = e.target.closest('button[data-axis]'); if (!b) return; sel = { axis: b.dataset.axis, n: +b.dataset.n }; panel(); draw(); const nb = $('#cube-table button[data-axis="' + sel.axis + '"][data-n="' + sel.n + '"]'); if (nb) nb.focus(); });
+    $('#cube-play').addEventListener('click', () => { running = !running; paintPlay(); sync(); });
+    $('#cube-reset').addEventListener('click', () => set(INIT));
+    let drag = null;
+    cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, yaw: view.yaw, pitch: view.pitch }; try { cv.setPointerCapture(e.pointerId); } catch (x) {} });
+    cv.addEventListener('pointermove', e => { if (!drag) return; view.yaw = drag.yaw + (e.clientX - drag.x) * 0.008; view.pitch = Math.max(-0.2, Math.min(1.35, drag.pitch + (e.clientY - drag.y) * 0.006)); if (!(running && active)) draw(); });
+    ['pointerup', 'pointercancel'].forEach(t => cv.addEventListener(t, () => { drag = null; }));
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(resize).observe(cv);
+    document.addEventListener('capc:screen', e => { active = e.detail === 'acoustics'; if (active) resize(); sync(); });
+    step(PULSE * 1.4); panel(); paintPlay(); resize();
+    return { set: set };
+  })();
+  mountSlots(document);
+
+  /* deep links for review: #framing, #isolation, #isolation-model, #acoustics, #suite-2-plan */
+  const h = location.hash.replace('#', '');
+  const m = h.match(/^(framing|isolation|acoustics)/);
+  if (m) {
+    goChapter(m[1]);
+    if (h === 'isolation-model') setTimeout(() => $('#iso-more').scrollIntoView({ block: 'start' }), 60);
+  }
+  if (/suite-2-(plan|brief)/.test(h)) setTimeout(() => { const t = h.indexOf('plan') > 0 ? $('#cp .cp-row') : $('#cp'); if (t) t.scrollIntoView({ block: 'start' }); }, 60);
 })();
 </script>
 </body>
