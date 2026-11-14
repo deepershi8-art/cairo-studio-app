@@ -59,17 +59,19 @@ h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:clam
 <details class="f3d-notes">
   <summary>Assumptions and inconsistencies <span>(concept model · Proposed)</span></summary>
   <ol>
-    <li><b>Source.</b> The layout follows the concept brief for the AI-rendered “RATEENA SOUND First floor (upper level)” cutaway. It is a concept model, not a survey. Check it against the drawing before relying on it.</li>
-    <li><b>Footprint.</b> The overall footprint is 24.00 × 20.00 m to the outside face, with 0.35 m exterior walls. The 12.00 m live room takes only half of the 24 m side, so the image’s proportions and labels disagree. The labelled room sizes are kept true. The remaining width is given to the lobby, green room and circulation.</li>
-    <li><b>Live room height.</b> 5.15 m as labelled on the image. The current programme and the ground-floor section give 4.50 m. This needs a decision.</li>
-    <li><b>Control room.</b> 6.50 × 5.50 m = 35.75 m² as labelled. The current programme gives 24.5 m² (5.00 × 4.90 m). The angled front is modelled with angled soffits inside the rectangle, so the labelled area stays true. A splayed structural wall would reduce the floor area.</li>
-    <li><b>Which floor?</b> The ground-floor concept plan also places the live room, control room and booths on the ground floor. This image puts them upstairs. A 5.15 m live room on an upper level also needs a double-height volume and a heavy floating floor. Which floor is it?</li>
-    <li><b>Booths.</b> The percussion booth / load-in (4.50 × 4.00 m) runs 4.50 m east–west, with 1.80 m double doors into the live room. On an upper floor, load-in depends on the freight elevator. “ISO Booth 02” implies an ISO Booth 01 that is not on this floor.</li>
-    <li><b>Unlabelled spaces.</b> The lobby, green room, restrooms and corridors are not dimensioned on the image. Their sizes are scaled to fill the footprint.</li>
-    <li><b>Heights.</b> Proposed ceilings are 3.6 m for the control room and 3.0 m elsewhere. There is no roof or ceiling (cutaway), and no structure, columns or services are modelled. The 0.30 m floor slab is indicative.</li>
-    <li><b>Walls.</b> Assumed thicknesses: 0.40 m around the live room; a double-leaf partition (0.30 + 0.40 m cavity + 0.30 m) between the control room and the booths; 0.30 m elsewhere. Door and window positions are assumed. Control-room glazing is double-paned.</li>
-    <li><b>Areas.</b> The labelled rooms total 169.25 m², against a 480 m² gross footprint.</li>
-    <li><b>Furniture and cables.</b> Furniture uses typical real sizes: grand piano 1.50 × 2.10 m, 3.2 m console, 1.20 × 1.80 m gobos, 600 × 1000 mm server racks. The red cable route is indicative only.</li>
+    <li><b>Source.</b> The layout follows the AI-rendered “RATEENA SOUND First floor (upper level)” isometric cutaway, viewed from its front-left corner. It is a concept model, not a survey.</li>
+    <li><b>Footprint.</b> 24.00 × 20.00 m to the outside face, with 0.35 m exterior walls (23.30 × 19.30 m inside).</li>
+    <li><b>Live room size.</b> As drawn, the live room spans the full back of the floor, so it is modelled at 23.30 × 8.33 m clear (≈ 194 m²). The drawing labels it 12.00 × 8.33 m and 100 m². Both figures are shown; the labelled size and the drawing cannot both be true.</li>
+    <li><b>Live room height.</b> 5.15 m as labelled on this drawing. The current programme and the ground-floor section give 4.50 m.</li>
+    <li><b>Control room.</b> Labelled 6.50 × 5.50 m (35.75 m²), modelled as that envelope with 1.0 m canted corners, so the net area is ≈ 33.75 m². The rear corners are canted too, so the corridor can pass behind it. The current programme gives 24.5 m².</li>
+    <li><b>Which floor?</b> The ground-floor concept plan also places the live room, control room and booths downstairs. A 5.15 m live room on an upper floor needs a double-height volume and a heavy floating floor. Which floor is it?</li>
+    <li><b>Booths.</b> The percussion booth (4.50 × 4.00 m) and ISO Booth 02 (3.00 × 2.50 m) keep their labelled sizes. They sit against the live room’s front wall on either side of the control room, each with a window into the control room. “ISO Booth 02” implies an ISO Booth 01 that is not on this floor.</li>
+    <li><b>Equipment room.</b> The labelled 4.00 × 2.00 m is turned to 2.00 × 4.00 m to fit the front-left corner.</li>
+    <li><b>Leftover space.</b> True room sizes leave space the drawing does not label. That gives a 5.20 × 4.00 m unassigned room beside the equipment room, and a load-in bay and a foyer bay either side of the booths. The lobby (7.70 × 4.77 m), green room (4.50 × 4.00 m) and restrooms (1.20 × 4.00 m each) are scaled to fit, and come out smaller than the drawing suggests.</li>
+    <li><b>Heights.</b> Proposed ceilings are 3.6 m for the control room and 3.0 m elsewhere. There is no roof or ceiling (cutaway), and no structure, columns or services. The 0.30 m slab, the 2.60 × 3.45 m stairwell opening and the 3.1 m depth to the floor below are indicative.</li>
+    <li><b>Walls.</b> Assumed thicknesses: 0.40 m for the live room’s front wall; double leaves between the control room and the booths; 0.30 m elsewhere. Door and window positions are assumed. Control-room glazing is double-paned.</li>
+    <li><b>Areas.</b> The labelled rooms total 169.25 m² (100 + 35.75 + 18 + 7.5 + 8), against a 480 m² gross footprint.</li>
+    <li><b>Furniture and cables.</b> Furniture uses typical real sizes: grand piano 1.50 × 2.10 m, 3.2 m console, 1.20 × 1.80 m wheeled gobos, 600 × 1000 mm server racks. The red cable route is indicative only.</li>
   </ol>
 </details>
 
@@ -1662,7 +1664,7 @@ function Floor3D(root, opt) {
   /* ---------- lights ---------- */
   scene.add(new T.HemisphereLight(0xfff3e2, 0x4a4038, 1.7));
   const sun = new T.DirectionalLight(0xfff0dc, 2.5);
-  sun.position.set(CX + 9, 28, CZ + 13); sun.target.position.set(CX, 0, CZ);
+  sun.position.set(CX - 8, 28, CZ + 12); sun.target.position.set(CX, 0, CZ);
   sun.castShadow = true;
   sun.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 5, far: 60 });
@@ -1762,31 +1764,42 @@ function Floor3D(root, opt) {
   }
   function grp(x, z, ry, parent, y) { const g = new T.Group(); g.position.set(x, y || 0, z); g.rotation.y = ry || 0; (parent || furn).add(g); return g; }
 
-  /* ---------- rooms (true scale, metres; x east, z south) ---------- */
+  /* ---------- layout (true scale, metres). x runs left → right, z runs back → front.
+     Viewer stands at the front-left corner (x = 0, z = 20). ---------- */
+  const rect = (x0, z0, x1, z1) => [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+  const HOLE = rect(8.45, 15.9, 11.05, 19.35);                   // stairwell opening (stair goes down)
+  const CTL = [[9.75, 9.08], [14.25, 9.08], [15.25, 10.08], [15.25, 13.58], [14.25, 14.58], [9.75, 14.58], [8.75, 13.58], [8.75, 10.08]];
   const ROOMS = [
-    { id: 'live', name: 'Main Live Room', r: [[0.35, 0.35, 12.35, 8.68]], floor: 'oak', h: 5.15, dims: '12.00 × 8.33 m', area: '100 m²', ceil: '5.15 m (as labelled)' },
-    { id: 'control', name: 'Control Room', r: [[5.85, 9.08, 12.35, 14.58]], floor: 'oak', h: 3.6, dims: '6.50 × 5.50 m, angled front', area: '35.75 m²', ceil: '3.6 m (proposed)' },
-    { id: 'perc', name: 'Percussion Booth / Load-in', r: [[0.35, 9.08, 4.85, 13.08]], floor: 'oak', h: 3.0, dims: '4.50 × 4.00 m', area: '18 m²', ceil: '3.0 m (proposed)' },
-    { id: 'iso', name: 'ISO Booth 02', r: [[1.85, 13.38, 4.85, 15.88]], floor: 'oak', h: 3.0, dims: '3.00 × 2.50 m', area: '7.5 m²', ceil: '3.0 m (proposed)' },
-    { id: 'equip', name: 'Equipment / Machine Room', r: [[8.35, 14.88, 12.35, 16.88]], floor: 'epoxy', h: 3.0, dims: '4.00 × 2.00 m', area: '8 m²', ceil: '3.0 m (proposed)' },
-    { id: 'lobby', name: 'Freight Elevator and Staircase Lobby', r: [[12.75, 0.35, 23.65, 6.85]], floor: 'stone', h: 3.0, dims: '10.90 × 6.50 m (scaled from the image)', area: '≈ 70.9 m² incl. stair and shaft', ceil: '3.0 m (proposed)' },
-    { id: 'green', name: 'Artist Green Room', r: [[12.75, 7.15, 23.65, 14.65]], floor: 'oak', h: 3.0, dims: '10.90 × 7.50 m (scaled from the image)', area: '≈ 81.8 m²', ceil: '3.0 m (proposed)' },
-    { id: 'wc1', name: 'Restroom 01', r: [[18.65, 14.95, 23.65, 17.15]], floor: 'tile', h: 3.0, dims: '5.00 × 2.20 m (scaled)', area: '11.0 m²', ceil: '3.0 m (proposed)' },
-    { id: 'wc2', name: 'Restroom 02', r: [[18.65, 17.45, 23.65, 19.65]], floor: 'tile', h: 3.0, dims: '5.00 × 2.20 m (scaled)', area: '11.0 m²', ceil: '3.0 m (proposed)' },
-    { id: 'circ', name: 'Circulation and load-in route', r: [[0.35, 17.18, 18.35, 19.65], [0.35, 13.38, 1.55, 17.18], [1.55, 16.18, 8.05, 17.18], [5.15, 14.88, 8.05, 16.18], [12.75, 14.95, 18.35, 17.18]], floor: 'oakPale', h: 3.0, dims: 'Corridors linking booths, control and green room', area: '≈ 70 m²', ceil: '3.0 m (proposed)', lab: [9, 18.4] }
+    { id: 'live', name: 'Main Live Room', p: [rect(0.35, 0.35, 23.65, 8.68)], floor: 'oak', dims: 'Drawn 23.30 × 8.33 m across the full back · labelled 12.00 × 8.33 m', area: 'Labelled 100 m² · as drawn ≈ 194 m²', ceil: '5.15 m (as labelled)' },
+    { id: 'control', name: 'Control Room', p: [CTL], floor: 'oak', dims: '6.50 × 5.50 m envelope, canted corners', area: 'Labelled 35.75 m² · net ≈ 33.75 m²', ceil: '3.6 m (proposed)', lab: [12, 12.6] },
+    { id: 'perc', name: 'Percussion Booth / Load-in pass-through', p: [rect(3.65, 9.08, 8.15, 13.08)], floor: 'oak', dims: '4.50 × 4.00 m', area: '18 m²', ceil: '3.0 m (proposed)' },
+    { id: 'iso', name: 'ISO Booth 02', p: [rect(15.85, 9.08, 18.85, 11.58)], floor: 'oak', dims: '3.00 × 2.50 m', area: '7.5 m²', ceil: '3.0 m (proposed)' },
+    { id: 'equip', name: 'Equipment / Machine Room', p: [rect(0.35, 15.65, 2.35, 19.65)], floor: 'epoxy', dims: '2.00 × 4.00 m (labelled 4.00 × 2.00, turned to fit the corner)', area: '8 m²', ceil: '3.0 m (proposed)' },
+    { id: 'spare', name: 'Unassigned space', p: [rect(2.65, 15.65, 7.85, 19.65)], floor: 'oakPale', dims: '5.20 × 4.00 m · not labelled on the drawing', area: '≈ 20.8 m²', ceil: '3.0 m (proposed)' },
+    { id: 'lobby', name: 'Freight Elevator and Staircase Lobby', p: [rect(8.15, 14.88, 15.85, 19.65)], holes: [HOLE], floor: 'stone', dims: '7.70 × 4.77 m (scaled) · stairwell and lift shaft', area: '≈ 36.7 m² incl. stairwell and shaft', ceil: '3.0 m (proposed)', lab: [12.2, 15.6] },
+    { id: 'green', name: 'Artist Green Room', p: [rect(16.15, 15.65, 20.65, 19.65)], floor: 'oak', dims: '4.50 × 4.00 m (scaled)', area: '18 m²', ceil: '3.0 m (proposed)' },
+    { id: 'wc1', name: 'Restroom 01', p: [rect(20.95, 15.65, 22.15, 19.65)], floor: 'tile', dims: '1.20 × 4.00 m (scaled)', area: '4.8 m²', ceil: '3.0 m (proposed)' },
+    { id: 'wc2', name: 'Restroom 02', p: [rect(22.45, 15.65, 23.65, 19.65)], floor: 'tile', dims: '1.20 × 4.00 m (scaled)', area: '4.8 m²', ceil: '3.0 m (proposed)' },
+    { id: 'circ', name: 'Corridor and load-in route', p: [rect(0.35, 0.35, 23.65, 19.65)], holes: [HOLE], floor: 'oakPale', base: 1, dims: 'Corridor from the lobby to the left and right, with load-in and foyer bays', area: '≈ 68 m²', ceil: '3.0 m (proposed)', lab: [4.6, 14.4] }
   ];
   const pick = [];
-  // building slab (shows the 0.30 m floor thickness of an upper level)
-  bx(CX, -0.3, CZ, 24, 0.292, 20, M.slab, world, 0, false);
-  ROOMS.forEach(R => R.r.forEach(([x0, z0, x1, z1]) => {
-    const w = x1 - x0, d = z1 - z0, g = new T.PlaneGeometry(w, d), uv = g.attributes.uv;
+  function shapeGeo(pts, holes, sc) {
+    const sh = new T.Shape(pts.map(([x, z]) => new T.Vector2(x, -z)));
+    (holes || []).forEach(h => sh.holes.push(new T.Path(h.map(([x, z]) => new T.Vector2(x, -z)))));
+    const g = new T.ShapeGeometry(sh), uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / sc, uv.getY(i) / sc);
+    return g;
+  }
+  // building slab (0.30 m, upper level) with the stairwell opening
+  [[0, 0, 24, 15.9], [0, 19.35, 24, 20], [0, 15.9, 8.45, 19.35], [11.05, 15.9, 24, 19.35]].forEach(([x0, z0, x1, z1]) => bx((x0 + x1) / 2, -0.3, (z0 + z1) / 2, x1 - x0, 0.292, z1 - z0, M.slab, world, 0, false));
+  ROOMS.forEach(R => {
     const sc = R.floor === 'stone' ? 4 : R.floor === 'tile' ? 1.2 : 2;
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / sc, uv.getY(i) * d / sc);
-    const m = new T.Mesh(g, M[R.floor]); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, R.id === 'circ' ? 0.0 : 0.012, (z0 + z1) / 2);
-    m.receiveShadow = true; m.userData.room = R; world.add(m); pick.push(m);
-  }));
+    R.geos = R.p.map(pts => shapeGeo(pts, R.holes, sc));
+    R.geos.forEach(g => { const m = new T.Mesh(g, M[R.floor]); m.rotation.x = -Math.PI / 2; m.position.y = R.base ? 0 : 0.012; m.receiveShadow = true; m.userData.room = R; world.add(m); if (!R.base) pick.unshift(m); else pick.push(m); });
+    const pts = R.p[0]; R.c = R.lab || [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+  });
 
-  /* ---------- walls (axis-aligned rectangles, with openings) ---------- */
+  /* ---------- walls (axis-aligned rectangles with openings, plus canted segments) ---------- */
   const H5 = 5.15, H36 = 3.6, H3 = 3.0;
   const wallPieces = [];
   function wall(xa, xb, za, zb, h, ops, ext) {
@@ -1810,8 +1823,8 @@ function Floor3D(root, opt) {
         for (let i = 0; i < n; i++) {
           const hinge = i === 0 ? o.a : o.b, dir = i === 0 ? 1 : -1, g = new T.Group();
           g.position.set(alongX ? hinge : c, 0, alongX ? c : hinge);
-          const leaf = bx(alongX ? dir * lw / 2 : 0, 0, alongX ? 0 : dir * lw / 2, alongX ? lw - 0.02 : 0.05, (o.head || 2.2) - 0.02, alongX ? 0.05 : lw - 0.02, M.door, g);
-          g.rotation.y = (o.swing || 1) * dir * 1.15 * (alongX ? 1 : 1); world.add(g);
+          bx(alongX ? dir * lw / 2 : 0, 0, alongX ? 0 : dir * lw / 2, alongX ? lw - 0.02 : 0.05, (o.head || 2.2) - 0.02, alongX ? 0.05 : lw - 0.02, M.door, g);
+          g.rotation.y = (o.swing || 1) * dir * 1.15; world.add(g);
         }
       }
     });
@@ -1823,38 +1836,49 @@ function Floor3D(root, opt) {
       m.castShadow = m.receiveShadow = true; world.add(m); wallPieces.push({ m, y0, y1 });
     });
   }
+  function seg(ax, az, bxp, bzp, t, h, cx, cz) {        // canted wall; inner face on the line a–b, thickness pushed away from (cx, cz)
+    const dx = bxp - ax, dz = bzp - az, len = Math.hypot(dx, dz); let nx = -dz / len, nz = dx / len;
+    const mx = (ax + bxp) / 2, mz = (az + bzp) / 2; if ((cx - mx) * nx + (cz - mz) * nz > 0) { nx = -nx; nz = -nz; }
+    const m = new T.Mesh(BOX, [M.wall, M.wall, M.cap, M.wall, M.wall, M.wall]); m.scale.set(len + t * 0.8, h, t);
+    m.position.set(mx + nx * t / 2, h / 2, mz + nz * t / 2); m.rotation.y = -Math.atan2(dz, dx);
+    m.castShadow = m.receiveShadow = true; world.add(m); wallPieces.push({ m, y0: 0, y1: h });
+  }
   // exterior (0.35 m)
-  wall(0, 12.75, 0, 0.35, H5, [], 1); wall(12.75, 24, 0, 0.35, H3, [], 1);
+  wall(0, 24, 0, 0.35, H5, [], 1);
   wall(0, 0.35, 0.35, 9.08, H5, [], 1); wall(0, 0.35, 9.08, 20, H3, [], 1);
-  wall(0.35, 24, 19.65, 20, H3, [], 1); wall(23.65, 24, 0.35, 19.65, H3, [], 1);
-  // live room
-  wall(0.35, 12.35, 8.68, 9.08, H5, [{ a: 1.2, b: 3.0, head: 2.6, dbl: 1, swing: -1 }, { a: 7.3, b: 10.9, win: 1, sill: 0.95, head: 2.55, dbl: 1 }]);
-  wall(12.35, 12.75, 0.35, 9.08, H5, [{ a: 3.4, b: 5.2, head: 2.6, dbl: 1 }]);
-  // control room: double-leaf west partition with 0.40 m cavity
-  wall(4.85, 5.15, 9.08, 16.18, H3, [{ a: 10.2, b: 12.0, win: 1, sill: 0.9, head: 2.3 }, { a: 13.6, b: 14.4, win: 1, sill: 0.9, head: 2.2 }]);
-  wall(5.55, 5.85, 9.08, 14.88, H36, [{ a: 10.2, b: 12.0, win: 1, sill: 0.9, head: 2.3 }, { a: 13.6, b: 14.4, win: 1, sill: 0.9, head: 2.2 }]);
-  wall(5.15, 5.55, 14.58, 14.88, H3);
-  wall(12.35, 12.75, 9.08, 17.18, H36);
-  wall(5.85, 12.35, 14.58, 14.88, H36, [{ a: 6.3, b: 7.3, head: 2.2 }]);
-  // booths
-  wall(0.35, 4.85, 13.08, 13.38, H3, [{ a: 0.5, b: 1.45, head: 2.2 }]);
-  wall(1.55, 1.85, 13.38, 16.18, H3, [{ a: 14.6, b: 15.5, head: 2.1, swing: -1 }]);
-  wall(1.85, 4.85, 15.88, 16.18, H3);
-  // equipment room
-  wall(8.05, 8.35, 14.88, 17.18, H3);
-  wall(8.35, 12.35, 16.88, 17.18, H3, [{ a: 9.0, b: 10.0, head: 2.1 }]);
-  // lobby, green room, restrooms
-  wall(12.75, 23.65, 6.85, 7.15, H3, [{ a: 17.4, b: 19.4, head: 2.5, leaf: false }]);
-  wall(12.75, 23.65, 14.65, 14.95, H3, [{ a: 14.0, b: 15.0, head: 2.2 }]);
-  wall(18.35, 18.65, 14.95, 19.65, H3, [{ a: 15.5, b: 16.4, head: 2.1 }, { a: 18.2, b: 19.1, head: 2.1 }]);
-  wall(18.65, 23.65, 17.15, 17.45, H3);
-  // freight elevator shaft
-  wall(20.85, 21.1, 0.35, 3.65, H3, [{ a: 0.9, b: 3.1, head: 2.6, leaf: false }]);
-  wall(21.1, 23.65, 3.4, 3.65, H3);
+  wall(23.65, 24, 0.35, 9.08, H5, [], 1); wall(23.65, 24, 9.08, 20, H3, [], 1);
+  wall(0.35, 23.65, 19.65, 20, H3, [], 1);
+  // live room front wall (0.40 m): percussion door, control-room window, main door from the right-hand foyer
+  wall(0.35, 23.65, 8.68, 9.08, H5, [{ a: 5.0, b: 6.8, head: 2.6, dbl: 1, swing: -1 }, { a: 10.05, b: 13.95, win: 1, sill: 0.95, head: 2.55, dbl: 1 }, { a: 20.4, b: 22.2, head: 2.6, dbl: 1, swing: -1 }]);
+  // percussion booth / load-in pass-through
+  wall(3.35, 3.65, 9.08, 13.38, H3);
+  wall(3.65, 8.35, 13.08, 13.38, H3, [{ a: 4.4, b: 6.2, head: 2.5, dbl: 1 }]);
+  wall(8.15, 8.35, 9.08, 13.38, H3, [{ a: 10.6, b: 12.2, win: 1, sill: 0.9, head: 2.3 }]);
+  // control room: canted octagon, side leaves form double partitions with the booths
+  wall(8.45, 8.75, 10.08, 13.58, H36, [{ a: 10.6, b: 12.2, win: 1, sill: 0.9, head: 2.3 }]);
+  wall(15.25, 15.55, 10.08, 13.58, H36, [{ a: 10.3, b: 11.3, win: 1, sill: 0.9, head: 2.2 }]);
+  wall(9.75, 14.25, 14.58, 14.88, H36, [{ a: 13.2, b: 14.1, head: 2.2 }]);
+  seg(8.75, 10.08, 9.75, 9.08, 0.3, H36, 12, 11.8); seg(14.25, 9.08, 15.25, 10.08, 0.3, H36, 12, 11.8);
+  seg(8.75, 13.58, 9.75, 14.58, 0.3, H36, 12, 11.8); seg(14.25, 14.58, 15.25, 13.58, 0.3, H36, 12, 11.8);
+  // ISO booth 02
+  wall(15.65, 15.85, 9.08, 11.88, H3, [{ a: 10.3, b: 11.3, win: 1, sill: 0.9, head: 2.2 }]);
+  wall(15.85, 19.15, 11.58, 11.88, H3, [{ a: 17.3, b: 18.2, head: 2.1 }]);
+  wall(18.85, 19.15, 9.08, 11.58, H3);
+  // front row: equipment, unassigned, lobby, green room, restrooms
+  wall(0.35, 7.85, 15.35, 15.65, H3, [{ a: 0.9, b: 1.8, head: 2.1 }, { a: 4.4, b: 5.3, head: 2.1 }]);
+  wall(2.35, 2.65, 15.65, 19.65, H3);
+  wall(7.85, 8.15, 15.35, 19.65, H3);
+  wall(15.85, 16.15, 15.35, 19.65, H3);
+  wall(16.15, 23.65, 15.35, 15.65, H3, [{ a: 17.0, b: 18.6, head: 2.5, leaf: false }, { a: 21.15, b: 21.95, head: 2.1 }, { a: 22.65, b: 23.45, head: 2.1 }]);
+  wall(20.65, 20.95, 15.65, 19.65, H3);
+  wall(22.15, 22.45, 15.65, 19.65, H3);
+  // freight lift shaft
+  wall(12.65, 12.9, 16.35, 19.65, H3);
+  wall(12.9, 15.85, 16.35, 16.6, H3, [{ a: 13.4, b: 15.2, head: 2.6, leaf: false }]);
 
   /* ---------- wall linings: oak slats, fabric panels, QRD diffusers (instanced) ---------- */
   const L = { slat: [], fab: [], qrd: [] }, _o = new T.Object3D();
-  function put(arr, axis, fixed, n, s, y0, h, w, d) {   // axis: wall runs along 'x' or 'z'; n = normal sign into room
+  function put(arr, axis, fixed, n, s, y0, h, w, d) {
     if (axis === 'x') _o.position.set(s, y0 + h / 2, fixed + n * d / 2), _o.scale.set(w, h, d);
     else _o.position.set(fixed + n * d / 2, y0 + h / 2, s), _o.scale.set(d, h, w);
     _o.updateMatrix(); arr.push(_o.matrix.clone());
@@ -1864,22 +1888,23 @@ function Floor3D(root, opt) {
   function fabric(axis, fixed, n, s0, s1, y0, y1, ex, pw) { pw = pw || 1.2; for (let s = s0 + 0.05; s + pw <= s1 + 0.001; s += pw + 0.05) { const m = s + pw / 2; if (!out(m, ex)) put(L.fab, axis, fixed, n, m, y0, y1 - y0, pw, 0.07); } }
   const QS = [0, 1, 4, 2, 2, 4, 1];
   function qrd(axis, fixed, n, s0, mods, y0, y1) { for (let k = 0; k < mods; k++) QS.forEach((q, i) => put(L.qrd, axis, fixed, n, s0 + k * 0.6 + i * 0.0857 + 0.043, y0, y1 - y0, 0.078, 0.03 + q * 0.045)); }
-  // live room
-  qrd('x', 0.35, 1, 3.65, 8, 0.8, 3.4);
-  slats('x', 0.35, 1, 0.35, 3.6, 0, 4.4); slats('x', 0.35, 1, 8.5, 12.35, 0, 4.4);
+  // live room: back wall slats + fabric + central QRD array
+  qrd('x', 0.35, 1, 9.3, 9, 0.8, 3.4);
+  slats('x', 0.35, 1, 0.35, 9.25, 0, 2.8); slats('x', 0.35, 1, 14.75, 23.65, 0, 2.8);
+  fabric('x', 0.35, 1, 0.35, 9.25, 3.0, 4.8, null, 1.4); fabric('x', 0.35, 1, 14.75, 23.65, 3.0, 4.8, null, 1.4); fabric('x', 0.35, 1, 9.3, 14.7, 3.6, 4.8, null, 1.3);
   slats('z', 0.35, 1, 0.35, 8.68, 0, 2.7); fabric('z', 0.35, 1, 0.35, 8.68, 2.9, 4.7, null, 1.55);
-  slats('z', 12.35, -1, 0.35, 8.68, 0, 2.7, [[3.3, 5.3]]); fabric('z', 12.35, -1, 0.35, 8.68, 2.9, 4.7, null, 1.55);
-  slats('x', 8.68, -1, 0.35, 12.35, 0, 2.7, [[1.1, 3.1], [7.2, 11.0]]); fabric('x', 8.68, -1, 0.35, 12.35, 2.9, 4.7, null, 1.55);
+  slats('z', 23.65, -1, 0.35, 8.68, 0, 2.7); fabric('z', 23.65, -1, 0.35, 8.68, 2.9, 4.7, null, 1.55);
+  slats('x', 8.68, -1, 0.35, 23.65, 0, 2.7, [[4.9, 6.9], [9.95, 14.05], [20.3, 22.3]]); fabric('x', 8.68, -1, 0.35, 23.65, 2.9, 4.7, null, 1.55);
   // control room
-  slats('z', 5.85, 1, 9.08, 14.58, 0, 2.6, [[10.1, 12.1], [13.5, 14.5]]); fabric('z', 5.85, 1, 9.08, 14.58, 2.75, 3.5, null, 1.3);
-  slats('z', 12.35, -1, 9.08, 14.58, 0, 2.6); fabric('z', 12.35, -1, 9.08, 14.58, 2.75, 3.5, null, 1.3);
-  qrd('x', 14.58, -1, 7.55, 7, 0.6, 2.7); fabric('x', 14.58, -1, 5.85, 12.35, 2.85, 3.5, [[6.2, 7.4]], 1.25);
+  slats('z', 8.75, 1, 10.08, 13.58, 0, 2.6, [[10.5, 12.3]]); fabric('z', 8.75, 1, 10.08, 13.58, 2.75, 3.5, null, 1.1);
+  slats('z', 15.25, -1, 10.08, 13.58, 0, 2.6, [[10.2, 11.4]]); fabric('z', 15.25, -1, 10.08, 13.58, 2.75, 3.5, null, 1.1);
+  qrd('x', 14.58, -1, 9.9, 5, 1.0, 2.8); fabric('x', 14.58, -1, 9.75, 13.1, 2.9, 3.5, null, 1.0);
   // booths
-  fabric('z', 0.35, 1, 9.08, 13.08, 0.4, 2.7, null, 1.25); fabric('x', 13.08, -1, 1.5, 4.85, 0.4, 2.7, null, 1.0);
-  fabric('z', 4.85, -1, 9.08, 13.08, 0.4, 2.7, [[10.1, 12.1]], 0.9); fabric('x', 9.08, 1, 3.1, 4.85, 0.4, 2.7, null, 1.6);
-  fabric('x', 15.88, -1, 1.85, 4.85, 0.4, 2.7, null, 0.92); fabric('z', 1.85, 1, 13.38, 15.88, 0.4, 2.7, [[14.5, 15.6]], 0.75);
+  fabric('z', 3.65, 1, 9.08, 13.08, 0.4, 2.7, null, 1.25); fabric('x', 13.08, -1, 3.65, 8.15, 0.4, 2.7, [[4.3, 6.3]], 1.0);
+  fabric('z', 8.15, -1, 9.08, 13.08, 0.4, 2.7, [[10.5, 12.3]], 0.9);
+  fabric('z', 15.85, 1, 9.08, 11.58, 0.4, 2.7, [[10.2, 11.4]], 0.75); fabric('x', 11.58, -1, 15.85, 18.85, 0.4, 2.7, [[17.2, 18.3]], 0.92); fabric('z', 18.85, -1, 9.08, 11.58, 0.4, 2.7, null, 1.15);
   // green room feature wall
-  slats('z', 12.75, 1, 7.15, 14.65, 0, 2.9);
+  slats('z', 16.15, 1, 15.65, 19.65, 0, 2.9);
   function inst(arr, mat) { const im = new T.InstancedMesh(BOX, mat, arr.length); arr.forEach((m, i) => im.setMatrixAt(i, m)); im.castShadow = true; im.receiveShadow = true; world.add(im); return im; }
   inst(L.slat, M.slat); inst(L.fab, M.fabric); inst(L.qrd, M.qrd);
 
@@ -1901,9 +1926,9 @@ function Floor3D(root, opt) {
     return g;
   }
 
-  // Grand piano ~1.50 × 2.10 m
+  // Grand piano ~1.50 × 2.10 m, left of centre
   (function () {
-    const g = grp(3.4, 4.6, -0.55);
+    const g = grp(7.3, 4.5, -0.5);
     const sh = new T.Shape(); sh.moveTo(0, 0); sh.lineTo(1.5, 0); sh.lineTo(1.5, 0.5);
     sh.bezierCurveTo(1.5, 1.05, 0.8, 1.0, 0.68, 1.55); sh.bezierCurveTo(0.6, 1.95, 0.45, 2.1, 0.22, 2.1); sh.lineTo(0, 2.1); sh.lineTo(0, 0);
     const body = new T.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false, curveSegments: 16 }); body.rotateX(-Math.PI / 2); body.translate(-0.75, 0.68, 1.05);
@@ -1914,13 +1939,14 @@ function Floor3D(root, opt) {
     bx(0, 0.68, 1.2, 1.5, 0.12, 0.3, M.piano, g); bx(0, 0.72, 1.2, 1.4, 0.04, 0.16, M.ivory, g); bx(0, 0.76, 1.12, 1.4, 0.012, 0.06, M.black, g);
     [[-0.62, 1.15], [0.62, 1.15], [-0.55, -0.85]].forEach(([a, b]) => cy(a, 0, b, 0.05, 0.04, 0.68, M.piano, g, 10));
     bx(0, 0, 1.85, 0.8, 0.5, 0.36, M.piano, g); bx(0, 0.5, 1.85, 0.8, 0.06, 0.36, M.leather, g);
-    micStand(4.6, 3.6, 1.45, -2.4);
+    micStand(8.5, 3.4, 1.45, -2.4);
   })();
 
-  // Drum kit on rug
+  // Drum kit on a red Persian rug, centre
   (function () {
-    const rug = new T.Mesh(new T.PlaneGeometry(3.0, 2.5), new T.MeshStandardMaterial({ map: rugTex, roughness: 1 })); rug.rotation.x = -Math.PI / 2; rug.position.set(8.7, 0.02, 2.6); rug.receiveShadow = true; furn.add(rug);
-    const g = grp(8.7, 2.6, 0, furn, 0.02), drum = (x, y, z, r, h, rx) => { const d = new T.Mesh(cg(r, r, h, 24), [M.shell, M.head, M.head]); d.position.set(x, y, z); d.rotation.x = rx || 0; d.castShadow = true; g.add(d); return d; };
+    const DX = 11.9, DZ = 3.3;
+    const rug = new T.Mesh(new T.PlaneGeometry(3.0, 2.5), new T.MeshStandardMaterial({ map: rugTex, roughness: 1 })); rug.rotation.x = -Math.PI / 2; rug.position.set(DX, 0.02, DZ); rug.receiveShadow = true; furn.add(rug);
+    const g = grp(DX, DZ, 0, furn, 0.02), drum = (x, y, z, r, h, rx) => { const d = new T.Mesh(cg(r, r, h, 24), [M.shell, M.head, M.head]); d.position.set(x, y, z); d.rotation.x = rx || 0; d.castShadow = true; g.add(d); return d; };
     drum(0, 0.28, 0.25, 0.28, 0.45, Math.PI / 2);
     drum(0.15, 0.82, 0.2, 0.13, 0.2, 0.35); drum(-0.17, 0.84, 0.2, 0.14, 0.22, 0.35);
     drum(0.32, 0.6, -0.12, 0.18, 0.14); cy(0.32, 0, -0.12, 0.01, 0.01, 0.53, M.steel, g, 6);
@@ -1929,34 +1955,35 @@ function Floor3D(root, opt) {
     cym(0.62, 0.92, -0.05, 0.18); cy(0.62, 0.9, -0.05, 0.18, 0.04, 0.012, M.brass, g, 28);
     cym(0.5, 1.35, 0.45, 0.23, -0.25); cym(-0.7, 1.2, 0.25, 0.27, -0.2); cym(-0.25, 1.45, 0.55, 0.2, -0.3);
     cy(0, 0, -0.62, 0.17, 0.17, 0.5, M.dark, g); cy(0, 0.5, -0.62, 0.2, 0.2, 0.08, M.leather, g);
-    micStand(8.1, 3.6, 1.7, -1.4); micStand(9.4, 3.6, 1.7, -1.8);
+    micStand(DX - 0.6, DZ + 1.0, 1.7, -1.4); micStand(DX + 0.7, DZ + 1.0, 1.7, -1.8);
   })();
 
-  // Double bass (~1.9 m) on stand
+  // Double bass (~1.9 m) on stand, right
   (function () {
-    const g = grp(10.9, 6.2, -0.4); g.rotation.x = 0.08;
+    const g = grp(18.4, 4.6, -0.5); g.rotation.x = 0.08;
     const blob = (y, sx, sy, sz) => { const s = new T.Mesh(new T.SphereGeometry(1, 24, 16), M.bassWood); s.scale.set(sx, sy, sz); s.position.y = y; s.castShadow = true; g.add(s); };
     blob(0.58, 0.34, 0.36, 0.11); blob(1.02, 0.27, 0.27, 0.1); blob(0.8, 0.24, 0.2, 0.1);
     bx(0, 1.25, 0.06, 0.06, 0.65, 0.05, M.black, g); cy(0, 1.88, 0.03, 0.035, 0.035, 0.08, M.bassWood, g, 10);
     cy(0, 0, 0, 0.01, 0.01, 0.24, M.steel, g, 6); bx(0, 0.2, -0.25, 0.4, 0.04, 0.5, M.dark, g);
-    micStand(10.2, 6.6, 1.0, -0.6);
+    micStand(17.8, 5.1, 1.0, -0.6);
   })();
 
-  // Gobos (1.20 × 1.80 m) cluster
+  // Wooden wheeled gobos (1.20 × 1.80 m), cluster on the right
   function gobo(x, z, ry, win) {
-    const g = grp(x, z, ry); bx(-0.45, 0, 0, 0.08, 0.06, 0.45, M.dark, g); bx(0.45, 0, 0, 0.08, 0.06, 0.45, M.dark, g);
-    bx(0, 0.1, 0, 1.2, win ? 1.1 : 1.8, 0.1, M.fabric, g); bx(0, 0.1, 0, 1.24, 0.03, 0.11, M.door, g);
-    if (win) { const p = bx(0, 1.2, 0, 1.12, 0.68, 0.02, M.glass, g, 0, false); p.renderOrder = 2; bx(0, 1.88, 0, 1.24, 0.03, 0.11, M.door, g); bx(-0.6, 1.2, 0, 0.04, 0.7, 0.1, M.door, g); bx(0.6, 1.2, 0, 0.04, 0.7, 0.1, M.door, g); }
+    const g = grp(x, z, ry); bx(-0.45, 0.06, 0, 0.08, 0.05, 0.45, M.door, g); bx(0.45, 0.06, 0, 0.08, 0.05, 0.45, M.door, g);
+    [[-0.45, -0.18], [-0.45, 0.18], [0.45, -0.18], [0.45, 0.18]].forEach(([a, b]) => { const w = cy(a, 0, b, 0.04, 0.04, 0.03, M.dark, g, 10); w.rotation.z = Math.PI / 2; w.position.y = 0.04; });
+    bx(0, 0.12, 0, 1.2, win ? 1.1 : 1.8, 0.1, M.fabric, g);
+    bx(-0.61, 0.12, 0, 0.05, 1.8, 0.11, M.door, g); bx(0.61, 0.12, 0, 0.05, 1.8, 0.11, M.door, g); bx(0, 0.1, 0, 1.27, 0.04, 0.11, M.door, g); bx(0, 1.9, 0, 1.27, 0.04, 0.11, M.door, g);
+    if (win) { const p = bx(0, 1.22, 0, 1.12, 0.68, 0.02, M.glass, g, 0, false); p.renderOrder = 2; }
   }
-  gobo(7.0, 3.3, 1.1); gobo(7.3, 4.4, 0.6, 1); gobo(10.4, 3.3, -1.1); gobo(10.1, 4.4, -0.6, 1); gobo(1.6, 6.6, 1.2, 0);
-  // string chairs and music stands
-  [[5.6, 6.4], [6.6, 6.7], [7.6, 6.6]].forEach(([x, z], i) => { chair(x, z, Math.PI + 0.2 - i * 0.2, M.walnut); cy(x + 0.05, 0, z - 0.7, 0.01, 0.01, 1.1, M.dark, furn, 6); bx(x + 0.05, 1.05, z - 0.7, 0.5, 0.35, 0.02, M.dark).rotation.x = -0.4; });
-  micStand(6.6, 5.7, 1.5, 1.6);
-  // pendant light rig above live room (no roof; indicative)
+  gobo(16.9, 3.3, 0.55); gobo(17.2, 6.0, 1.05, 1); gobo(19.7, 3.2, -0.6, 1); gobo(20.3, 5.6, -1.15); gobo(18.6, 7.2, 0.15);
+  // string chairs and music stands, left side
+  [[2.6, 6.3], [3.6, 6.6], [4.6, 6.5]].forEach(([x, z], i) => { chair(x, z, Math.PI + 0.2 - i * 0.2, M.walnut); cy(x + 0.05, 0, z - 0.7, 0.01, 0.01, 1.1, M.dark, furn, 6); bx(x + 0.05, 1.05, z - 0.7, 0.5, 0.35, 0.02, M.dark).rotation.x = -0.4; });
+  micStand(3.6, 5.6, 1.5, 1.6);
 
-  // Control room
+  // Control room: console, soffit monitors, racks, sofa at the back
   (function () {
-    const cz = 11.2, cx = 9.1;
+    const cz = 11.25, cx = 12.0;
     const g = grp(cx, cz, 0);
     bx(0, 0, 0.05, 3.3, 0.66, 1.0, M.walnut, g); bx(0, 0, -0.62, 3.3, 0.72, 0.26, M.walnut, g);
     const top = new T.Group(); top.position.set(0, 0.74, 0); top.rotation.x = 0.16; g.add(top);
@@ -1965,7 +1992,8 @@ function Floor3D(root, opt) {
     const ch = 44, fad = new T.InstancedMesh(BOX, M.chrome, ch), knob = new T.InstancedMesh(cg(0.011, 0.012, 0.022, 10), M.steel, ch * 7), led = new T.InstancedMesh(BOX, M.led, ch);
     for (let i = 0; i < ch; i++) {
       const x = -1.5 + (i + 0.5) * 3.0 / ch;
-      _o.position.set(x, 0.012, 0.33 - (i % 3) * 0.04); _o.scale.set(0.022, 0.02, 0.035); _o.rotation.set(0, 0, 0); _o.updateMatrix(); fad.setMatrixAt(i, _o.matrix);
+      _o.rotation.set(0, 0, 0);
+      _o.position.set(x, 0.012, 0.33 - (i % 3) * 0.04); _o.scale.set(0.022, 0.02, 0.035); _o.updateMatrix(); fad.setMatrixAt(i, _o.matrix);
       for (let k = 0; k < 7; k++) { _o.position.set(x, 0.011, -0.45 + k * 0.085); _o.scale.set(1, 1, 1); _o.updateMatrix(); knob.setMatrixAt(i * 7 + k, _o.matrix); }
       _o.position.set(x, 0.005, 0.17); _o.scale.set(0.012, 0.01, 0.012); _o.updateMatrix(); led.setMatrixAt(i, _o.matrix);
     }
@@ -1976,107 +2004,104 @@ function Floor3D(root, opt) {
     bx(0, 1.06, -0.66, 0.6, 0.32, 0.03, M.screen, g, 0, false);
     speaker(g, -1.05, 1.24, -0.62, 0.22, 0.34, 0.25, [[-0.06, 0.07], [0.09, 0.03]]).rotation.y = 0.3;
     speaker(g, 1.05, 1.24, -0.62, 0.22, 0.34, 0.25, [[-0.06, 0.07], [0.09, 0.03]]).rotation.y = -0.3;
-    // engineer chair
     const ec = grp(cx, cz + 1.05, Math.PI); cy(0, 0, 0, 0.3, 0.3, 0.03, M.dark, ec, 5); cy(0, 0, 0, 0.03, 0.03, 0.45, M.steel, ec, 8); bx(0, 0.45, 0, 0.52, 0.09, 0.5, M.leather, ec); bx(0, 0.52, -0.23, 0.5, 0.62, 0.08, M.leather, ec);
-    // side racks
     [[-2.15, 0.35], [2.15, -0.35]].forEach(([dx, r]) => { const rk = grp(cx + dx, cz + 0.15, r); bx(0, 0, 0, 0.56, 0.85, 0.62, M.dark, rk); for (let k = 0; k < 6; k++) { bx(0, 0.08 + k * 0.125, 0.315, 0.48, 0.1, 0.01, k % 2 ? M.darkMid : M.steel, rk, 0, false); bx(0.18, 0.12 + k * 0.125, 0.322, 0.02, 0.02, 0.005, k % 3 ? M.ledBlue : M.led, rk, 0, false); } });
-    // soffit-mounted main monitors flanking the window (angled front)
-    [[6.55, 0.42], [11.65, -0.42]].forEach(([x, r]) => {
-      const s = grp(x, 9.55, r); bx(0, 0, 0, 1.3, 3.0, 0.75, M.fabric, s);
-      const sp = speaker(s, 0, 1.0, 0.36, 0.8, 1.0, 0.06, [[-0.22, 0.19], [0.22, 0.19]]); bx(0, 1.25, 0.4, 0.8, 0.28, 0.04, M.darkMid, s); bx(0, 2.3, 0.39, 0.9, 0.2, 0.03, M.cone, s);
+    // two soffit-mounted main monitors on the canted front corners, aimed at the mix position
+    [[9.6, 9.95, 0.8], [14.4, 9.95, -0.8]].forEach(([x, z, r]) => {
+      const s = grp(x, z, r); bx(0, 0, 0, 1.3, 3.0, 0.6, M.fabric, s);
+      speaker(s, 0, 1.0, 0.3, 0.8, 1.0, 0.06, [[-0.22, 0.19], [0.22, 0.19]]); bx(0, 1.25, 0.34, 0.8, 0.28, 0.04, M.darkMid, s); bx(0, 2.3, 0.33, 0.9, 0.2, 0.03, M.cone, s);
     });
-    // producer desk and sofa at the rear
-    bx(cx, 0, 13.55, 2.6, 0.72, 0.7, M.walnut); bx(cx, 0.72, 13.55, 2.64, 0.04, 0.74, M.darkMid);
-    bx(cx - 0.6, 0.76, 13.6, 0.5, 0.3, 0.02, M.screen, furn, 0, false); bx(cx + 0.6, 0.76, 13.6, 0.5, 0.3, 0.02, M.screen, furn, 0, false);
-    chair(cx - 0.5, 13.0, Math.PI, M.leather); chair(cx + 0.5, 13.0, Math.PI, M.leather);
-    // tall rack column in corner
-    const tr = grp(6.35, 13.95, Math.PI / 2); bx(0, 0, 0, 0.6, 1.9, 0.8, M.dark, tr); for (let k = 0; k < 12; k++) bx(0, 0.15 + k * 0.14, 0.405, 0.5, 0.11, 0.01, k % 2 ? M.darkMid : M.steel, tr, 0, false);
+    // sofa against the rear wall, below the diffuser
+    const sf = grp(11.4, 14.05, Math.PI); bx(0, 0, 0, 2.4, 0.42, 0.9, M.leather, sf); bx(0, 0.42, 0.33, 2.4, 0.45, 0.24, M.leather, sf); bx(-1.12, 0.42, 0, 0.18, 0.22, 0.9, M.leather, sf); bx(1.12, 0.42, 0, 0.18, 0.22, 0.9, M.leather, sf);
+    for (let i = 0; i < 3; i++) bx(-0.72 + i * 0.72, 0.42, -0.08, 0.68, 0.12, 0.62, M.cushion, sf);
+    cy(11.4, 0, 13.0, 0.35, 0.35, 0.4, M.walnut, furn, 28);
+    const tr = grp(14.75, 12.8, -Math.PI / 2); bx(0, 0, 0, 0.6, 1.9, 0.8, M.dark, tr); for (let k = 0; k < 12; k++) bx(0, 0.15 + k * 0.14, 0.405, 0.5, 0.11, 0.01, k % 2 ? M.darkMid : M.steel, tr, 0, false);
   })();
 
   // Percussion booth: congas, bongos, cajón
   (function () {
     const prof = [[0, 0], [0.11, 0], [0.135, 0.12], [0.15, 0.32], [0.145, 0.5], [0.125, 0.7], [0.12, 0.76], [0, 0.76]].map(([r, y]) => new T.Vector2(r, y));
     const lathe = new T.LatheGeometry(prof, 24);
-    [[2.4, 11.2, 0.92], [2.85, 11.0, 1.0], [3.3, 11.2, 1.06]].forEach(([x, z, s]) => {
+    [[5.6, 11.2, 0.92], [6.05, 11.0, 1.0], [6.5, 11.2, 1.06]].forEach(([x, z, s]) => {
       const c = new T.Mesh(lathe, M.bassWood); c.scale.set(s, s, s); c.position.set(x, 0.08, z); c.castShadow = c.receiveShadow = true; furn.add(c);
       cy(x, 0.08 + 0.76 * s, z, 0.12 * s, 0.12 * s, 0.012, M.head); cy(x, 0, z, 0.15, 0.15, 0.08, M.steel, furn, 12);
     });
-    cy(2.6, 0.75, 11.75, 0.1, 0.1, 0.14, M.bassWood); cy(2.85, 0.75, 11.75, 0.12, 0.12, 0.14, M.bassWood); cy(2.72, 0, 11.75, 0.01, 0.01, 0.75, M.steel, furn, 6);
-    bx(2.85, 0, 12.1, 0.3, 0.48, 0.3, M.oak); bx(3.9, 0, 10.0, 0.62, 0.02, 0.62, M.door);
-    micStand(3.5, 11.8, 1.3, 2.5); micStand(2.2, 11.9, 1.3, 0.8);
-    gobo(1.5, 10.0, 0.4);
+    cy(5.8, 0.75, 11.75, 0.1, 0.1, 0.14, M.bassWood); cy(6.05, 0.75, 11.75, 0.12, 0.12, 0.14, M.bassWood); cy(5.92, 0, 11.75, 0.01, 0.01, 0.75, M.steel, furn, 6);
+    bx(6.05, 0, 12.3, 0.3, 0.48, 0.3, M.oak); bx(7.3, 0, 10.0, 0.62, 0.02, 0.62, M.door);
+    micStand(6.9, 11.8, 1.3, 2.5); micStand(5.0, 11.9, 1.3, 0.8);
+    gobo(4.5, 10.0, 0.4);
   })();
   // ISO booth 02
-  micStand(3.4, 14.4, 1.55, 1.57); chair(3.4, 15.1, 0, M.leather); cy(2.7, 0, 14.5, 0.01, 0.01, 1.1, M.dark, furn, 6);
-  // Equipment / machine room: server racks
+  micStand(17.3, 10.0, 1.55, 1.57); chair(17.3, 10.8, 0, M.leather); cy(16.5, 0, 10.1, 0.01, 0.01, 1.1, M.dark, furn, 6); bx(16.5, 1.05, 10.1, 0.5, 0.35, 0.02, M.dark).rotation.x = -0.4;
+  // Equipment / machine room: server racks along the outside wall
   (function () {
     const leds = []; for (let i = 0; i < 4; i++) {
-      const x = 8.85 + i * 0.68; bx(x, 0, 15.45, 0.6, 2.0, 1.0, M.dark); bx(x, 0.05, 15.96, 0.54, 1.9, 0.01, M.darkMid, furn, 0, false);
-      for (let k = 0; k < 14; k++) leds.push([x - 0.2 + (k % 2) * 0.05, 0.2 + k * 0.12, 15.97]);
+      const z = 16.25 + i * 0.68; bx(0.9, 0, z, 1.0, 2.0, 0.6, M.dark); bx(1.41, 0.05, z, 0.01, 1.9, 0.54, M.darkMid, furn, 0, false);
+      for (let k = 0; k < 14; k++) leds.push([1.42, 0.2 + k * 0.12, z - 0.2 + (k % 2) * 0.05]);
     }
-    const im = new T.InstancedMesh(BOX, M.led, leds.length); leds.forEach(([x, y, z], i) => { _o.position.set(x, y, z); _o.scale.set(0.02, 0.012, 0.004); _o.rotation.set(0, 0, 0); _o.updateMatrix(); im.setMatrixAt(i, _o.matrix); }); furn.add(im);
-    bx(11.95, 0, 16.3, 0.5, 1.6, 0.6, M.steel);
+    const im = new T.InstancedMesh(BOX, M.led, leds.length); leds.forEach(([x, y, z], i) => { _o.position.set(x, y, z); _o.scale.set(0.004, 0.012, 0.02); _o.rotation.set(0, 0, 0); _o.updateMatrix(); im.setMatrixAt(i, _o.matrix); }); furn.add(im);
+    bx(1.9, 0, 19.2, 0.6, 1.6, 0.5, M.steel);
   })();
 
-  // Lobby: freight elevator shaft and staircase
+  // Lobby: stairwell opening with a stair going down, and the freight lift shaft
   (function () {
-    bx(22.37, 0, 1.87, 2.5, 0.06, 3.0, M.steel); bx(21.15, 0, 2.0, 0.12, 0.012, 2.2, M.hazard, furn, 0, false);
-    bx(21.2, 0, 0.75, 0.05, 2.6, 0.55, M.steel); bx(21.2, 0, 3.25, 0.05, 2.6, 0.55, M.steel);
-    bx(23.55, 0.0, 1.87, 0.06, 2.6, 2.9, M.steel); bx(22.4, 0.9, 0.42, 2.3, 0.08, 0.04, M.chrome); bx(22.4, 0.9, 3.33, 2.3, 0.08, 0.04, M.chrome);
-    bx(20.7, 1.2, 3.3, 0.05, 0.14, 0.08, M.brass);
-    // U-stair: two flights of 10 risers (0.15 m), 0.28 m goings, landing at 1.5 m
-    const sx0 = 13.05, w = 1.3;
-    for (let i = 0; i < 10; i++) {
-      bx(sx0 + w / 2, 0, 5.9 - i * 0.28, w, 0.15 * (i + 1), 0.28, M.stair);
-      bx(sx0 + w + 0.2 + w / 2, 1.5, 1.95 + i * 0.28, w, 0.15 * (i + 1), 0.28, M.stair);
+    // stairwell liner below the floor
+    const [hx0, hz0, hx1, hz1] = [8.45, 15.9, 11.05, 19.35], D = 3.1;
+    bx((hx0 + hx1) / 2, -D, (hz0 + hz1) / 2, hx1 - hx0, 0.02, hz1 - hz0, M.stair, furn, 0, false);
+    bx(hx0 - 0.1, -D, (hz0 + hz1) / 2, 0.2, D - 0.3, hz1 - hz0 + 0.4, M.wall, furn, 0, false); bx(hx1 + 0.1, -D, (hz0 + hz1) / 2, 0.2, D - 0.3, hz1 - hz0 + 0.4, M.wall, furn, 0, false);
+    bx((hx0 + hx1) / 2, -D, hz0 - 0.1, hx1 - hx0, D - 0.3, 0.2, M.wall, furn, 0, false); bx((hx0 + hx1) / 2, -D, hz1 + 0.1, hx1 - hx0, D - 0.3, 0.2, M.wall, furn, 0, false);
+    // U-stair down: flight A from the lobby (z 15.9) towards the front, landing at −1.50 m, flight B back down to −3.00 m
+    const w = 1.2, rise = 0.1875, go = 0.28;
+    for (let i = 0; i < 8; i++) {
+      bx(hx0 + w / 2, -rise * (i + 1) - 0.18, hz0 + go * (i + 0.5), w, 0.18, go, M.stair);
+      bx(hx1 - w / 2, -1.5 - rise * (i + 1) - 0.18, hz0 + 2.24 - go * (i + 0.5), w, 0.18, go, M.stair);
     }
-    bx(sx0 + 1.4, 0, 1.0, 2.8, 1.5, 1.3, M.stair);
-    bx(sx0 + w + 0.1, 0, 3.5, 0.2, 1.6, 4.5, M.wall);
-    const rail = (x0, y0, z0, x1, y1, z1) => { const a = new T.Vector3(x0, y0, z0), b = new T.Vector3(x1, y1, z1), len = a.distanceTo(b); const m = new T.Mesh(cg(0.025, 0.025, len, 8), M.brass); m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize()); m.castShadow = true; furn.add(m); };
-    rail(sx0 + 2 * w + 0.25, 2.5, 1.9, sx0 + 2 * w + 0.25, 4.0, 4.7);
-    rail(sx0 + 0.05, 1.05, 6.0, sx0 + 0.05, 2.5, 2.0);
-    const gp = bx(sx0 + 2 * w + 0.25, 1.5, 3.3, 0.02, 1.6, 2.8, M.glass, furn, 0, false); gp.rotation.x = Math.atan2(1.5, 2.8); gp.renderOrder = 2;
-    bx(19.0, 0, 5.9, 1.8, 0.45, 0.5, M.walnut); plant(17.6, 6.2, 1.1); plant(23.0, 6.2, 0.9);
+    bx((hx0 + hx1) / 2, -1.68, (hz0 + 2.24 + hz1) / 2, hx1 - hx0, 0.18, hz1 - hz0 - 2.24, M.stair);
+    // glass balustrade with brass rail around the opening
+    [[hx1, hz0, hx1, hz1], [hx0 + w, hz0, hx1, hz0]].forEach(([ax, az, bx2, bz]) => {
+      const len = Math.hypot(bx2 - ax, bz - az), alongX = Math.abs(bx2 - ax) > Math.abs(bz - az);
+      const p = bx((ax + bx2) / 2, 0, (az + bz) / 2, alongX ? len : 0.02, 1.05, alongX ? 0.02 : len, M.glass, furn, 0, false); p.renderOrder = 2;
+      bx((ax + bx2) / 2, 1.05, (az + bz) / 2, alongX ? len : 0.05, 0.05, alongX ? 0.05 : len, M.brass);
+    });
+    // freight lift: car platform, guide rails, part-open steel doors
+    bx(14.37, 0, 18.12, 2.9, 0.06, 3.0, M.steel); bx(14.3, 0, 16.68, 1.8, 0.012, 0.12, M.hazard, furn, 0, false);
+    bx(13.85, 0, 16.5, 0.6, 2.6, 0.05, M.steel); bx(14.75, 0, 16.5, 0.6, 2.6, 0.05, M.steel);
+    bx(15.78, 0, 18.1, 0.06, 2.6, 2.8, M.steel); bx(14.4, 0.9, 19.55, 2.6, 0.08, 0.04, M.chrome);
+    bx(15.3, 1.2, 16.32, 0.12, 0.14, 0.04, M.brass);
+    bx(9.8, 0, 15.25, 1.6, 0.45, 0.45, M.walnut); plant(15.4, 15.3, 1.0); plant(12.2, 19.2, 0.9);
   })();
 
-  // Green room: sofa, coffee bar, dining table
+  // Green room: sofa, armchair, coffee bar
   (function () {
-    const rug = new T.Mesh(new T.PlaneGeometry(4.0, 3.0), S(0x8f8576, 1)); rug.rotation.x = -Math.PI / 2; rug.position.set(15.9, 0.02, 10.1); rug.receiveShadow = true; furn.add(rug);
-    bx(15.6, 0, 8.25, 3.4, 0.42, 0.95, M.boucle); bx(15.6, 0.42, 7.9, 3.4, 0.45, 0.25, M.boucle);
-    bx(13.55, 0, 9.4, 0.95, 0.42, 3.2, M.boucle); bx(13.2, 0.42, 9.4, 0.25, 0.45, 3.2, M.boucle);
-    for (let i = 0; i < 3; i++) bx(14.6 + i * 1.05, 0.42, 8.35, 0.98, 0.14, 0.72, M.cushion);
-    cy(16.0, 0, 10.0, 0.55, 0.55, 0.38, M.oak, furn, 36); cy(16.0, 0.38, 10.0, 0.56, 0.56, 0.02, M.walnut, furn, 36);
-    chair(17.8, 10.6, -2.0, M.leather); chair(16.6, 11.5, Math.PI - 0.2, M.leather);
-    // coffee bar on the east wall
-    bx(23.2, 0, 9.9, 0.65, 0.92, 3.6, M.walnut); bx(23.2, 0.92, 9.9, 0.7, 0.05, 3.7, M.stone);
-    bx(23.25, 0.97, 9.1, 0.45, 0.42, 0.55, M.chrome); bx(23.3, 0.97, 9.7, 0.2, 0.38, 0.2, M.dark);
-    bx(23.5, 1.5, 9.9, 0.3, 0.03, 3.4, M.walnut); bx(23.5, 2.0, 9.9, 0.3, 0.03, 3.4, M.walnut);
-    [9.0, 9.9, 10.8].forEach(z => { cy(22.4, 0, z, 0.18, 0.18, 0.02, M.steel); cy(22.4, 0, z, 0.02, 0.02, 0.7, M.steel, furn, 6); cy(22.4, 0.7, z, 0.19, 0.19, 0.06, M.leather); });
-    cy(20.0, 0, 12.8, 0.06, 0.25, 0.72, M.dark, furn, 12); cy(20.0, 0.72, 12.8, 0.6, 0.6, 0.04, M.oak, furn, 36);
-    [0, 1, 2, 3].forEach(k => { const a = k * Math.PI / 2 + 0.4; chair(20 + Math.cos(a) * 0.85, 12.8 + Math.sin(a) * 0.85, -a - Math.PI / 2, M.walnut); });
-    plant(13.3, 14.1, 1.1); plant(23.1, 7.7, 0.9); plant(18.4, 7.6, 0.8);
-    bx(21.5, 0, 14.3, 2.0, 0.6, 0.45, M.walnut); bx(21.5, 1.3, 14.6, 1.6, 0.9, 0.04, M.screen, furn, 0, false);
+    const rug = new T.Mesh(new T.PlaneGeometry(2.6, 2.4), S(0x8f8576, 1)); rug.rotation.x = -Math.PI / 2; rug.position.set(17.8, 0.02, 17.1); rug.receiveShadow = true; furn.add(rug);
+    bx(16.75, 0, 17.1, 0.9, 0.42, 2.3, M.boucle); bx(16.45, 0.42, 17.1, 0.25, 0.45, 2.3, M.boucle);
+    for (let i = 0; i < 3; i++) bx(16.85, 0.42, 16.35 + i * 0.75, 0.66, 0.14, 0.7, M.cushion);
+    cy(17.95, 0, 17.0, 0.45, 0.45, 0.38, M.oak, furn, 36); cy(17.95, 0.38, 17.0, 0.46, 0.46, 0.02, M.walnut, furn, 36);
+    chair(19.3, 16.6, -1.8, M.leather); chair(19.2, 17.6, -1.3, M.leather);
+    bx(18.6, 0, 19.25, 3.2, 0.92, 0.65, M.walnut); bx(18.6, 0.92, 19.25, 3.3, 0.05, 0.7, M.stone);
+    bx(17.6, 0.97, 19.3, 0.55, 0.42, 0.45, M.chrome); bx(18.2, 0.97, 19.35, 0.2, 0.38, 0.2, M.dark);
+    bx(18.6, 1.5, 19.5, 3.0, 0.03, 0.28, M.walnut); bx(18.6, 2.0, 19.5, 3.0, 0.03, 0.28, M.walnut);
+    [17.7, 18.6, 19.5].forEach(x => { cy(x, 0, 18.55, 0.18, 0.18, 0.02, M.steel); cy(x, 0, 18.55, 0.02, 0.02, 0.7, M.steel, furn, 6); cy(x, 0.7, 18.55, 0.19, 0.19, 0.06, M.leather); });
+    plant(20.2, 16.1, 0.9);
   })();
   // Restrooms
-  [[14.95, 17.15], [17.45, 19.65]].forEach(([z0, z1]) => {
-    const zc = (z0 + z1) / 2;
-    bx(23.35, 0, zc - 0.4, 0.55, 0.42, 0.38, M.white); bx(23.55, 0.42, zc - 0.4, 0.18, 0.4, 0.38, M.white);
-    bx(20.0, 0, z0 + 0.3, 1.6, 0.85, 0.5, M.walnut); bx(20.0, 0.85, z0 + 0.3, 1.64, 0.04, 0.54, M.stone); cy(19.6, 0.86, z0 + 0.3, 0.18, 0.14, 0.06, M.white); cy(20.4, 0.86, z0 + 0.3, 0.18, 0.14, 0.06, M.white);
-    bx(20.0, 1.1, z0 + 0.06, 1.6, 0.9, 0.02, M.chrome, furn, 0, false);
-    bx(22.4, 0, zc - 0.05, 0.05, 2.1, 1.5, M.walnut);
+  [21.55, 23.05].forEach(x => {
+    bx(x, 0, 19.25, 0.38, 0.42, 0.55, M.white); bx(x, 0.42, 19.55, 0.38, 0.4, 0.18, M.white);
+    bx(x + 0.38, 0, 17.4, 0.4, 0.85, 0.5, M.walnut); bx(x + 0.38, 0.85, 17.4, 0.44, 0.04, 0.54, M.stone); cy(x + 0.38, 0.86, 17.4, 0.14, 0.11, 0.06, M.white);
   });
-  plant(17.9, 19.2, 0.9); plant(0.85, 19.1, 0.9);
+  plant(7.4, 15.0, 0.9); plant(23.2, 12.3, 0.9); plant(0.85, 9.6, 0.9);
+  bx(21.3, 0, 12.4, 1.8, 0.45, 0.5, M.walnut);
 
-  /* ---------- cable route (red dashes) ---------- */
+  /* ---------- cable route (red dashes along the corridor) ---------- */
   const cableG = new T.Group(); world.add(cableG);
   (function () {
     const routes = [
-      [[9.1, 11.6], [9.1, 13.1], [7.9, 14.73], [7.9, 15.9], [8.6, 16.6]],
-      [[9.1, 10.6], [9.1, 8.88], [8.7, 6.2], [8.7, 3.4]],
-      [[9.1, 8.88], [5.0, 7.2], [3.6, 5.2]],
-      [[7.3, 11.0], [5.35, 11.0], [3.0, 11.0]],
-      [[7.3, 11.4], [5.35, 14.0], [3.4, 14.3]],
-      [[9.1, 8.88], [10.6, 7.0], [10.8, 6.6]]
+      [[1.35, 17.2], [1.35, 14.35], [5.3, 14.35], [5.3, 13.23], [5.9, 11.7]],
+      [[5.3, 14.35], [8.6, 14.35], [9.4, 15.1], [13.65, 15.1], [13.65, 14.73], [12.0, 13.2], [12.0, 12.0]],
+      [[13.65, 15.1], [15.7, 14.2], [17.75, 13.0], [17.75, 11.73], [17.3, 10.5]],
+      [[12.0, 10.7], [12.0, 8.88], [11.9, 4.6]],
+      [[12.0, 8.88], [8.6, 5.7]],
+      [[12.0, 8.88], [17.9, 5.2]]
     ];
     const dashes = [];
     routes.forEach(rt => { for (let i = 0; i < rt.length - 1; i++) { const [ax, az] = rt[i], [bxp, bzp] = rt[i + 1], len = Math.hypot(bxp - ax, bzp - az), ang = Math.atan2(bzp - az, bxp - ax); for (let s = 0.1; s < len; s += 0.36) { const t = s / len; dashes.push([ax + (bxp - ax) * t, az + (bzp - az) * t, ang]); } } });
@@ -2097,15 +2122,15 @@ function Floor3D(root, opt) {
   function highlight(R) {
     while (hiG.children.length) hiG.remove(hiG.children[0]);
     if (!R) return;
-    R.r.forEach(([x0, z0, x1, z1]) => { const m = new T.Mesh(new T.PlaneGeometry(x1 - x0, z1 - z0), M.hi); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, 0.04, (z0 + z1) / 2); m.renderOrder = 3; hiG.add(m); });
+    R.geos.forEach(g => { const m = new T.Mesh(g, M.hi); m.rotation.x = -Math.PI / 2; m.position.y = 0.04; m.renderOrder = 3; hiG.add(m); });
   }
 
   /* ---------- HTML labels ---------- */
-  const SHORT = { live: 'Live room', control: 'Control', perc: 'Percussion', iso: 'ISO 02', equip: 'Equipment', lobby: 'Lift & stair', green: 'Green room', wc1: 'WC 01', wc2: 'WC 02', circ: 'Circulation' };
+  const SHORT = { live: 'Live room', control: 'Control', perc: 'Percussion', iso: 'ISO 02', equip: 'Equipment', lobby: 'Lift & stair', green: 'Green room', wc1: 'WC 01', wc2: 'WC 02', circ: 'Corridor', spare: 'Unassigned' };
   let shortMode = null;
   const labs = ROOMS.map(R => {
     const el = document.createElement('div'); el.className = 'f3d-lab'; el.dataset.long = R.name.replace(' and ', ' & '); el.dataset.short = SHORT[R.id] || R.name; el.textContent = el.dataset.long;
-    labelsEl.appendChild(el); const r = R.r[0]; return { el, R, p: new T.Vector3(R.lab ? R.lab[0] : (r[0] + r[2]) / 2, 0.2, R.lab ? R.lab[1] : (r[1] + r[3]) / 2) };
+    labelsEl.appendChild(el); return { el, R, p: new T.Vector3(R.c[0], 0.2, R.c[1]) };
   });
   const dimLabs = [['24.00 m', 12, 0.1, 22.6], ['20.00 m', -1.6, 0.1, 10]].map(([t, x, y, z]) => { const el = document.createElement('div'); el.className = 'f3d-lab f3d-dim'; el.textContent = t; el.hidden = true; labelsEl.appendChild(el); return { el, p: new T.Vector3(x, y, z) }; });
   let showLabels = true;
@@ -2138,13 +2163,13 @@ function Floor3D(root, opt) {
 
   function fitDist(w, d, fov) { const a = camera.aspect, t = Math.tan(T.MathUtils.degToRad(fov / 2)); return Math.max(d / (2 * t), w / (2 * t * a)); }
   function views() {
-    const ov = fitDist(27, 23, camera.fov) * (camera.aspect < 1 ? 1.45 : 1.2), dir = new T.Vector3(0.55, 0.78, 0.62).normalize();
+    const ov = fitDist(27, 23, camera.fov) * (camera.aspect < 1 ? 1.55 : 1.38), dir = new T.Vector3(-0.45, 1.05, 0.5).normalize();
     return {
-      overview: { p: new T.Vector3(CX, 0, CZ + 0.6).addScaledVector(dir, ov), t: new T.Vector3(CX, 0, CZ + 0.6) },
+      overview: { p: new T.Vector3(CX, 0, CZ - 0.4).addScaledVector(dir, ov), t: new T.Vector3(CX, 0, CZ - 0.4) },
       top: { p: new T.Vector3(CX, fitDist(25, 21, camera.fov) * 1.06 + 3, CZ + 0.001), t: new T.Vector3(CX, 0, CZ) },
-      live: { p: new T.Vector3(9.6, 14.5, 13.8), t: new T.Vector3(6.4, 0.4, 4.2) },
-      control: { p: new T.Vector3(10.0, 2.3, 12.75), t: new T.Vector3(9.05, 0.85, 11.05) },
-      walk: { p: new T.Vector3(11.6, 1.6, 8.1), t: new T.Vector3(10.0, 1.5, 6.9) }
+      live: { p: new T.Vector3(12, 15.5, 17.5), t: new T.Vector3(12, 0.3, 4.2) },
+      control: { p: new T.Vector3(12.9, 2.3, 12.95), t: new T.Vector3(11.95, 0.85, 11.1) },
+      walk: { p: new T.Vector3(1.6, 1.6, 7.9), t: new T.Vector3(3.3, 1.5, 6.9) }
     };
   }
   let tween = null, dirty = true;
