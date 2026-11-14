@@ -946,6 +946,51 @@
     .ac-inner { padding: 1.4rem 1.1rem 2.5rem; }
     .isolation { padding-left: 1.1rem; padding-right: 1.1rem; }
   }
+.f3d { --f3d-brass: #b08d57; color: #e8e4dc; background: #141416; border: 1px solid rgba(176,141,87,0.35); border-radius: 2px; padding: 0.9rem; }
+.f3d button { font: inherit; cursor: pointer; border: 1px solid rgba(176,141,87,0.35); background: transparent; color: rgba(232,228,220,0.75); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.55rem 0.8rem; min-height: 40px; border-radius: 2px; transition: background .3s, color .3s; white-space: nowrap; }
+.f3d button:hover { color: #e8e4dc; background: rgba(176,141,87,0.15); }
+.f3d button.active, .f3d button[aria-pressed="true"] { background: var(--f3d-brass); color: #141416; border-color: var(--f3d-brass); }
+.f3d button:focus-visible, .f3d input:focus-visible, .f3d-cv:focus-visible { outline: 2px solid var(--f3d-brass); outline-offset: 2px; }
+.f3d-bar, .f3d-tools { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: space-between; }
+.f3d-views, .f3d-togs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.f3d-views .f3d-reset { margin-left: 0.4rem; border-style: dashed; }
+.f3d-stage { position: relative; margin: 0.75rem 0; aspect-ratio: 16 / 9.5; min-height: 340px; max-height: 78vh; background: #121213; overflow: hidden; border-radius: 2px; }
+.f3d-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.f3d-cv:active { cursor: grabbing; }
+.f3d-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.f3d-lab { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: #f3efe6; background: rgba(20,20,22,0.72); border: 1px solid rgba(176,141,87,0.45); padding: 0.22rem 0.45rem; border-radius: 2px; }
+.f3d-dim { color: #d3ad6c; letter-spacing: 0.06em; text-transform: none; font-size: 0.72rem; }
+.f3d-tip { position: absolute; z-index: 2; max-width: 240px; background: rgba(20,20,22,0.94); border: 1px solid #b08d57; padding: 0.6rem 0.75rem; border-radius: 2px; pointer-events: none; display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.78rem; line-height: 1.35; box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+.f3d-tip b { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 1.12rem; color: #f3efe6; }
+.f3d-tip span { color: rgba(232,228,220,0.75); }
+.f3d-tip em { align-self: flex-start; font-style: normal; font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: #141416; background: #b08d57; padding: 0.12rem 0.4rem; margin-top: 0.2rem; }
+.f3d-tip.fixed { left: 0.6rem; right: 0.6rem; bottom: 2.4rem; top: auto; max-width: none; }
+.f3d-hint { position: absolute; left: 0.75rem; bottom: 0.55rem; margin: 0; font-size: 0.62rem; letter-spacing: 0.08em; color: rgba(232,228,220,0.5); pointer-events: none; right: 0.75rem; }
+.f3d-fallback { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 2rem; text-align: center; color: rgba(232,228,220,0.7); }
+.f3d-fallback[hidden], .f3d-tip[hidden] { display: none; }
+.f3d-cut { display: flex; align-items: center; gap: 0.6rem; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(232,228,220,0.75); flex: 1 1 260px; min-width: 0; }
+.f3d-cut input { flex: 1; min-width: 80px; accent-color: #b08d57; height: 28px; }
+.f3d-cut output { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1rem; letter-spacing: 0.02em; text-transform: none; color: #f3efe6; min-width: 3.6rem; text-align: right; }
+@media (max-width: 640px) {
+  .f3d { padding: 0.6rem; }
+  .f3d-stage { aspect-ratio: auto; height: 62vh; min-height: 320px; }
+  .f3d button { padding: 0.5rem 0.6rem; font-size: 0.6rem; letter-spacing: 0.08em; }
+  .f3d-hint { font-size: 0.56rem; }
+  .f3d-views .f3d-reset { margin-left: 0; }
+}
+.f3d-notes { margin-top: 0.9rem; border-top: 1px solid rgba(176,141,87,0.35); padding-top: 0.6rem; font-size: 0.82rem; line-height: 1.55; color: rgba(232,228,220,0.82); }
+.f3d-notes summary { cursor: pointer; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: #d3ad6c; padding: 0.4rem 0; }
+.f3d-notes summary span { color: rgba(232,228,220,0.5); letter-spacing: 0.06em; text-transform: none; }
+.f3d-notes ol { margin: 0.5rem 0 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+.f3d-notes b { color: #f3efe6; font-weight: 500; }
+@media (max-width: 640px) {
+  .sx-controls { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+  .sx-seg[role="tablist"] { width: 100%; }
+  .sx-seg[role="tablist"] button { flex: 1 1 0; min-width: 0; white-space: normal; line-height: 1.25; padding: 0.5rem 0.45rem; text-align: center; }
+}
+
+.sx-p3-intro em{font-style:normal;color:var(--brass);}
+#sx-p3 .f3d-notes{color:inherit;}
 </style>
 </head>
 <body>
@@ -1245,6 +1290,7 @@
             <div class="sx-seg" role="tablist" aria-label="Page">
               <button type="button" class="active" data-page="1" role="tab" aria-selected="true"><span class="pn">1</span>Volume of air</button>
               <button type="button" data-page="2" role="tab" aria-selected="false"><span class="pn">2</span>Rooms and adjacencies</button>
+              <button type="button" data-page="3" role="tab" aria-selected="false"><span class="pn">3</span>First floor — 3D model</button>
             </div>
             <div class="sx-seg" role="group" aria-label="Drawing style">
               <button type="button" class="active" data-var="sketch">A · Sketch</button>
@@ -1265,6 +1311,28 @@
           <p class="sx-refnote">Figures above are the current programme. The eight sound cards below keep their original fixed reference rooms (<b>6.0 × 5.0 × 2.7 m</b> against <b>10.0 × 9.5 × 5.2 m</b>, with a <b>60 m²</b> alternative) so their audio and calculations are unchanged; they illustrate the principle, not the current room.</p>
           <div class="sx-grid" data-grid="1"></div>
           <div class="sx-next"><button type="button" data-page-go="2">Rooms and adjacencies →</button></div>
+        </div>
+
+        <div class="sx-page" data-page="3" id="sx-p3">
+          <p class="sx-lede sx-p3-intro">RATEENA SOUND, first floor (upper level): a solid, open-top cutaway at true metric scale. Rotate, tilt, pan and zoom down to the furniture. Tap or hover over a room for its size. Every room here is <em>Proposed</em>.</p>
+          <div id="f3d" class="f3d-host"></div>
+          <details class="f3d-notes">
+  <summary>Assumptions and inconsistencies <span>(concept model · Proposed)</span></summary>
+  <ol>
+    <li><b>Source.</b> The layout follows the concept brief for the AI-rendered “RATEENA SOUND First floor (upper level)” cutaway. It is a concept model, not a survey. Check it against the drawing before relying on it.</li>
+    <li><b>Footprint.</b> The overall footprint is 24.00 × 20.00 m to the outside face, with 0.35 m exterior walls. The 12.00 m live room takes only half of the 24 m side, so the image’s proportions and labels disagree. The labelled room sizes are kept true. The remaining width is given to the lobby, green room and circulation.</li>
+    <li><b>Live room height.</b> 5.15 m as labelled on the image. The current programme and the ground-floor section give 4.50 m. This needs a decision.</li>
+    <li><b>Control room.</b> 6.50 × 5.50 m = 35.75 m² as labelled. The current programme gives 24.5 m² (5.00 × 4.90 m). The angled front is modelled with angled soffits inside the rectangle, so the labelled area stays true. A splayed structural wall would reduce the floor area.</li>
+    <li><b>Which floor?</b> The ground-floor concept plan also places the live room, control room and booths on the ground floor. This image puts them upstairs. A 5.15 m live room on an upper level also needs a double-height volume and a heavy floating floor. Which floor is it?</li>
+    <li><b>Booths.</b> The percussion booth / load-in (4.50 × 4.00 m) runs 4.50 m east–west, with 1.80 m double doors into the live room. On an upper floor, load-in depends on the freight elevator. “ISO Booth 02” implies an ISO Booth 01 that is not on this floor.</li>
+    <li><b>Unlabelled spaces.</b> The lobby, green room, restrooms and corridors are not dimensioned on the image. Their sizes are scaled to fill the footprint.</li>
+    <li><b>Heights.</b> Proposed ceilings are 3.6 m for the control room and 3.0 m elsewhere. There is no roof or ceiling (cutaway), and no structure, columns or services are modelled. The 0.30 m floor slab is indicative.</li>
+    <li><b>Walls.</b> Assumed thicknesses: 0.40 m around the live room; a double-leaf partition (0.30 + 0.40 m cavity + 0.30 m) between the control room and the booths; 0.30 m elsewhere. Door and window positions are assumed. Control-room glazing is double-paned.</li>
+    <li><b>Areas.</b> The labelled rooms total 169.25 m², against a 480 m² gross footprint.</li>
+    <li><b>Furniture and cables.</b> Furniture uses typical real sizes: grand piano 1.50 × 2.10 m, 3.2 m console, 1.20 × 1.80 m gobos, 600 × 1000 mm server racks. The red cable route is indicative only.</li>
+  </ol>
+</details>
+
         </div>
 
         <div class="sx-page" data-page="2" id="sx-p2">
@@ -3003,16 +3071,17 @@
   ctxs.forEach(c => { try { c.redraw(); } catch (e) {} });
   /* deep links for review: #suite-2, #graphic */
   const h = location.hash;
-  if (/suite|graphic|sketch/.test(h)) {
+  if (/suite|graphic|sketch|floor-3d/.test(h)) {
     if (/graphic/.test(h)) setVariant('graphic');
     if (/suite-2/.test(h)) setPage(2);
+    if (/floor-3d|suite-3/.test(h)) setPage(3);
     const chap = document.querySelector('.chapter[data-screen="suite"]'); if (chap) chap.click();
   }
   /* swipe between pages on touch */
   let x0 = null, y0 = null;
-  root.addEventListener('touchstart', e => { if (e.target.closest('.plan-wrap, .cp-panel, .cp-table-wrap')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  root.addEventListener('touchstart', e => { if (e.target.closest('.plan-wrap, .cp-panel, .cp-table-wrap, .f3d, .cp-scroll')) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
   root.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
-    if (Math.abs(dx) > 70 && Math.abs(dy) < 50) setPage(dx < 0 ? 2 : 1); }, { passive: true });
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 50) { const cur = +((root.querySelector('.sx-page.active') || {}).dataset || {}).page || 1; setPage(Math.max(1, Math.min(3, cur + (dx < 0 ? 1 : -1)))); } }, { passive: true });
 })();
 </script>
 <script id="room-modes-lib">
@@ -3636,6 +3705,2186 @@ window.THREE={ACESFilmicToneMapping:et,AddEquation:y,AddOperation:J,AdditiveAnim
     if (h === 'isolation-model') setTimeout(() => $('#iso-more').scrollIntoView({ block: 'start' }), 60);
   }
   if (/suite-2-(plan|brief)/.test(h)) setTimeout(() => { const t = h.indexOf('plan') > 0 ? $('#cp .cp-row') : $('#cp'); if (t) t.scrollIntoView({ block: 'start' }); }, 60);
+})();
+</script>
+<script>/* three.js r170 OrbitControls (MIT), classic build */
+(function(){const {Controls,MOUSE,Quaternion,Spherical,TOUCH,Vector2,Vector3,Plane,Ray,MathUtils}=window.THREE;
+
+
+// OrbitControls performs orbiting, dollying (zooming), and panning.
+// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
+//
+//    Orbit - left mouse / touch: one-finger move
+//    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
+//    Pan - right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move
+
+const _changeEvent = { type: 'change' };
+const _startEvent = { type: 'start' };
+const _endEvent = { type: 'end' };
+const _ray = new Ray();
+const _plane = new Plane();
+const _TILT_LIMIT = Math.cos( 70 * MathUtils.DEG2RAD );
+
+const _v = new Vector3();
+const _twoPI = 2 * Math.PI;
+
+const _STATE = {
+	NONE: - 1,
+	ROTATE: 0,
+	DOLLY: 1,
+	PAN: 2,
+	TOUCH_ROTATE: 3,
+	TOUCH_PAN: 4,
+	TOUCH_DOLLY_PAN: 5,
+	TOUCH_DOLLY_ROTATE: 6
+};
+const _EPS = 0.000001;
+
+class OrbitControls extends Controls {
+
+	constructor( object, domElement = null ) {
+
+		super( object, domElement );
+
+		this.state = _STATE.NONE;
+
+		// Set to false to disable this control
+		this.enabled = true;
+
+		// "target" sets the location of focus, where the object orbits around
+		this.target = new Vector3();
+
+		// Sets the 3D cursor (similar to Blender), from which the maxTargetRadius takes effect
+		this.cursor = new Vector3();
+
+		// How far you can dolly in and out ( PerspectiveCamera only )
+		this.minDistance = 0;
+		this.maxDistance = Infinity;
+
+		// How far you can zoom in and out ( OrthographicCamera only )
+		this.minZoom = 0;
+		this.maxZoom = Infinity;
+
+		// Limit camera target within a spherical area around the cursor
+		this.minTargetRadius = 0;
+		this.maxTargetRadius = Infinity;
+
+		// How far you can orbit vertically, upper and lower limits.
+		// Range is 0 to Math.PI radians.
+		this.minPolarAngle = 0; // radians
+		this.maxPolarAngle = Math.PI; // radians
+
+		// How far you can orbit horizontally, upper and lower limits.
+		// If set, the interval [ min, max ] must be a sub-interval of [ - 2 PI, 2 PI ], with ( max - min < 2 PI )
+		this.minAzimuthAngle = - Infinity; // radians
+		this.maxAzimuthAngle = Infinity; // radians
+
+		// Set to true to enable damping (inertia)
+		// If damping is enabled, you must call controls.update() in your animation loop
+		this.enableDamping = false;
+		this.dampingFactor = 0.05;
+
+		// This option actually enables dollying in and out; left as "zoom" for backwards compatibility.
+		// Set to false to disable zooming
+		this.enableZoom = true;
+		this.zoomSpeed = 1.0;
+
+		// Set to false to disable rotating
+		this.enableRotate = true;
+		this.rotateSpeed = 1.0;
+
+		// Set to false to disable panning
+		this.enablePan = true;
+		this.panSpeed = 1.0;
+		this.screenSpacePanning = true; // if false, pan orthogonal to world-space direction camera.up
+		this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
+		this.zoomToCursor = false;
+
+		// Set to true to automatically rotate around the target
+		// If auto-rotate is enabled, you must call controls.update() in your animation loop
+		this.autoRotate = false;
+		this.autoRotateSpeed = 2.0; // 30 seconds per orbit when fps is 60
+
+		// The four arrow keys
+		this.keys = { LEFT: 'ArrowLeft', UP: 'ArrowUp', RIGHT: 'ArrowRight', BOTTOM: 'ArrowDown' };
+
+		// Mouse buttons
+		this.mouseButtons = { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
+
+		// Touch fingers
+		this.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
+
+		// for reset
+		this.target0 = this.target.clone();
+		this.position0 = this.object.position.clone();
+		this.zoom0 = this.object.zoom;
+
+		// the target DOM element for key events
+		this._domElementKeyEvents = null;
+
+		// internals
+
+		this._lastPosition = new Vector3();
+		this._lastQuaternion = new Quaternion();
+		this._lastTargetPosition = new Vector3();
+
+		// so camera.up is the orbit axis
+		this._quat = new Quaternion().setFromUnitVectors( object.up, new Vector3( 0, 1, 0 ) );
+		this._quatInverse = this._quat.clone().invert();
+
+		// current position in spherical coordinates
+		this._spherical = new Spherical();
+		this._sphericalDelta = new Spherical();
+
+		this._scale = 1;
+		this._panOffset = new Vector3();
+
+		this._rotateStart = new Vector2();
+		this._rotateEnd = new Vector2();
+		this._rotateDelta = new Vector2();
+
+		this._panStart = new Vector2();
+		this._panEnd = new Vector2();
+		this._panDelta = new Vector2();
+
+		this._dollyStart = new Vector2();
+		this._dollyEnd = new Vector2();
+		this._dollyDelta = new Vector2();
+
+		this._dollyDirection = new Vector3();
+		this._mouse = new Vector2();
+		this._performCursorZoom = false;
+
+		this._pointers = [];
+		this._pointerPositions = {};
+
+		this._controlActive = false;
+
+		// event listeners
+
+		this._onPointerMove = onPointerMove.bind( this );
+		this._onPointerDown = onPointerDown.bind( this );
+		this._onPointerUp = onPointerUp.bind( this );
+		this._onContextMenu = onContextMenu.bind( this );
+		this._onMouseWheel = onMouseWheel.bind( this );
+		this._onKeyDown = onKeyDown.bind( this );
+
+		this._onTouchStart = onTouchStart.bind( this );
+		this._onTouchMove = onTouchMove.bind( this );
+
+		this._onMouseDown = onMouseDown.bind( this );
+		this._onMouseMove = onMouseMove.bind( this );
+
+		this._interceptControlDown = interceptControlDown.bind( this );
+		this._interceptControlUp = interceptControlUp.bind( this );
+
+		//
+
+		if ( this.domElement !== null ) {
+
+			this.connect();
+
+		}
+
+		this.update();
+
+	}
+
+	connect() {
+
+		this.domElement.addEventListener( 'pointerdown', this._onPointerDown );
+		this.domElement.addEventListener( 'pointercancel', this._onPointerUp );
+
+		this.domElement.addEventListener( 'contextmenu', this._onContextMenu );
+		this.domElement.addEventListener( 'wheel', this._onMouseWheel, { passive: false } );
+
+		const document = this.domElement.getRootNode(); // offscreen canvas compatibility
+		document.addEventListener( 'keydown', this._interceptControlDown, { passive: true, capture: true } );
+
+		this.domElement.style.touchAction = 'none'; // disable touch scroll
+
+	}
+
+	disconnect() {
+
+		this.domElement.removeEventListener( 'pointerdown', this._onPointerDown );
+		this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+		this.domElement.removeEventListener( 'pointercancel', this._onPointerUp );
+
+		this.domElement.removeEventListener( 'wheel', this._onMouseWheel );
+		this.domElement.removeEventListener( 'contextmenu', this._onContextMenu );
+
+		this.stopListenToKeyEvents();
+
+		const document = this.domElement.getRootNode(); // offscreen canvas compatibility
+		document.removeEventListener( 'keydown', this._interceptControlDown, { capture: true } );
+
+		this.domElement.style.touchAction = 'auto';
+
+	}
+
+	dispose() {
+
+		this.disconnect();
+
+	}
+
+	getPolarAngle() {
+
+		return this._spherical.phi;
+
+	}
+
+	getAzimuthalAngle() {
+
+		return this._spherical.theta;
+
+	}
+
+	getDistance() {
+
+		return this.object.position.distanceTo( this.target );
+
+	}
+
+	listenToKeyEvents( domElement ) {
+
+		domElement.addEventListener( 'keydown', this._onKeyDown );
+		this._domElementKeyEvents = domElement;
+
+	}
+
+	stopListenToKeyEvents() {
+
+		if ( this._domElementKeyEvents !== null ) {
+
+			this._domElementKeyEvents.removeEventListener( 'keydown', this._onKeyDown );
+			this._domElementKeyEvents = null;
+
+		}
+
+	}
+
+	saveState() {
+
+		this.target0.copy( this.target );
+		this.position0.copy( this.object.position );
+		this.zoom0 = this.object.zoom;
+
+	}
+
+	reset() {
+
+		this.target.copy( this.target0 );
+		this.object.position.copy( this.position0 );
+		this.object.zoom = this.zoom0;
+
+		this.object.updateProjectionMatrix();
+		this.dispatchEvent( _changeEvent );
+
+		this.update();
+
+		this.state = _STATE.NONE;
+
+	}
+
+	update( deltaTime = null ) {
+
+		const position = this.object.position;
+
+		_v.copy( position ).sub( this.target );
+
+		// rotate offset to "y-axis-is-up" space
+		_v.applyQuaternion( this._quat );
+
+		// angle from z-axis around y-axis
+		this._spherical.setFromVector3( _v );
+
+		if ( this.autoRotate && this.state === _STATE.NONE ) {
+
+			this._rotateLeft( this._getAutoRotationAngle( deltaTime ) );
+
+		}
+
+		if ( this.enableDamping ) {
+
+			this._spherical.theta += this._sphericalDelta.theta * this.dampingFactor;
+			this._spherical.phi += this._sphericalDelta.phi * this.dampingFactor;
+
+		} else {
+
+			this._spherical.theta += this._sphericalDelta.theta;
+			this._spherical.phi += this._sphericalDelta.phi;
+
+		}
+
+		// restrict theta to be between desired limits
+
+		let min = this.minAzimuthAngle;
+		let max = this.maxAzimuthAngle;
+
+		if ( isFinite( min ) && isFinite( max ) ) {
+
+			if ( min < - Math.PI ) min += _twoPI; else if ( min > Math.PI ) min -= _twoPI;
+
+			if ( max < - Math.PI ) max += _twoPI; else if ( max > Math.PI ) max -= _twoPI;
+
+			if ( min <= max ) {
+
+				this._spherical.theta = Math.max( min, Math.min( max, this._spherical.theta ) );
+
+			} else {
+
+				this._spherical.theta = ( this._spherical.theta > ( min + max ) / 2 ) ?
+					Math.max( min, this._spherical.theta ) :
+					Math.min( max, this._spherical.theta );
+
+			}
+
+		}
+
+		// restrict phi to be between desired limits
+		this._spherical.phi = Math.max( this.minPolarAngle, Math.min( this.maxPolarAngle, this._spherical.phi ) );
+
+		this._spherical.makeSafe();
+
+
+		// move target to panned location
+
+		if ( this.enableDamping === true ) {
+
+			this.target.addScaledVector( this._panOffset, this.dampingFactor );
+
+		} else {
+
+			this.target.add( this._panOffset );
+
+		}
+
+		// Limit the target distance from the cursor to create a sphere around the center of interest
+		this.target.sub( this.cursor );
+		this.target.clampLength( this.minTargetRadius, this.maxTargetRadius );
+		this.target.add( this.cursor );
+
+		let zoomChanged = false;
+		// adjust the camera position based on zoom only if we're not zooming to the cursor or if it's an ortho camera
+		// we adjust zoom later in these cases
+		if ( this.zoomToCursor && this._performCursorZoom || this.object.isOrthographicCamera ) {
+
+			this._spherical.radius = this._clampDistance( this._spherical.radius );
+
+		} else {
+
+			const prevRadius = this._spherical.radius;
+			this._spherical.radius = this._clampDistance( this._spherical.radius * this._scale );
+			zoomChanged = prevRadius != this._spherical.radius;
+
+		}
+
+		_v.setFromSpherical( this._spherical );
+
+		// rotate offset back to "camera-up-vector-is-up" space
+		_v.applyQuaternion( this._quatInverse );
+
+		position.copy( this.target ).add( _v );
+
+		this.object.lookAt( this.target );
+
+		if ( this.enableDamping === true ) {
+
+			this._sphericalDelta.theta *= ( 1 - this.dampingFactor );
+			this._sphericalDelta.phi *= ( 1 - this.dampingFactor );
+
+			this._panOffset.multiplyScalar( 1 - this.dampingFactor );
+
+		} else {
+
+			this._sphericalDelta.set( 0, 0, 0 );
+
+			this._panOffset.set( 0, 0, 0 );
+
+		}
+
+		// adjust camera position
+		if ( this.zoomToCursor && this._performCursorZoom ) {
+
+			let newRadius = null;
+			if ( this.object.isPerspectiveCamera ) {
+
+				// move the camera down the pointer ray
+				// this method avoids floating point error
+				const prevRadius = _v.length();
+				newRadius = this._clampDistance( prevRadius * this._scale );
+
+				const radiusDelta = prevRadius - newRadius;
+				this.object.position.addScaledVector( this._dollyDirection, radiusDelta );
+				this.object.updateMatrixWorld();
+
+				zoomChanged = !! radiusDelta;
+
+			} else if ( this.object.isOrthographicCamera ) {
+
+				// adjust the ortho camera position based on zoom changes
+				const mouseBefore = new Vector3( this._mouse.x, this._mouse.y, 0 );
+				mouseBefore.unproject( this.object );
+
+				const prevZoom = this.object.zoom;
+				this.object.zoom = Math.max( this.minZoom, Math.min( this.maxZoom, this.object.zoom / this._scale ) );
+				this.object.updateProjectionMatrix();
+
+				zoomChanged = prevZoom !== this.object.zoom;
+
+				const mouseAfter = new Vector3( this._mouse.x, this._mouse.y, 0 );
+				mouseAfter.unproject( this.object );
+
+				this.object.position.sub( mouseAfter ).add( mouseBefore );
+				this.object.updateMatrixWorld();
+
+				newRadius = _v.length();
+
+			} else {
+
+				console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - zoom to cursor disabled.' );
+				this.zoomToCursor = false;
+
+			}
+
+			// handle the placement of the target
+			if ( newRadius !== null ) {
+
+				if ( this.screenSpacePanning ) {
+
+					// position the orbit target in front of the new camera position
+					this.target.set( 0, 0, - 1 )
+						.transformDirection( this.object.matrix )
+						.multiplyScalar( newRadius )
+						.add( this.object.position );
+
+				} else {
+
+					// get the ray and translation plane to compute target
+					_ray.origin.copy( this.object.position );
+					_ray.direction.set( 0, 0, - 1 ).transformDirection( this.object.matrix );
+
+					// if the camera is 20 degrees above the horizon then don't adjust the focus target to avoid
+					// extremely large values
+					if ( Math.abs( this.object.up.dot( _ray.direction ) ) < _TILT_LIMIT ) {
+
+						this.object.lookAt( this.target );
+
+					} else {
+
+						_plane.setFromNormalAndCoplanarPoint( this.object.up, this.target );
+						_ray.intersectPlane( _plane, this.target );
+
+					}
+
+				}
+
+			}
+
+		} else if ( this.object.isOrthographicCamera ) {
+
+			const prevZoom = this.object.zoom;
+			this.object.zoom = Math.max( this.minZoom, Math.min( this.maxZoom, this.object.zoom / this._scale ) );
+
+			if ( prevZoom !== this.object.zoom ) {
+
+				this.object.updateProjectionMatrix();
+				zoomChanged = true;
+
+			}
+
+		}
+
+		this._scale = 1;
+		this._performCursorZoom = false;
+
+		// update condition is:
+		// min(camera displacement, camera rotation in radians)^2 > EPS
+		// using small-angle approximation cos(x/2) = 1 - x^2 / 8
+
+		if ( zoomChanged ||
+			this._lastPosition.distanceToSquared( this.object.position ) > _EPS ||
+			8 * ( 1 - this._lastQuaternion.dot( this.object.quaternion ) ) > _EPS ||
+			this._lastTargetPosition.distanceToSquared( this.target ) > _EPS ) {
+
+			this.dispatchEvent( _changeEvent );
+
+			this._lastPosition.copy( this.object.position );
+			this._lastQuaternion.copy( this.object.quaternion );
+			this._lastTargetPosition.copy( this.target );
+
+			return true;
+
+		}
+
+		return false;
+
+	}
+
+	_getAutoRotationAngle( deltaTime ) {
+
+		if ( deltaTime !== null ) {
+
+			return ( _twoPI / 60 * this.autoRotateSpeed ) * deltaTime;
+
+		} else {
+
+			return _twoPI / 60 / 60 * this.autoRotateSpeed;
+
+		}
+
+	}
+
+	_getZoomScale( delta ) {
+
+		const normalizedDelta = Math.abs( delta * 0.01 );
+		return Math.pow( 0.95, this.zoomSpeed * normalizedDelta );
+
+	}
+
+	_rotateLeft( angle ) {
+
+		this._sphericalDelta.theta -= angle;
+
+	}
+
+	_rotateUp( angle ) {
+
+		this._sphericalDelta.phi -= angle;
+
+	}
+
+	_panLeft( distance, objectMatrix ) {
+
+		_v.setFromMatrixColumn( objectMatrix, 0 ); // get X column of objectMatrix
+		_v.multiplyScalar( - distance );
+
+		this._panOffset.add( _v );
+
+	}
+
+	_panUp( distance, objectMatrix ) {
+
+		if ( this.screenSpacePanning === true ) {
+
+			_v.setFromMatrixColumn( objectMatrix, 1 );
+
+		} else {
+
+			_v.setFromMatrixColumn( objectMatrix, 0 );
+			_v.crossVectors( this.object.up, _v );
+
+		}
+
+		_v.multiplyScalar( distance );
+
+		this._panOffset.add( _v );
+
+	}
+
+	// deltaX and deltaY are in pixels; right and down are positive
+	_pan( deltaX, deltaY ) {
+
+		const element = this.domElement;
+
+		if ( this.object.isPerspectiveCamera ) {
+
+			// perspective
+			const position = this.object.position;
+			_v.copy( position ).sub( this.target );
+			let targetDistance = _v.length();
+
+			// half of the fov is center to top of screen
+			targetDistance *= Math.tan( ( this.object.fov / 2 ) * Math.PI / 180.0 );
+
+			// we use only clientHeight here so aspect ratio does not distort speed
+			this._panLeft( 2 * deltaX * targetDistance / element.clientHeight, this.object.matrix );
+			this._panUp( 2 * deltaY * targetDistance / element.clientHeight, this.object.matrix );
+
+		} else if ( this.object.isOrthographicCamera ) {
+
+			// orthographic
+			this._panLeft( deltaX * ( this.object.right - this.object.left ) / this.object.zoom / element.clientWidth, this.object.matrix );
+			this._panUp( deltaY * ( this.object.top - this.object.bottom ) / this.object.zoom / element.clientHeight, this.object.matrix );
+
+		} else {
+
+			// camera neither orthographic nor perspective
+			console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.' );
+			this.enablePan = false;
+
+		}
+
+	}
+
+	_dollyOut( dollyScale ) {
+
+		if ( this.object.isPerspectiveCamera || this.object.isOrthographicCamera ) {
+
+			this._scale /= dollyScale;
+
+		} else {
+
+			console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+			this.enableZoom = false;
+
+		}
+
+	}
+
+	_dollyIn( dollyScale ) {
+
+		if ( this.object.isPerspectiveCamera || this.object.isOrthographicCamera ) {
+
+			this._scale *= dollyScale;
+
+		} else {
+
+			console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+			this.enableZoom = false;
+
+		}
+
+	}
+
+	_updateZoomParameters( x, y ) {
+
+		if ( ! this.zoomToCursor ) {
+
+			return;
+
+		}
+
+		this._performCursorZoom = true;
+
+		const rect = this.domElement.getBoundingClientRect();
+		const dx = x - rect.left;
+		const dy = y - rect.top;
+		const w = rect.width;
+		const h = rect.height;
+
+		this._mouse.x = ( dx / w ) * 2 - 1;
+		this._mouse.y = - ( dy / h ) * 2 + 1;
+
+		this._dollyDirection.set( this._mouse.x, this._mouse.y, 1 ).unproject( this.object ).sub( this.object.position ).normalize();
+
+	}
+
+	_clampDistance( dist ) {
+
+		return Math.max( this.minDistance, Math.min( this.maxDistance, dist ) );
+
+	}
+
+	//
+	// event callbacks - update the object state
+	//
+
+	_handleMouseDownRotate( event ) {
+
+		this._rotateStart.set( event.clientX, event.clientY );
+
+	}
+
+	_handleMouseDownDolly( event ) {
+
+		this._updateZoomParameters( event.clientX, event.clientX );
+		this._dollyStart.set( event.clientX, event.clientY );
+
+	}
+
+	_handleMouseDownPan( event ) {
+
+		this._panStart.set( event.clientX, event.clientY );
+
+	}
+
+	_handleMouseMoveRotate( event ) {
+
+		this._rotateEnd.set( event.clientX, event.clientY );
+
+		this._rotateDelta.subVectors( this._rotateEnd, this._rotateStart ).multiplyScalar( this.rotateSpeed );
+
+		const element = this.domElement;
+
+		this._rotateLeft( _twoPI * this._rotateDelta.x / element.clientHeight ); // yes, height
+
+		this._rotateUp( _twoPI * this._rotateDelta.y / element.clientHeight );
+
+		this._rotateStart.copy( this._rotateEnd );
+
+		this.update();
+
+	}
+
+	_handleMouseMoveDolly( event ) {
+
+		this._dollyEnd.set( event.clientX, event.clientY );
+
+		this._dollyDelta.subVectors( this._dollyEnd, this._dollyStart );
+
+		if ( this._dollyDelta.y > 0 ) {
+
+			this._dollyOut( this._getZoomScale( this._dollyDelta.y ) );
+
+		} else if ( this._dollyDelta.y < 0 ) {
+
+			this._dollyIn( this._getZoomScale( this._dollyDelta.y ) );
+
+		}
+
+		this._dollyStart.copy( this._dollyEnd );
+
+		this.update();
+
+	}
+
+	_handleMouseMovePan( event ) {
+
+		this._panEnd.set( event.clientX, event.clientY );
+
+		this._panDelta.subVectors( this._panEnd, this._panStart ).multiplyScalar( this.panSpeed );
+
+		this._pan( this._panDelta.x, this._panDelta.y );
+
+		this._panStart.copy( this._panEnd );
+
+		this.update();
+
+	}
+
+	_handleMouseWheel( event ) {
+
+		this._updateZoomParameters( event.clientX, event.clientY );
+
+		if ( event.deltaY < 0 ) {
+
+			this._dollyIn( this._getZoomScale( event.deltaY ) );
+
+		} else if ( event.deltaY > 0 ) {
+
+			this._dollyOut( this._getZoomScale( event.deltaY ) );
+
+		}
+
+		this.update();
+
+	}
+
+	_handleKeyDown( event ) {
+
+		let needsUpdate = false;
+
+		switch ( event.code ) {
+
+			case this.keys.UP:
+
+				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+					this._rotateUp( _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+
+				} else {
+
+					this._pan( 0, this.keyPanSpeed );
+
+				}
+
+				needsUpdate = true;
+				break;
+
+			case this.keys.BOTTOM:
+
+				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+					this._rotateUp( - _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+
+				} else {
+
+					this._pan( 0, - this.keyPanSpeed );
+
+				}
+
+				needsUpdate = true;
+				break;
+
+			case this.keys.LEFT:
+
+				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+					this._rotateLeft( _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+
+				} else {
+
+					this._pan( this.keyPanSpeed, 0 );
+
+				}
+
+				needsUpdate = true;
+				break;
+
+			case this.keys.RIGHT:
+
+				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+					this._rotateLeft( - _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+
+				} else {
+
+					this._pan( - this.keyPanSpeed, 0 );
+
+				}
+
+				needsUpdate = true;
+				break;
+
+		}
+
+		if ( needsUpdate ) {
+
+			// prevent the browser from scrolling on cursor keys
+			event.preventDefault();
+
+			this.update();
+
+		}
+
+
+	}
+
+	_handleTouchStartRotate( event ) {
+
+		if ( this._pointers.length === 1 ) {
+
+			this._rotateStart.set( event.pageX, event.pageY );
+
+		} else {
+
+			const position = this._getSecondPointerPosition( event );
+
+			const x = 0.5 * ( event.pageX + position.x );
+			const y = 0.5 * ( event.pageY + position.y );
+
+			this._rotateStart.set( x, y );
+
+		}
+
+	}
+
+	_handleTouchStartPan( event ) {
+
+		if ( this._pointers.length === 1 ) {
+
+			this._panStart.set( event.pageX, event.pageY );
+
+		} else {
+
+			const position = this._getSecondPointerPosition( event );
+
+			const x = 0.5 * ( event.pageX + position.x );
+			const y = 0.5 * ( event.pageY + position.y );
+
+			this._panStart.set( x, y );
+
+		}
+
+	}
+
+	_handleTouchStartDolly( event ) {
+
+		const position = this._getSecondPointerPosition( event );
+
+		const dx = event.pageX - position.x;
+		const dy = event.pageY - position.y;
+
+		const distance = Math.sqrt( dx * dx + dy * dy );
+
+		this._dollyStart.set( 0, distance );
+
+	}
+
+	_handleTouchStartDollyPan( event ) {
+
+		if ( this.enableZoom ) this._handleTouchStartDolly( event );
+
+		if ( this.enablePan ) this._handleTouchStartPan( event );
+
+	}
+
+	_handleTouchStartDollyRotate( event ) {
+
+		if ( this.enableZoom ) this._handleTouchStartDolly( event );
+
+		if ( this.enableRotate ) this._handleTouchStartRotate( event );
+
+	}
+
+	_handleTouchMoveRotate( event ) {
+
+		if ( this._pointers.length == 1 ) {
+
+			this._rotateEnd.set( event.pageX, event.pageY );
+
+		} else {
+
+			const position = this._getSecondPointerPosition( event );
+
+			const x = 0.5 * ( event.pageX + position.x );
+			const y = 0.5 * ( event.pageY + position.y );
+
+			this._rotateEnd.set( x, y );
+
+		}
+
+		this._rotateDelta.subVectors( this._rotateEnd, this._rotateStart ).multiplyScalar( this.rotateSpeed );
+
+		const element = this.domElement;
+
+		this._rotateLeft( _twoPI * this._rotateDelta.x / element.clientHeight ); // yes, height
+
+		this._rotateUp( _twoPI * this._rotateDelta.y / element.clientHeight );
+
+		this._rotateStart.copy( this._rotateEnd );
+
+	}
+
+	_handleTouchMovePan( event ) {
+
+		if ( this._pointers.length === 1 ) {
+
+			this._panEnd.set( event.pageX, event.pageY );
+
+		} else {
+
+			const position = this._getSecondPointerPosition( event );
+
+			const x = 0.5 * ( event.pageX + position.x );
+			const y = 0.5 * ( event.pageY + position.y );
+
+			this._panEnd.set( x, y );
+
+		}
+
+		this._panDelta.subVectors( this._panEnd, this._panStart ).multiplyScalar( this.panSpeed );
+
+		this._pan( this._panDelta.x, this._panDelta.y );
+
+		this._panStart.copy( this._panEnd );
+
+	}
+
+	_handleTouchMoveDolly( event ) {
+
+		const position = this._getSecondPointerPosition( event );
+
+		const dx = event.pageX - position.x;
+		const dy = event.pageY - position.y;
+
+		const distance = Math.sqrt( dx * dx + dy * dy );
+
+		this._dollyEnd.set( 0, distance );
+
+		this._dollyDelta.set( 0, Math.pow( this._dollyEnd.y / this._dollyStart.y, this.zoomSpeed ) );
+
+		this._dollyOut( this._dollyDelta.y );
+
+		this._dollyStart.copy( this._dollyEnd );
+
+		const centerX = ( event.pageX + position.x ) * 0.5;
+		const centerY = ( event.pageY + position.y ) * 0.5;
+
+		this._updateZoomParameters( centerX, centerY );
+
+	}
+
+	_handleTouchMoveDollyPan( event ) {
+
+		if ( this.enableZoom ) this._handleTouchMoveDolly( event );
+
+		if ( this.enablePan ) this._handleTouchMovePan( event );
+
+	}
+
+	_handleTouchMoveDollyRotate( event ) {
+
+		if ( this.enableZoom ) this._handleTouchMoveDolly( event );
+
+		if ( this.enableRotate ) this._handleTouchMoveRotate( event );
+
+	}
+
+	// pointers
+
+	_addPointer( event ) {
+
+		this._pointers.push( event.pointerId );
+
+	}
+
+	_removePointer( event ) {
+
+		delete this._pointerPositions[ event.pointerId ];
+
+		for ( let i = 0; i < this._pointers.length; i ++ ) {
+
+			if ( this._pointers[ i ] == event.pointerId ) {
+
+				this._pointers.splice( i, 1 );
+				return;
+
+			}
+
+		}
+
+	}
+
+	_isTrackingPointer( event ) {
+
+		for ( let i = 0; i < this._pointers.length; i ++ ) {
+
+			if ( this._pointers[ i ] == event.pointerId ) return true;
+
+		}
+
+		return false;
+
+	}
+
+	_trackPointer( event ) {
+
+		let position = this._pointerPositions[ event.pointerId ];
+
+		if ( position === undefined ) {
+
+			position = new Vector2();
+			this._pointerPositions[ event.pointerId ] = position;
+
+		}
+
+		position.set( event.pageX, event.pageY );
+
+	}
+
+	_getSecondPointerPosition( event ) {
+
+		const pointerId = ( event.pointerId === this._pointers[ 0 ] ) ? this._pointers[ 1 ] : this._pointers[ 0 ];
+
+		return this._pointerPositions[ pointerId ];
+
+	}
+
+	//
+
+	_customWheelEvent( event ) {
+
+		const mode = event.deltaMode;
+
+		// minimal wheel event altered to meet delta-zoom demand
+		const newEvent = {
+			clientX: event.clientX,
+			clientY: event.clientY,
+			deltaY: event.deltaY,
+		};
+
+		switch ( mode ) {
+
+			case 1: // LINE_MODE
+				newEvent.deltaY *= 16;
+				break;
+
+			case 2: // PAGE_MODE
+				newEvent.deltaY *= 100;
+				break;
+
+		}
+
+		// detect if event was triggered by pinching
+		if ( event.ctrlKey && ! this._controlActive ) {
+
+			newEvent.deltaY *= 10;
+
+		}
+
+		return newEvent;
+
+	}
+
+}
+
+function onPointerDown( event ) {
+
+	if ( this.enabled === false ) return;
+
+	if ( this._pointers.length === 0 ) {
+
+		this.domElement.setPointerCapture( event.pointerId );
+
+		this.domElement.addEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.addEventListener( 'pointerup', this._onPointerUp );
+
+	}
+
+	//
+
+	if ( this._isTrackingPointer( event ) ) return;
+
+	//
+
+	this._addPointer( event );
+
+	if ( event.pointerType === 'touch' ) {
+
+		this._onTouchStart( event );
+
+	} else {
+
+		this._onMouseDown( event );
+
+	}
+
+}
+
+function onPointerMove( event ) {
+
+	if ( this.enabled === false ) return;
+
+	if ( event.pointerType === 'touch' ) {
+
+		this._onTouchMove( event );
+
+	} else {
+
+		this._onMouseMove( event );
+
+	}
+
+}
+
+function onPointerUp( event ) {
+
+	this._removePointer( event );
+
+	switch ( this._pointers.length ) {
+
+		case 0:
+
+			this.domElement.releasePointerCapture( event.pointerId );
+
+			this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
+			this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+
+			this.dispatchEvent( _endEvent );
+
+			this.state = _STATE.NONE;
+
+			break;
+
+		case 1:
+
+			const pointerId = this._pointers[ 0 ];
+			const position = this._pointerPositions[ pointerId ];
+
+			// minimal placeholder event - allows state correction on pointer-up
+			this._onTouchStart( { pointerId: pointerId, pageX: position.x, pageY: position.y } );
+
+			break;
+
+	}
+
+}
+
+function onMouseDown( event ) {
+
+	let mouseAction;
+
+	switch ( event.button ) {
+
+		case 0:
+
+			mouseAction = this.mouseButtons.LEFT;
+			break;
+
+		case 1:
+
+			mouseAction = this.mouseButtons.MIDDLE;
+			break;
+
+		case 2:
+
+			mouseAction = this.mouseButtons.RIGHT;
+			break;
+
+		default:
+
+			mouseAction = - 1;
+
+	}
+
+	switch ( mouseAction ) {
+
+		case MOUSE.DOLLY:
+
+			if ( this.enableZoom === false ) return;
+
+			this._handleMouseDownDolly( event );
+
+			this.state = _STATE.DOLLY;
+
+			break;
+
+		case MOUSE.ROTATE:
+
+			if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+				if ( this.enablePan === false ) return;
+
+				this._handleMouseDownPan( event );
+
+				this.state = _STATE.PAN;
+
+			} else {
+
+				if ( this.enableRotate === false ) return;
+
+				this._handleMouseDownRotate( event );
+
+				this.state = _STATE.ROTATE;
+
+			}
+
+			break;
+
+		case MOUSE.PAN:
+
+			if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+				if ( this.enableRotate === false ) return;
+
+				this._handleMouseDownRotate( event );
+
+				this.state = _STATE.ROTATE;
+
+			} else {
+
+				if ( this.enablePan === false ) return;
+
+				this._handleMouseDownPan( event );
+
+				this.state = _STATE.PAN;
+
+			}
+
+			break;
+
+		default:
+
+			this.state = _STATE.NONE;
+
+	}
+
+	if ( this.state !== _STATE.NONE ) {
+
+		this.dispatchEvent( _startEvent );
+
+	}
+
+}
+
+function onMouseMove( event ) {
+
+	switch ( this.state ) {
+
+		case _STATE.ROTATE:
+
+			if ( this.enableRotate === false ) return;
+
+			this._handleMouseMoveRotate( event );
+
+			break;
+
+		case _STATE.DOLLY:
+
+			if ( this.enableZoom === false ) return;
+
+			this._handleMouseMoveDolly( event );
+
+			break;
+
+		case _STATE.PAN:
+
+			if ( this.enablePan === false ) return;
+
+			this._handleMouseMovePan( event );
+
+			break;
+
+	}
+
+}
+
+function onMouseWheel( event ) {
+
+	if ( this.enabled === false || this.enableZoom === false || this.state !== _STATE.NONE ) return;
+
+	event.preventDefault();
+
+	this.dispatchEvent( _startEvent );
+
+	this._handleMouseWheel( this._customWheelEvent( event ) );
+
+	this.dispatchEvent( _endEvent );
+
+}
+
+function onKeyDown( event ) {
+
+	if ( this.enabled === false || this.enablePan === false ) return;
+
+	this._handleKeyDown( event );
+
+}
+
+function onTouchStart( event ) {
+
+	this._trackPointer( event );
+
+	switch ( this._pointers.length ) {
+
+		case 1:
+
+			switch ( this.touches.ONE ) {
+
+				case TOUCH.ROTATE:
+
+					if ( this.enableRotate === false ) return;
+
+					this._handleTouchStartRotate( event );
+
+					this.state = _STATE.TOUCH_ROTATE;
+
+					break;
+
+				case TOUCH.PAN:
+
+					if ( this.enablePan === false ) return;
+
+					this._handleTouchStartPan( event );
+
+					this.state = _STATE.TOUCH_PAN;
+
+					break;
+
+				default:
+
+					this.state = _STATE.NONE;
+
+			}
+
+			break;
+
+		case 2:
+
+			switch ( this.touches.TWO ) {
+
+				case TOUCH.DOLLY_PAN:
+
+					if ( this.enableZoom === false && this.enablePan === false ) return;
+
+					this._handleTouchStartDollyPan( event );
+
+					this.state = _STATE.TOUCH_DOLLY_PAN;
+
+					break;
+
+				case TOUCH.DOLLY_ROTATE:
+
+					if ( this.enableZoom === false && this.enableRotate === false ) return;
+
+					this._handleTouchStartDollyRotate( event );
+
+					this.state = _STATE.TOUCH_DOLLY_ROTATE;
+
+					break;
+
+				default:
+
+					this.state = _STATE.NONE;
+
+			}
+
+			break;
+
+		default:
+
+			this.state = _STATE.NONE;
+
+	}
+
+	if ( this.state !== _STATE.NONE ) {
+
+		this.dispatchEvent( _startEvent );
+
+	}
+
+}
+
+function onTouchMove( event ) {
+
+	this._trackPointer( event );
+
+	switch ( this.state ) {
+
+		case _STATE.TOUCH_ROTATE:
+
+			if ( this.enableRotate === false ) return;
+
+			this._handleTouchMoveRotate( event );
+
+			this.update();
+
+			break;
+
+		case _STATE.TOUCH_PAN:
+
+			if ( this.enablePan === false ) return;
+
+			this._handleTouchMovePan( event );
+
+			this.update();
+
+			break;
+
+		case _STATE.TOUCH_DOLLY_PAN:
+
+			if ( this.enableZoom === false && this.enablePan === false ) return;
+
+			this._handleTouchMoveDollyPan( event );
+
+			this.update();
+
+			break;
+
+		case _STATE.TOUCH_DOLLY_ROTATE:
+
+			if ( this.enableZoom === false && this.enableRotate === false ) return;
+
+			this._handleTouchMoveDollyRotate( event );
+
+			this.update();
+
+			break;
+
+		default:
+
+			this.state = _STATE.NONE;
+
+	}
+
+}
+
+function onContextMenu( event ) {
+
+	if ( this.enabled === false ) return;
+
+	event.preventDefault();
+
+}
+
+function interceptControlDown( event ) {
+
+	if ( event.key === 'Control' ) {
+
+		this._controlActive = true;
+
+		const document = this.domElement.getRootNode(); // offscreen canvas compatibility
+
+		document.addEventListener( 'keyup', this._interceptControlUp, { passive: true, capture: true } );
+
+	}
+
+}
+
+function interceptControlUp( event ) {
+
+	if ( event.key === 'Control' ) {
+
+		this._controlActive = false;
+
+		const document = this.domElement.getRootNode(); // offscreen canvas compatibility
+
+		document.removeEventListener( 'keyup', this._interceptControlUp, { passive: true, capture: true } );
+
+	}
+
+}
+
+
+
+window.THREE.OrbitControls=OrbitControls;})();
+</script>
+<script>/* RATEENA SOUND · First floor (upper level) · solid 3D cutaway model
+   Concept model. All dimensions in metres; status: Proposed. */
+(function () {
+'use strict';
+function Floor3D(root, opt) {
+  opt = opt || {};
+  const T = window.THREE;
+  root.classList.add('f3d');
+  root.innerHTML = `
+  <div class="f3d-bar">
+    <div class="f3d-views" role="group" aria-label="Preset views">
+      <button type="button" data-view="overview" class="active">Overview</button>
+      <button type="button" data-view="top">Top plan</button>
+      <button type="button" data-view="live">Live room</button>
+      <button type="button" data-view="control">Control room</button>
+      <button type="button" data-view="walk">Eye level</button>
+      <button type="button" data-act="reset" class="f3d-reset">Reset view</button>
+    </div>
+  </div>
+  <div class="f3d-stage">
+    <canvas class="f3d-cv" tabindex="0" aria-label="3D model of the first floor. Drag to rotate and tilt, scroll or pinch to zoom, right-drag or two-finger drag to pan."></canvas>
+    <div class="f3d-labels" aria-hidden="true"></div>
+    <div class="f3d-tip" role="status" aria-live="polite" hidden></div>
+    <p class="f3d-hint">Drag to rotate and tilt · scroll or pinch to zoom · right-drag or two fingers to pan · tap a room</p>
+    <p class="f3d-fallback" hidden>This 3D view needs WebGL, which is not available in this browser.</p>
+  </div>
+  <div class="f3d-tools">
+    <label class="f3d-cut"><span>Wall height</span><input type="range" min="0.3" max="5.15" step="0.05" value="5.15" aria-label="Wall cutaway height"><output>Full</output></label>
+    <div class="f3d-togs" role="group" aria-label="Layers">
+      <button type="button" data-tog="labels" aria-pressed="true">Room labels</button>
+      <button type="button" data-tog="grid" aria-pressed="false">Scale bar + 1 m grid</button>
+      <button type="button" data-tog="cables" aria-pressed="true">Cable route</button>
+    </div>
+  </div>`;
+  const $ = s => root.querySelector(s);
+  const canvas = $('.f3d-cv'), stage = $('.f3d-stage'), labelsEl = $('.f3d-labels'), tip = $('.f3d-tip');
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+
+  let renderer;
+  try { renderer = new T.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }); }
+  catch (e) { $('.f3d-fallback').hidden = false; return { setActive() {}, resize() {} }; }
+  const small = Math.min(screen.width, screen.height) < 820 || coarse;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.75 : 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;
+  renderer.toneMapping = T.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  renderer.localClippingEnabled = true;
+
+  const scene = new T.Scene();
+  scene.background = new T.Color(0x121213);
+  const camera = new T.PerspectiveCamera(40, 1, 0.05, 220);
+  const CX = 12, CZ = 10;
+
+  /* ---------- lights ---------- */
+  scene.add(new T.HemisphereLight(0xfff3e2, 0x4a4038, 1.7));
+  const sun = new T.DirectionalLight(0xfff0dc, 2.5);
+  sun.position.set(CX + 9, 28, CZ + 13); sun.target.position.set(CX, 0, CZ);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048);
+  Object.assign(sun.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 5, far: 60 });
+  sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.025; sun.shadow.radius = 4;
+  scene.add(sun, sun.target);
+  const fill = new T.DirectionalLight(0xdfe6ff, 0.35); fill.position.set(CX - 14, 18, CZ - 10); scene.add(fill);
+
+  /* ---------- textures (procedural, offline) ---------- */
+  function tex(w, h, draw) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+    const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping;
+    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); return t;
+  }
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const oakTex = tex(512, 512, (g, w, h) => {           // 512 px = 2 m; planks 0.20 m wide
+    const pw = w / 10;
+    for (let i = 0; i < 10; i++) {
+      let y = -rnd() * h;
+      while (y < h) {
+        const len = h * (0.45 + rnd() * 0.5);
+        const l = 52 + rnd() * 10, hue = 30 + rnd() * 6;
+        g.fillStyle = `hsl(${hue},${38 + rnd() * 10}%,${l}%)`; g.fillRect(i * pw, y, pw, len);
+        g.strokeStyle = 'rgba(70,40,15,0.18)'; g.lineWidth = 1;
+        for (let k = 0; k < 9; k++) { const gx = i * pw + 3 + rnd() * (pw - 6); g.beginPath(); g.moveTo(gx, y); for (let yy = y; yy < y + len; yy += 8) g.lineTo(gx + Math.sin(yy * 0.05 + k) * 1.6, yy); g.stroke(); }
+        g.fillStyle = 'rgba(40,22,8,0.55)'; g.fillRect(i * pw, y, pw, 1.5);
+        y += len;
+      }
+      g.fillStyle = 'rgba(40,22,8,0.5)'; g.fillRect(i * pw, 0, 1.5, h);
+    }
+  });
+  const fabricTex = tex(128, 128, (g, w, h) => {
+    g.fillStyle = '#3a3734'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 2600; i++) { const v = 40 + rnd() * 28; g.fillStyle = `rgba(${v},${v - 2},${v - 5},0.5)`; g.fillRect(rnd() * w, rnd() * h, 1, 1 + rnd() * 2); }
+  });
+  const stoneTex = tex(512, 512, (g, w, h) => {          // 512 px = 4 m; 0.8 m slabs
+    g.fillStyle = '#d6cdbd'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(150,130,105,${0.08 + rnd() * 0.12})`; g.lineWidth = 1 + rnd() * 2; g.beginPath(); let x = rnd() * w, y = rnd() * h; g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += (rnd() - 0.3) * 60; y += (rnd() - 0.5) * 30; g.lineTo(x, y); } g.stroke(); }
+    g.strokeStyle = 'rgba(90,80,65,0.35)'; g.lineWidth = 1.2; const s = w / 5;
+    for (let i = 0; i <= 5; i++) { g.beginPath(); g.moveTo(i * s, 0); g.lineTo(i * s, h); g.stroke(); g.beginPath(); g.moveTo(0, i * s); g.lineTo(w, i * s); g.stroke(); }
+  });
+  const tileTex = tex(256, 256, (g, w, h) => {           // 256 px = 1.2 m; 0.30 m tiles
+    g.fillStyle = '#c9c5bd'; g.fillRect(0, 0, w, h); g.strokeStyle = '#a19c92'; g.lineWidth = 2; const s = w / 4;
+    for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * s, 0); g.lineTo(i * s, h); g.stroke(); g.beginPath(); g.moveTo(0, i * s); g.lineTo(w, i * s); g.stroke(); }
+  });
+  const rugTex = tex(512, 420, (g, w, h) => {
+    g.fillStyle = '#6e1f1b'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#c9a46a'; g.lineWidth = 10; g.strokeRect(18, 18, w - 36, h - 36);
+    g.strokeStyle = '#1f2433'; g.lineWidth = 16; g.strokeRect(40, 40, w - 80, h - 80);
+    g.fillStyle = '#8c2e24'; g.fillRect(60, 60, w - 120, h - 120);
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) {
+      const x = 95 + i * (w - 190) / 4, y = 90 + j * (h - 180) / 3;
+      g.fillStyle = (i + j) % 2 ? '#c9a46a' : '#26304a'; g.beginPath(); g.moveTo(x, y - 22); g.lineTo(x + 18, y); g.lineTo(x, y + 22); g.lineTo(x - 18, y); g.fill();
+    }
+    g.fillStyle = '#d8b878'; g.beginPath(); g.ellipse(w / 2, h / 2, 70, 50, 0, 0, 7); g.fill();
+    g.fillStyle = '#6e1f1b'; g.beginPath(); g.ellipse(w / 2, h / 2, 46, 30, 0, 0, 7); g.fill();
+  });
+
+  /* ---------- materials ---------- */
+  const clip = new T.Plane(new T.Vector3(0, -1, 0), 99);
+  const S = (c, r, m, x) => new T.MeshStandardMaterial(Object.assign({ color: c, roughness: r == null ? 0.85 : r, metalness: m || 0 }, x || {}));
+  const M = {
+    oak: S(0xffffff, 0.62, 0, { map: oakTex }),
+    oakPale: S(0xf3e6d2, 0.7, 0, { map: oakTex }),
+    stone: S(0xffffff, 0.55, 0, { map: stoneTex }),
+    tile: S(0xffffff, 0.4, 0, { map: tileTex }),
+    epoxy: S(0x4a4b4d, 0.5),
+    slab: S(0x2a2928, 0.95),
+    wall: S(0x45403b, 0.92), wallExt: S(0x524c46, 0.9), cap: S(0x8a8174, 0.8), consoleTop: S(0x303034, 0.5, 0.3),
+    slat: S(0xa8774a, 0.55, 0, { clippingPlanes: [clip] }),
+    fabric: S(0xffffff, 0.98, 0, { map: fabricTex, clippingPlanes: [clip] }),
+    qrd: S(0xc49a6c, 0.6, 0, { clippingPlanes: [clip] }),
+    door: S(0x8a6240, 0.6, 0, { clippingPlanes: [clip] }),
+    glass: new T.MeshStandardMaterial({ color: 0x9fc4cf, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.2, depthWrite: false, clippingPlanes: [clip], side: T.DoubleSide }),
+    black: S(0x0d0d0e, 0.25, 0.1), piano: S(0x070708, 0.18, 0.15), ivory: S(0xf2eee2, 0.4),
+    chrome: S(0xd9d9dc, 0.25, 0.9), steel: S(0x8a8c90, 0.45, 0.7), dark: S(0x1c1c1e, 0.6, 0.2), darkMid: S(0x2e2e31, 0.55, 0.2),
+    brass: S(0xc9a24a, 0.35, 0.9), shell: S(0x5a1d1a, 0.35, 0.1), head: S(0xeeeae0, 0.7),
+    bassWood: S(0x7a3818, 0.3, 0.05), walnut: S(0x4a3020, 0.5), leather: S(0x8a5530, 0.55), boucle: S(0xd9d0c1, 0.97),
+    cushion: S(0x5d5852, 0.95), cone: S(0x222224, 0.8), green: S(0x4c6a3c, 0.85), pot: S(0xb9ad9a, 0.8),
+    white: S(0xf1f0ec, 0.35), led: new T.MeshBasicMaterial({ color: 0x7dffb0 }), ledAmber: new T.MeshBasicMaterial({ color: 0xffb347 }),
+    ledBlue: new T.MeshBasicMaterial({ color: 0x5fb6ff }), screen: new T.MeshBasicMaterial({ color: 0x1d3446 }),
+    hazard: S(0xd6a21e, 0.6), stair: S(0xa79c8b, 0.7), cable: new T.MeshBasicMaterial({ color: 0xd8342c }),
+    hi: new T.MeshBasicMaterial({ color: 0xd3ad6c, transparent: true, opacity: 0.28, depthWrite: false })
+  };
+
+  /* ---------- geometry helpers ---------- */
+  const BOX = new T.BoxGeometry(1, 1, 1);
+  const world = new T.Group(); scene.add(world);
+  const furn = new T.Group(); world.add(furn);
+  function bx(x, y, z, w, h, d, mat, parent, ry, cast) {      // centre x/z, bottom y
+    const m = new T.Mesh(BOX, mat); m.scale.set(w, h, d); m.position.set(x, y + h / 2, z);
+    if (ry) m.rotation.y = ry; m.castShadow = cast !== false; m.receiveShadow = true; (parent || furn).add(m); return m;
+  }
+  const cylCache = {};
+  function cg(rt, rb, h, seg) { const k = [rt, rb, h, seg].join(); return cylCache[k] || (cylCache[k] = new T.CylinderGeometry(rt, rb, h, seg || 20)); }
+  function cy(x, y, z, rt, rb, h, mat, parent, seg) {
+    const m = new T.Mesh(cg(rt, rb, h, seg), mat); m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; (parent || furn).add(m); return m;
+  }
+  function grp(x, z, ry, parent, y) { const g = new T.Group(); g.position.set(x, y || 0, z); g.rotation.y = ry || 0; (parent || furn).add(g); return g; }
+
+  /* ---------- rooms (true scale, metres; x east, z south) ---------- */
+  const ROOMS = [
+    { id: 'live', name: 'Main Live Room', r: [[0.35, 0.35, 12.35, 8.68]], floor: 'oak', h: 5.15, dims: '12.00 × 8.33 m', area: '100 m²', ceil: '5.15 m (as labelled)' },
+    { id: 'control', name: 'Control Room', r: [[5.85, 9.08, 12.35, 14.58]], floor: 'oak', h: 3.6, dims: '6.50 × 5.50 m, angled front', area: '35.75 m²', ceil: '3.6 m (proposed)' },
+    { id: 'perc', name: 'Percussion Booth / Load-in', r: [[0.35, 9.08, 4.85, 13.08]], floor: 'oak', h: 3.0, dims: '4.50 × 4.00 m', area: '18 m²', ceil: '3.0 m (proposed)' },
+    { id: 'iso', name: 'ISO Booth 02', r: [[1.85, 13.38, 4.85, 15.88]], floor: 'oak', h: 3.0, dims: '3.00 × 2.50 m', area: '7.5 m²', ceil: '3.0 m (proposed)' },
+    { id: 'equip', name: 'Equipment / Machine Room', r: [[8.35, 14.88, 12.35, 16.88]], floor: 'epoxy', h: 3.0, dims: '4.00 × 2.00 m', area: '8 m²', ceil: '3.0 m (proposed)' },
+    { id: 'lobby', name: 'Freight Elevator and Staircase Lobby', r: [[12.75, 0.35, 23.65, 6.85]], floor: 'stone', h: 3.0, dims: '10.90 × 6.50 m (scaled from the image)', area: '≈ 70.9 m² incl. stair and shaft', ceil: '3.0 m (proposed)' },
+    { id: 'green', name: 'Artist Green Room', r: [[12.75, 7.15, 23.65, 14.65]], floor: 'oak', h: 3.0, dims: '10.90 × 7.50 m (scaled from the image)', area: '≈ 81.8 m²', ceil: '3.0 m (proposed)' },
+    { id: 'wc1', name: 'Restroom 01', r: [[18.65, 14.95, 23.65, 17.15]], floor: 'tile', h: 3.0, dims: '5.00 × 2.20 m (scaled)', area: '11.0 m²', ceil: '3.0 m (proposed)' },
+    { id: 'wc2', name: 'Restroom 02', r: [[18.65, 17.45, 23.65, 19.65]], floor: 'tile', h: 3.0, dims: '5.00 × 2.20 m (scaled)', area: '11.0 m²', ceil: '3.0 m (proposed)' },
+    { id: 'circ', name: 'Circulation and load-in route', r: [[0.35, 17.18, 18.35, 19.65], [0.35, 13.38, 1.55, 17.18], [1.55, 16.18, 8.05, 17.18], [5.15, 14.88, 8.05, 16.18], [12.75, 14.95, 18.35, 17.18]], floor: 'oakPale', h: 3.0, dims: 'Corridors linking booths, control and green room', area: '≈ 70 m²', ceil: '3.0 m (proposed)', lab: [9, 18.4] }
+  ];
+  const pick = [];
+  // building slab (shows the 0.30 m floor thickness of an upper level)
+  bx(CX, -0.3, CZ, 24, 0.292, 20, M.slab, world, 0, false);
+  ROOMS.forEach(R => R.r.forEach(([x0, z0, x1, z1]) => {
+    const w = x1 - x0, d = z1 - z0, g = new T.PlaneGeometry(w, d), uv = g.attributes.uv;
+    const sc = R.floor === 'stone' ? 4 : R.floor === 'tile' ? 1.2 : 2;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / sc, uv.getY(i) * d / sc);
+    const m = new T.Mesh(g, M[R.floor]); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, R.id === 'circ' ? 0.0 : 0.012, (z0 + z1) / 2);
+    m.receiveShadow = true; m.userData.room = R; world.add(m); pick.push(m);
+  }));
+
+  /* ---------- walls (axis-aligned rectangles, with openings) ---------- */
+  const H5 = 5.15, H36 = 3.6, H3 = 3.0;
+  const wallPieces = [];
+  function wall(xa, xb, za, zb, h, ops, ext) {
+    const alongX = (xb - xa) >= (zb - za), s0 = alongX ? xa : za, s1 = alongX ? xb : zb, t = alongX ? zb - za : xb - xa;
+    const c = alongX ? (za + zb) / 2 : (xa + xb) / 2;
+    const side = ext ? M.wallExt : M.wall, mats = [side, side, M.cap, side, side, side];
+    const pieces = []; let cur = s0;
+    (ops || []).slice().sort((a, b) => a.a - b.a).forEach(o => {
+      if (o.a > cur) pieces.push([cur, o.a, 0, h]);
+      if (o.win) { pieces.push([o.a, o.b, 0, o.sill]); pieces.push([o.a, o.b, o.head, h]); }
+      else pieces.push([o.a, o.b, o.head || 2.2, h]);
+      cur = o.b;
+      const len = o.b - o.a, mid = (o.a + o.b) / 2;
+      if (o.win) {
+        (o.dbl ? [-t * 0.28, t * 0.28] : [0]).forEach(off => {
+          const p = new T.Mesh(BOX, M.glass); p.scale.set(alongX ? len : 0.014, o.head - o.sill, alongX ? 0.014 : len);
+          p.position.set(alongX ? mid : c + off, o.sill + (o.head - o.sill) / 2, alongX ? c + off : mid); p.renderOrder = 2; world.add(p);
+        });
+      } else if (o.leaf !== false) {
+        const n = o.dbl ? 2 : 1, lw = len / n;
+        for (let i = 0; i < n; i++) {
+          const hinge = i === 0 ? o.a : o.b, dir = i === 0 ? 1 : -1, g = new T.Group();
+          g.position.set(alongX ? hinge : c, 0, alongX ? c : hinge);
+          const leaf = bx(alongX ? dir * lw / 2 : 0, 0, alongX ? 0 : dir * lw / 2, alongX ? lw - 0.02 : 0.05, (o.head || 2.2) - 0.02, alongX ? 0.05 : lw - 0.02, M.door, g);
+          g.rotation.y = (o.swing || 1) * dir * 1.15 * (alongX ? 1 : 1); world.add(g);
+        }
+      }
+    });
+    if (cur < s1) pieces.push([cur, s1, 0, h]);
+    pieces.forEach(([a, b, y0, y1]) => {
+      if (y1 - y0 < 0.001) return;
+      const m = new T.Mesh(BOX, mats); const len = b - a, mid = (a + b) / 2;
+      m.scale.set(alongX ? len : t, y1 - y0, alongX ? t : len); m.position.set(alongX ? mid : c, y0 + (y1 - y0) / 2, alongX ? c : mid);
+      m.castShadow = m.receiveShadow = true; world.add(m); wallPieces.push({ m, y0, y1 });
+    });
+  }
+  // exterior (0.35 m)
+  wall(0, 12.75, 0, 0.35, H5, [], 1); wall(12.75, 24, 0, 0.35, H3, [], 1);
+  wall(0, 0.35, 0.35, 9.08, H5, [], 1); wall(0, 0.35, 9.08, 20, H3, [], 1);
+  wall(0.35, 24, 19.65, 20, H3, [], 1); wall(23.65, 24, 0.35, 19.65, H3, [], 1);
+  // live room
+  wall(0.35, 12.35, 8.68, 9.08, H5, [{ a: 1.2, b: 3.0, head: 2.6, dbl: 1, swing: -1 }, { a: 7.3, b: 10.9, win: 1, sill: 0.95, head: 2.55, dbl: 1 }]);
+  wall(12.35, 12.75, 0.35, 9.08, H5, [{ a: 3.4, b: 5.2, head: 2.6, dbl: 1 }]);
+  // control room: double-leaf west partition with 0.40 m cavity
+  wall(4.85, 5.15, 9.08, 16.18, H3, [{ a: 10.2, b: 12.0, win: 1, sill: 0.9, head: 2.3 }, { a: 13.6, b: 14.4, win: 1, sill: 0.9, head: 2.2 }]);
+  wall(5.55, 5.85, 9.08, 14.88, H36, [{ a: 10.2, b: 12.0, win: 1, sill: 0.9, head: 2.3 }, { a: 13.6, b: 14.4, win: 1, sill: 0.9, head: 2.2 }]);
+  wall(5.15, 5.55, 14.58, 14.88, H3);
+  wall(12.35, 12.75, 9.08, 17.18, H36);
+  wall(5.85, 12.35, 14.58, 14.88, H36, [{ a: 6.3, b: 7.3, head: 2.2 }]);
+  // booths
+  wall(0.35, 4.85, 13.08, 13.38, H3, [{ a: 0.5, b: 1.45, head: 2.2 }]);
+  wall(1.55, 1.85, 13.38, 16.18, H3, [{ a: 14.6, b: 15.5, head: 2.1, swing: -1 }]);
+  wall(1.85, 4.85, 15.88, 16.18, H3);
+  // equipment room
+  wall(8.05, 8.35, 14.88, 17.18, H3);
+  wall(8.35, 12.35, 16.88, 17.18, H3, [{ a: 9.0, b: 10.0, head: 2.1 }]);
+  // lobby, green room, restrooms
+  wall(12.75, 23.65, 6.85, 7.15, H3, [{ a: 17.4, b: 19.4, head: 2.5, leaf: false }]);
+  wall(12.75, 23.65, 14.65, 14.95, H3, [{ a: 14.0, b: 15.0, head: 2.2 }]);
+  wall(18.35, 18.65, 14.95, 19.65, H3, [{ a: 15.5, b: 16.4, head: 2.1 }, { a: 18.2, b: 19.1, head: 2.1 }]);
+  wall(18.65, 23.65, 17.15, 17.45, H3);
+  // freight elevator shaft
+  wall(20.85, 21.1, 0.35, 3.65, H3, [{ a: 0.9, b: 3.1, head: 2.6, leaf: false }]);
+  wall(21.1, 23.65, 3.4, 3.65, H3);
+
+  /* ---------- wall linings: oak slats, fabric panels, QRD diffusers (instanced) ---------- */
+  const L = { slat: [], fab: [], qrd: [] }, _o = new T.Object3D();
+  function put(arr, axis, fixed, n, s, y0, h, w, d) {   // axis: wall runs along 'x' or 'z'; n = normal sign into room
+    if (axis === 'x') _o.position.set(s, y0 + h / 2, fixed + n * d / 2), _o.scale.set(w, h, d);
+    else _o.position.set(fixed + n * d / 2, y0 + h / 2, s), _o.scale.set(d, h, w);
+    _o.updateMatrix(); arr.push(_o.matrix.clone());
+  }
+  const out = (s, ex) => (ex || []).some(([a, b]) => s > a && s < b);
+  function slats(axis, fixed, n, s0, s1, y0, y1, ex) { for (let s = s0 + 0.06; s < s1 - 0.03; s += 0.11) if (!out(s, ex)) put(L.slat, axis, fixed, n, s, y0, y1 - y0, 0.045, 0.04); }
+  function fabric(axis, fixed, n, s0, s1, y0, y1, ex, pw) { pw = pw || 1.2; for (let s = s0 + 0.05; s + pw <= s1 + 0.001; s += pw + 0.05) { const m = s + pw / 2; if (!out(m, ex)) put(L.fab, axis, fixed, n, m, y0, y1 - y0, pw, 0.07); } }
+  const QS = [0, 1, 4, 2, 2, 4, 1];
+  function qrd(axis, fixed, n, s0, mods, y0, y1) { for (let k = 0; k < mods; k++) QS.forEach((q, i) => put(L.qrd, axis, fixed, n, s0 + k * 0.6 + i * 0.0857 + 0.043, y0, y1 - y0, 0.078, 0.03 + q * 0.045)); }
+  // live room
+  qrd('x', 0.35, 1, 3.65, 8, 0.8, 3.4);
+  slats('x', 0.35, 1, 0.35, 3.6, 0, 4.4); slats('x', 0.35, 1, 8.5, 12.35, 0, 4.4);
+  slats('z', 0.35, 1, 0.35, 8.68, 0, 2.7); fabric('z', 0.35, 1, 0.35, 8.68, 2.9, 4.7, null, 1.55);
+  slats('z', 12.35, -1, 0.35, 8.68, 0, 2.7, [[3.3, 5.3]]); fabric('z', 12.35, -1, 0.35, 8.68, 2.9, 4.7, null, 1.55);
+  slats('x', 8.68, -1, 0.35, 12.35, 0, 2.7, [[1.1, 3.1], [7.2, 11.0]]); fabric('x', 8.68, -1, 0.35, 12.35, 2.9, 4.7, null, 1.55);
+  // control room
+  slats('z', 5.85, 1, 9.08, 14.58, 0, 2.6, [[10.1, 12.1], [13.5, 14.5]]); fabric('z', 5.85, 1, 9.08, 14.58, 2.75, 3.5, null, 1.3);
+  slats('z', 12.35, -1, 9.08, 14.58, 0, 2.6); fabric('z', 12.35, -1, 9.08, 14.58, 2.75, 3.5, null, 1.3);
+  qrd('x', 14.58, -1, 7.55, 7, 0.6, 2.7); fabric('x', 14.58, -1, 5.85, 12.35, 2.85, 3.5, [[6.2, 7.4]], 1.25);
+  // booths
+  fabric('z', 0.35, 1, 9.08, 13.08, 0.4, 2.7, null, 1.25); fabric('x', 13.08, -1, 1.5, 4.85, 0.4, 2.7, null, 1.0);
+  fabric('z', 4.85, -1, 9.08, 13.08, 0.4, 2.7, [[10.1, 12.1]], 0.9); fabric('x', 9.08, 1, 3.1, 4.85, 0.4, 2.7, null, 1.6);
+  fabric('x', 15.88, -1, 1.85, 4.85, 0.4, 2.7, null, 0.92); fabric('z', 1.85, 1, 13.38, 15.88, 0.4, 2.7, [[14.5, 15.6]], 0.75);
+  // green room feature wall
+  slats('z', 12.75, 1, 7.15, 14.65, 0, 2.9);
+  function inst(arr, mat) { const im = new T.InstancedMesh(BOX, mat, arr.length); arr.forEach((m, i) => im.setMatrixAt(i, m)); im.castShadow = true; im.receiveShadow = true; world.add(im); return im; }
+  inst(L.slat, M.slat); inst(L.fab, M.fabric); inst(L.qrd, M.qrd);
+
+  /* ---------- furniture ---------- */
+  function micStand(x, z, h, ry) {
+    const g = grp(x, z, ry || 0); cy(0, 0, 0, 0.16, 0.16, 0.02, M.dark, g); cy(0, 0, 0, 0.012, 0.012, h, M.steel, g, 8);
+    const boom = bx(0.25, h, 0, 0.55, 0.018, 0.018, M.steel, g); boom.rotation.z = 0.2;
+    cy(0.52, h + 0.02, 0, 0.025, 0.025, 0.12, M.chrome, g, 12); return g;
+  }
+  function chair(x, z, ry, mat) {
+    const g = grp(x, z, ry); bx(0, 0.43, 0, 0.46, 0.05, 0.46, mat || M.leather, g); bx(0, 0.48, -0.21, 0.46, 0.45, 0.05, mat || M.leather, g);
+    [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.2], [0.2, 0.2]].forEach(([a, b]) => cy(a, 0, b, 0.015, 0.015, 0.43, M.dark, g, 6)); return g;
+  }
+  function plant(x, z, s) { s = s || 1; cy(x, 0, z, 0.2 * s, 0.16 * s, 0.4 * s, M.pot); const f = new T.Mesh(new T.IcosahedronGeometry(0.42 * s, 1), M.green); f.position.set(x, 0.85 * s, z); f.scale.y = 1.25; f.castShadow = true; furn.add(f); }
+  function speaker(parent, x, y, z, w, h, d, woofers) {
+    const g = new T.Group(); g.position.set(x, y, z); parent.add(g); bx(0, 0, 0, w, h, d, M.dark, g);
+    woofers.forEach(([wy, r]) => { const c = new T.Mesh(cg(r, r * 0.8, 0.03, 24), M.cone); c.rotation.x = Math.PI / 2; c.position.set(0, wy, d / 2 + 0.012); g.add(c);
+      const ring = new T.Mesh(cg(r * 1.08, r * 1.08, 0.012, 24), M.darkMid); ring.rotation.x = Math.PI / 2; ring.position.set(0, wy, d / 2 + 0.004); g.add(ring); });
+    return g;
+  }
+
+  // Grand piano ~1.50 × 2.10 m
+  (function () {
+    const g = grp(3.4, 4.6, -0.55);
+    const sh = new T.Shape(); sh.moveTo(0, 0); sh.lineTo(1.5, 0); sh.lineTo(1.5, 0.5);
+    sh.bezierCurveTo(1.5, 1.05, 0.8, 1.0, 0.68, 1.55); sh.bezierCurveTo(0.6, 1.95, 0.45, 2.1, 0.22, 2.1); sh.lineTo(0, 2.1); sh.lineTo(0, 0);
+    const body = new T.ExtrudeGeometry(sh, { depth: 0.3, bevelEnabled: false, curveSegments: 16 }); body.rotateX(-Math.PI / 2); body.translate(-0.75, 0.68, 1.05);
+    const bm = new T.Mesh(body, M.piano); bm.castShadow = bm.receiveShadow = true; g.add(bm);
+    const lidG = new T.ExtrudeGeometry(sh, { depth: 0.02, bevelEnabled: false, curveSegments: 16 }); lidG.rotateX(-Math.PI / 2);
+    const lid = new T.Mesh(lidG, M.piano); lid.castShadow = true; const piv = new T.Group(); piv.position.set(-0.75, 0.98, 1.05); piv.rotation.z = 0.62; piv.add(lid); g.add(piv);
+    cy(0.1, 0.98, -0.25, 0.01, 0.01, 0.95, M.piano, g, 6).rotation.z = -0.3;
+    bx(0, 0.68, 1.2, 1.5, 0.12, 0.3, M.piano, g); bx(0, 0.72, 1.2, 1.4, 0.04, 0.16, M.ivory, g); bx(0, 0.76, 1.12, 1.4, 0.012, 0.06, M.black, g);
+    [[-0.62, 1.15], [0.62, 1.15], [-0.55, -0.85]].forEach(([a, b]) => cy(a, 0, b, 0.05, 0.04, 0.68, M.piano, g, 10));
+    bx(0, 0, 1.85, 0.8, 0.5, 0.36, M.piano, g); bx(0, 0.5, 1.85, 0.8, 0.06, 0.36, M.leather, g);
+    micStand(4.6, 3.6, 1.45, -2.4);
+  })();
+
+  // Drum kit on rug
+  (function () {
+    const rug = new T.Mesh(new T.PlaneGeometry(3.0, 2.5), new T.MeshStandardMaterial({ map: rugTex, roughness: 1 })); rug.rotation.x = -Math.PI / 2; rug.position.set(8.7, 0.02, 2.6); rug.receiveShadow = true; furn.add(rug);
+    const g = grp(8.7, 2.6, 0, furn, 0.02), drum = (x, y, z, r, h, rx) => { const d = new T.Mesh(cg(r, r, h, 24), [M.shell, M.head, M.head]); d.position.set(x, y, z); d.rotation.x = rx || 0; d.castShadow = true; g.add(d); return d; };
+    drum(0, 0.28, 0.25, 0.28, 0.45, Math.PI / 2);
+    drum(0.15, 0.82, 0.2, 0.13, 0.2, 0.35); drum(-0.17, 0.84, 0.2, 0.14, 0.22, 0.35);
+    drum(0.32, 0.6, -0.12, 0.18, 0.14); cy(0.32, 0, -0.12, 0.01, 0.01, 0.53, M.steel, g, 6);
+    drum(-0.5, 0.45, -0.18, 0.2, 0.4); [[-0.66, -0.05], [-0.36, -0.03], [-0.5, -0.38]].forEach(([a, b]) => cy(a, 0, b, 0.008, 0.008, 0.25, M.steel, g, 6));
+    const cym = (x, y, z, r, tilt) => { cy(x, 0, z, 0.01, 0.01, y, M.steel, g, 6); const c = cy(x, y, z, r, r * 0.2, 0.012, M.brass, g, 28); c.rotation.x = tilt || 0; };
+    cym(0.62, 0.92, -0.05, 0.18); cy(0.62, 0.9, -0.05, 0.18, 0.04, 0.012, M.brass, g, 28);
+    cym(0.5, 1.35, 0.45, 0.23, -0.25); cym(-0.7, 1.2, 0.25, 0.27, -0.2); cym(-0.25, 1.45, 0.55, 0.2, -0.3);
+    cy(0, 0, -0.62, 0.17, 0.17, 0.5, M.dark, g); cy(0, 0.5, -0.62, 0.2, 0.2, 0.08, M.leather, g);
+    micStand(8.1, 3.6, 1.7, -1.4); micStand(9.4, 3.6, 1.7, -1.8);
+  })();
+
+  // Double bass (~1.9 m) on stand
+  (function () {
+    const g = grp(10.9, 6.2, -0.4); g.rotation.x = 0.08;
+    const blob = (y, sx, sy, sz) => { const s = new T.Mesh(new T.SphereGeometry(1, 24, 16), M.bassWood); s.scale.set(sx, sy, sz); s.position.y = y; s.castShadow = true; g.add(s); };
+    blob(0.58, 0.34, 0.36, 0.11); blob(1.02, 0.27, 0.27, 0.1); blob(0.8, 0.24, 0.2, 0.1);
+    bx(0, 1.25, 0.06, 0.06, 0.65, 0.05, M.black, g); cy(0, 1.88, 0.03, 0.035, 0.035, 0.08, M.bassWood, g, 10);
+    cy(0, 0, 0, 0.01, 0.01, 0.24, M.steel, g, 6); bx(0, 0.2, -0.25, 0.4, 0.04, 0.5, M.dark, g);
+    micStand(10.2, 6.6, 1.0, -0.6);
+  })();
+
+  // Gobos (1.20 × 1.80 m) cluster
+  function gobo(x, z, ry, win) {
+    const g = grp(x, z, ry); bx(-0.45, 0, 0, 0.08, 0.06, 0.45, M.dark, g); bx(0.45, 0, 0, 0.08, 0.06, 0.45, M.dark, g);
+    bx(0, 0.1, 0, 1.2, win ? 1.1 : 1.8, 0.1, M.fabric, g); bx(0, 0.1, 0, 1.24, 0.03, 0.11, M.door, g);
+    if (win) { const p = bx(0, 1.2, 0, 1.12, 0.68, 0.02, M.glass, g, 0, false); p.renderOrder = 2; bx(0, 1.88, 0, 1.24, 0.03, 0.11, M.door, g); bx(-0.6, 1.2, 0, 0.04, 0.7, 0.1, M.door, g); bx(0.6, 1.2, 0, 0.04, 0.7, 0.1, M.door, g); }
+  }
+  gobo(7.0, 3.3, 1.1); gobo(7.3, 4.4, 0.6, 1); gobo(10.4, 3.3, -1.1); gobo(10.1, 4.4, -0.6, 1); gobo(1.6, 6.6, 1.2, 0);
+  // string chairs and music stands
+  [[5.6, 6.4], [6.6, 6.7], [7.6, 6.6]].forEach(([x, z], i) => { chair(x, z, Math.PI + 0.2 - i * 0.2, M.walnut); cy(x + 0.05, 0, z - 0.7, 0.01, 0.01, 1.1, M.dark, furn, 6); bx(x + 0.05, 1.05, z - 0.7, 0.5, 0.35, 0.02, M.dark).rotation.x = -0.4; });
+  micStand(6.6, 5.7, 1.5, 1.6);
+  // pendant light rig above live room (no roof; indicative)
+
+  // Control room
+  (function () {
+    const cz = 11.2, cx = 9.1;
+    const g = grp(cx, cz, 0);
+    bx(0, 0, 0.05, 3.3, 0.66, 1.0, M.walnut, g); bx(0, 0, -0.62, 3.3, 0.72, 0.26, M.walnut, g);
+    const top = new T.Group(); top.position.set(0, 0.74, 0); top.rotation.x = 0.16; g.add(top);
+    bx(0, -0.06, 0, 3.2, 0.06, 1.1, M.consoleTop, top);
+    bx(0, -0.08, 0.6, 3.24, 0.1, 0.16, M.leather, top);
+    const ch = 44, fad = new T.InstancedMesh(BOX, M.chrome, ch), knob = new T.InstancedMesh(cg(0.011, 0.012, 0.022, 10), M.steel, ch * 7), led = new T.InstancedMesh(BOX, M.led, ch);
+    for (let i = 0; i < ch; i++) {
+      const x = -1.5 + (i + 0.5) * 3.0 / ch;
+      _o.position.set(x, 0.012, 0.33 - (i % 3) * 0.04); _o.scale.set(0.022, 0.02, 0.035); _o.rotation.set(0, 0, 0); _o.updateMatrix(); fad.setMatrixAt(i, _o.matrix);
+      for (let k = 0; k < 7; k++) { _o.position.set(x, 0.011, -0.45 + k * 0.085); _o.scale.set(1, 1, 1); _o.updateMatrix(); knob.setMatrixAt(i * 7 + k, _o.matrix); }
+      _o.position.set(x, 0.005, 0.17); _o.scale.set(0.012, 0.01, 0.012); _o.updateMatrix(); led.setMatrixAt(i, _o.matrix);
+    }
+    [fad, knob, led].forEach(m => { m.castShadow = true; top.add(m); });
+    const fslots = new T.InstancedMesh(BOX, M.black, ch); for (let i = 0; i < ch; i++) { _o.position.set(-1.5 + (i + 0.5) * 3.0 / ch, 0.0005, 0.29); _o.scale.set(0.006, 0.001, 0.2); _o.updateMatrix(); fslots.setMatrixAt(i, _o.matrix); } top.add(fslots);
+    bx(0, 0.86, -0.66, 3.2, 0.2, 0.16, M.dark, g);
+    const mtr = new T.InstancedMesh(BOX, M.ledAmber, 24); for (let i = 0; i < 24; i++) { _o.position.set(-1.45 + i * 0.126, 0.97, -0.575); _o.scale.set(0.07, 0.04, 0.005); _o.updateMatrix(); mtr.setMatrixAt(i, _o.matrix); } g.add(mtr);
+    bx(0, 1.06, -0.66, 0.6, 0.32, 0.03, M.screen, g, 0, false);
+    speaker(g, -1.05, 1.24, -0.62, 0.22, 0.34, 0.25, [[-0.06, 0.07], [0.09, 0.03]]).rotation.y = 0.3;
+    speaker(g, 1.05, 1.24, -0.62, 0.22, 0.34, 0.25, [[-0.06, 0.07], [0.09, 0.03]]).rotation.y = -0.3;
+    // engineer chair
+    const ec = grp(cx, cz + 1.05, Math.PI); cy(0, 0, 0, 0.3, 0.3, 0.03, M.dark, ec, 5); cy(0, 0, 0, 0.03, 0.03, 0.45, M.steel, ec, 8); bx(0, 0.45, 0, 0.52, 0.09, 0.5, M.leather, ec); bx(0, 0.52, -0.23, 0.5, 0.62, 0.08, M.leather, ec);
+    // side racks
+    [[-2.15, 0.35], [2.15, -0.35]].forEach(([dx, r]) => { const rk = grp(cx + dx, cz + 0.15, r); bx(0, 0, 0, 0.56, 0.85, 0.62, M.dark, rk); for (let k = 0; k < 6; k++) { bx(0, 0.08 + k * 0.125, 0.315, 0.48, 0.1, 0.01, k % 2 ? M.darkMid : M.steel, rk, 0, false); bx(0.18, 0.12 + k * 0.125, 0.322, 0.02, 0.02, 0.005, k % 3 ? M.ledBlue : M.led, rk, 0, false); } });
+    // soffit-mounted main monitors flanking the window (angled front)
+    [[6.55, 0.42], [11.65, -0.42]].forEach(([x, r]) => {
+      const s = grp(x, 9.55, r); bx(0, 0, 0, 1.3, 3.0, 0.75, M.fabric, s);
+      const sp = speaker(s, 0, 1.0, 0.36, 0.8, 1.0, 0.06, [[-0.22, 0.19], [0.22, 0.19]]); bx(0, 1.25, 0.4, 0.8, 0.28, 0.04, M.darkMid, s); bx(0, 2.3, 0.39, 0.9, 0.2, 0.03, M.cone, s);
+    });
+    // producer desk and sofa at the rear
+    bx(cx, 0, 13.55, 2.6, 0.72, 0.7, M.walnut); bx(cx, 0.72, 13.55, 2.64, 0.04, 0.74, M.darkMid);
+    bx(cx - 0.6, 0.76, 13.6, 0.5, 0.3, 0.02, M.screen, furn, 0, false); bx(cx + 0.6, 0.76, 13.6, 0.5, 0.3, 0.02, M.screen, furn, 0, false);
+    chair(cx - 0.5, 13.0, Math.PI, M.leather); chair(cx + 0.5, 13.0, Math.PI, M.leather);
+    // tall rack column in corner
+    const tr = grp(6.35, 13.95, Math.PI / 2); bx(0, 0, 0, 0.6, 1.9, 0.8, M.dark, tr); for (let k = 0; k < 12; k++) bx(0, 0.15 + k * 0.14, 0.405, 0.5, 0.11, 0.01, k % 2 ? M.darkMid : M.steel, tr, 0, false);
+  })();
+
+  // Percussion booth: congas, bongos, cajón
+  (function () {
+    const prof = [[0, 0], [0.11, 0], [0.135, 0.12], [0.15, 0.32], [0.145, 0.5], [0.125, 0.7], [0.12, 0.76], [0, 0.76]].map(([r, y]) => new T.Vector2(r, y));
+    const lathe = new T.LatheGeometry(prof, 24);
+    [[2.4, 11.2, 0.92], [2.85, 11.0, 1.0], [3.3, 11.2, 1.06]].forEach(([x, z, s]) => {
+      const c = new T.Mesh(lathe, M.bassWood); c.scale.set(s, s, s); c.position.set(x, 0.08, z); c.castShadow = c.receiveShadow = true; furn.add(c);
+      cy(x, 0.08 + 0.76 * s, z, 0.12 * s, 0.12 * s, 0.012, M.head); cy(x, 0, z, 0.15, 0.15, 0.08, M.steel, furn, 12);
+    });
+    cy(2.6, 0.75, 11.75, 0.1, 0.1, 0.14, M.bassWood); cy(2.85, 0.75, 11.75, 0.12, 0.12, 0.14, M.bassWood); cy(2.72, 0, 11.75, 0.01, 0.01, 0.75, M.steel, furn, 6);
+    bx(2.85, 0, 12.1, 0.3, 0.48, 0.3, M.oak); bx(3.9, 0, 10.0, 0.62, 0.02, 0.62, M.door);
+    micStand(3.5, 11.8, 1.3, 2.5); micStand(2.2, 11.9, 1.3, 0.8);
+    gobo(1.5, 10.0, 0.4);
+  })();
+  // ISO booth 02
+  micStand(3.4, 14.4, 1.55, 1.57); chair(3.4, 15.1, 0, M.leather); cy(2.7, 0, 14.5, 0.01, 0.01, 1.1, M.dark, furn, 6);
+  // Equipment / machine room: server racks
+  (function () {
+    const leds = []; for (let i = 0; i < 4; i++) {
+      const x = 8.85 + i * 0.68; bx(x, 0, 15.45, 0.6, 2.0, 1.0, M.dark); bx(x, 0.05, 15.96, 0.54, 1.9, 0.01, M.darkMid, furn, 0, false);
+      for (let k = 0; k < 14; k++) leds.push([x - 0.2 + (k % 2) * 0.05, 0.2 + k * 0.12, 15.97]);
+    }
+    const im = new T.InstancedMesh(BOX, M.led, leds.length); leds.forEach(([x, y, z], i) => { _o.position.set(x, y, z); _o.scale.set(0.02, 0.012, 0.004); _o.rotation.set(0, 0, 0); _o.updateMatrix(); im.setMatrixAt(i, _o.matrix); }); furn.add(im);
+    bx(11.95, 0, 16.3, 0.5, 1.6, 0.6, M.steel);
+  })();
+
+  // Lobby: freight elevator shaft and staircase
+  (function () {
+    bx(22.37, 0, 1.87, 2.5, 0.06, 3.0, M.steel); bx(21.15, 0, 2.0, 0.12, 0.012, 2.2, M.hazard, furn, 0, false);
+    bx(21.2, 0, 0.75, 0.05, 2.6, 0.55, M.steel); bx(21.2, 0, 3.25, 0.05, 2.6, 0.55, M.steel);
+    bx(23.55, 0.0, 1.87, 0.06, 2.6, 2.9, M.steel); bx(22.4, 0.9, 0.42, 2.3, 0.08, 0.04, M.chrome); bx(22.4, 0.9, 3.33, 2.3, 0.08, 0.04, M.chrome);
+    bx(20.7, 1.2, 3.3, 0.05, 0.14, 0.08, M.brass);
+    // U-stair: two flights of 10 risers (0.15 m), 0.28 m goings, landing at 1.5 m
+    const sx0 = 13.05, w = 1.3;
+    for (let i = 0; i < 10; i++) {
+      bx(sx0 + w / 2, 0, 5.9 - i * 0.28, w, 0.15 * (i + 1), 0.28, M.stair);
+      bx(sx0 + w + 0.2 + w / 2, 1.5, 1.95 + i * 0.28, w, 0.15 * (i + 1), 0.28, M.stair);
+    }
+    bx(sx0 + 1.4, 0, 1.0, 2.8, 1.5, 1.3, M.stair);
+    bx(sx0 + w + 0.1, 0, 3.5, 0.2, 1.6, 4.5, M.wall);
+    const rail = (x0, y0, z0, x1, y1, z1) => { const a = new T.Vector3(x0, y0, z0), b = new T.Vector3(x1, y1, z1), len = a.distanceTo(b); const m = new T.Mesh(cg(0.025, 0.025, len, 8), M.brass); m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), b.clone().sub(a).normalize()); m.castShadow = true; furn.add(m); };
+    rail(sx0 + 2 * w + 0.25, 2.5, 1.9, sx0 + 2 * w + 0.25, 4.0, 4.7);
+    rail(sx0 + 0.05, 1.05, 6.0, sx0 + 0.05, 2.5, 2.0);
+    const gp = bx(sx0 + 2 * w + 0.25, 1.5, 3.3, 0.02, 1.6, 2.8, M.glass, furn, 0, false); gp.rotation.x = Math.atan2(1.5, 2.8); gp.renderOrder = 2;
+    bx(19.0, 0, 5.9, 1.8, 0.45, 0.5, M.walnut); plant(17.6, 6.2, 1.1); plant(23.0, 6.2, 0.9);
+  })();
+
+  // Green room: sofa, coffee bar, dining table
+  (function () {
+    const rug = new T.Mesh(new T.PlaneGeometry(4.0, 3.0), S(0x8f8576, 1)); rug.rotation.x = -Math.PI / 2; rug.position.set(15.9, 0.02, 10.1); rug.receiveShadow = true; furn.add(rug);
+    bx(15.6, 0, 8.25, 3.4, 0.42, 0.95, M.boucle); bx(15.6, 0.42, 7.9, 3.4, 0.45, 0.25, M.boucle);
+    bx(13.55, 0, 9.4, 0.95, 0.42, 3.2, M.boucle); bx(13.2, 0.42, 9.4, 0.25, 0.45, 3.2, M.boucle);
+    for (let i = 0; i < 3; i++) bx(14.6 + i * 1.05, 0.42, 8.35, 0.98, 0.14, 0.72, M.cushion);
+    cy(16.0, 0, 10.0, 0.55, 0.55, 0.38, M.oak, furn, 36); cy(16.0, 0.38, 10.0, 0.56, 0.56, 0.02, M.walnut, furn, 36);
+    chair(17.8, 10.6, -2.0, M.leather); chair(16.6, 11.5, Math.PI - 0.2, M.leather);
+    // coffee bar on the east wall
+    bx(23.2, 0, 9.9, 0.65, 0.92, 3.6, M.walnut); bx(23.2, 0.92, 9.9, 0.7, 0.05, 3.7, M.stone);
+    bx(23.25, 0.97, 9.1, 0.45, 0.42, 0.55, M.chrome); bx(23.3, 0.97, 9.7, 0.2, 0.38, 0.2, M.dark);
+    bx(23.5, 1.5, 9.9, 0.3, 0.03, 3.4, M.walnut); bx(23.5, 2.0, 9.9, 0.3, 0.03, 3.4, M.walnut);
+    [9.0, 9.9, 10.8].forEach(z => { cy(22.4, 0, z, 0.18, 0.18, 0.02, M.steel); cy(22.4, 0, z, 0.02, 0.02, 0.7, M.steel, furn, 6); cy(22.4, 0.7, z, 0.19, 0.19, 0.06, M.leather); });
+    cy(20.0, 0, 12.8, 0.06, 0.25, 0.72, M.dark, furn, 12); cy(20.0, 0.72, 12.8, 0.6, 0.6, 0.04, M.oak, furn, 36);
+    [0, 1, 2, 3].forEach(k => { const a = k * Math.PI / 2 + 0.4; chair(20 + Math.cos(a) * 0.85, 12.8 + Math.sin(a) * 0.85, -a - Math.PI / 2, M.walnut); });
+    plant(13.3, 14.1, 1.1); plant(23.1, 7.7, 0.9); plant(18.4, 7.6, 0.8);
+    bx(21.5, 0, 14.3, 2.0, 0.6, 0.45, M.walnut); bx(21.5, 1.3, 14.6, 1.6, 0.9, 0.04, M.screen, furn, 0, false);
+  })();
+  // Restrooms
+  [[14.95, 17.15], [17.45, 19.65]].forEach(([z0, z1]) => {
+    const zc = (z0 + z1) / 2;
+    bx(23.35, 0, zc - 0.4, 0.55, 0.42, 0.38, M.white); bx(23.55, 0.42, zc - 0.4, 0.18, 0.4, 0.38, M.white);
+    bx(20.0, 0, z0 + 0.3, 1.6, 0.85, 0.5, M.walnut); bx(20.0, 0.85, z0 + 0.3, 1.64, 0.04, 0.54, M.stone); cy(19.6, 0.86, z0 + 0.3, 0.18, 0.14, 0.06, M.white); cy(20.4, 0.86, z0 + 0.3, 0.18, 0.14, 0.06, M.white);
+    bx(20.0, 1.1, z0 + 0.06, 1.6, 0.9, 0.02, M.chrome, furn, 0, false);
+    bx(22.4, 0, zc - 0.05, 0.05, 2.1, 1.5, M.walnut);
+  });
+  plant(17.9, 19.2, 0.9); plant(0.85, 19.1, 0.9);
+
+  /* ---------- cable route (red dashes) ---------- */
+  const cableG = new T.Group(); world.add(cableG);
+  (function () {
+    const routes = [
+      [[9.1, 11.6], [9.1, 13.1], [7.9, 14.73], [7.9, 15.9], [8.6, 16.6]],
+      [[9.1, 10.6], [9.1, 8.88], [8.7, 6.2], [8.7, 3.4]],
+      [[9.1, 8.88], [5.0, 7.2], [3.6, 5.2]],
+      [[7.3, 11.0], [5.35, 11.0], [3.0, 11.0]],
+      [[7.3, 11.4], [5.35, 14.0], [3.4, 14.3]],
+      [[9.1, 8.88], [10.6, 7.0], [10.8, 6.6]]
+    ];
+    const dashes = [];
+    routes.forEach(rt => { for (let i = 0; i < rt.length - 1; i++) { const [ax, az] = rt[i], [bxp, bzp] = rt[i + 1], len = Math.hypot(bxp - ax, bzp - az), ang = Math.atan2(bzp - az, bxp - ax); for (let s = 0.1; s < len; s += 0.36) { const t = s / len; dashes.push([ax + (bxp - ax) * t, az + (bzp - az) * t, ang]); } } });
+    const im = new T.InstancedMesh(BOX, M.cable, dashes.length);
+    dashes.forEach(([x, z, a], i) => { _o.position.set(x, 0.03, z); _o.rotation.set(0, -a, 0); _o.scale.set(0.2, 0.012, 0.055); _o.updateMatrix(); im.setMatrixAt(i, _o.matrix); });
+    cableG.add(im);
+  })();
+
+  /* ---------- grid and scale bar ---------- */
+  const gridG = new T.Group(); gridG.visible = false; world.add(gridG);
+  const grid = new T.GridHelper(30, 30, 0xb08d57, 0x6d5a3c); grid.position.set(CX, 0.035, CZ); grid.material.transparent = true; grid.material.opacity = 0.55; gridG.add(grid);
+  for (let i = 0; i < 10; i++) bx(i + 0.5, 0, 21.0, 1, 0.04, 0.22, i % 2 ? M.black : M.white, gridG, 0, false);
+  const sbl = tex(1024, 96, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = '#e8e4dc'; g.font = '44px DM Sans, sans-serif'; g.textBaseline = 'middle'; [0, 1, 2, 5, 10].forEach(n => { g.textAlign = n === 0 ? 'left' : n === 10 ? 'right' : 'center'; g.fillText(n === 10 ? '10 m' : String(n), n / 10.4 * w + 6, h / 2); }); });
+  const sbm = new T.Mesh(new T.PlaneGeometry(10.4, 0.98), new T.MeshBasicMaterial({ map: sbl, transparent: true, depthWrite: false })); sbm.rotation.x = -Math.PI / 2; sbm.position.set(5.2, 0.05, 21.75); gridG.add(sbm);
+
+  /* ---------- highlight ---------- */
+  const hiG = new T.Group(); world.add(hiG);
+  function highlight(R) {
+    while (hiG.children.length) hiG.remove(hiG.children[0]);
+    if (!R) return;
+    R.r.forEach(([x0, z0, x1, z1]) => { const m = new T.Mesh(new T.PlaneGeometry(x1 - x0, z1 - z0), M.hi); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, 0.04, (z0 + z1) / 2); m.renderOrder = 3; hiG.add(m); });
+  }
+
+  /* ---------- HTML labels ---------- */
+  const SHORT = { live: 'Live room', control: 'Control', perc: 'Percussion', iso: 'ISO 02', equip: 'Equipment', lobby: 'Lift & stair', green: 'Green room', wc1: 'WC 01', wc2: 'WC 02', circ: 'Circulation' };
+  let shortMode = null;
+  const labs = ROOMS.map(R => {
+    const el = document.createElement('div'); el.className = 'f3d-lab'; el.dataset.long = R.name.replace(' and ', ' & '); el.dataset.short = SHORT[R.id] || R.name; el.textContent = el.dataset.long;
+    labelsEl.appendChild(el); const r = R.r[0]; return { el, R, p: new T.Vector3(R.lab ? R.lab[0] : (r[0] + r[2]) / 2, 0.2, R.lab ? R.lab[1] : (r[1] + r[3]) / 2) };
+  });
+  const dimLabs = [['24.00 m', 12, 0.1, 22.6], ['20.00 m', -1.6, 0.1, 10]].map(([t, x, y, z]) => { const el = document.createElement('div'); el.className = 'f3d-lab f3d-dim'; el.textContent = t; el.hidden = true; labelsEl.appendChild(el); return { el, p: new T.Vector3(x, y, z) }; });
+  let showLabels = true;
+  const _v = new T.Vector3();
+  function placeLabels() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    const sm = w < 700; if (sm !== shortMode) { shortMode = sm; labs.forEach(L => L.el.textContent = sm ? L.el.dataset.short : L.el.dataset.long); }
+    const shown = [];
+    const place = (L, on) => {
+      if (!on) { L.el.style.display = 'none'; return; }
+      _v.copy(L.p).project(camera);
+      if (_v.z > 1 || _v.x < -1.05 || _v.x > 1.05 || _v.y < -1.05 || _v.y > 1.05) { L.el.style.display = 'none'; return; }
+      const px = (_v.x + 1) / 2 * w, py = (1 - _v.y) / 2 * h;
+      L.el.style.display = ''; const ew = L.el.offsetWidth, eh = L.el.offsetHeight, rc = [px - ew / 2, py - eh / 2, px + ew / 2, py + eh / 2];
+      if (shown.some(o => rc[0] < o[2] + 4 && rc[2] > o[0] - 4 && rc[1] < o[3] + 2 && rc[3] > o[1] - 2)) { L.el.style.display = 'none'; return; }
+      shown.push(rc); L.el.style.transform = `translate(-50%,-50%) translate(${px}px,${py}px)`;
+    };
+    const dist = camera.position.distanceTo(controls.target);
+    labs.forEach(L => place(L, showLabels && (dist > 4 || camera.position.distanceTo(L.p) < 9)));
+    dimLabs.forEach(L => place(L, gridG.visible));
+  }
+
+  /* ---------- controls and views ---------- */
+  const controls = new T.OrbitControls(camera, canvas);
+  controls.enableDamping = !reduced; controls.dampingFactor = 0.09;
+  controls.zoomToCursor = true; controls.screenSpacePanning = true;
+  controls.minDistance = 0.25; controls.maxDistance = 70; controls.maxPolarAngle = Math.PI * 0.497;
+  controls.touches = { ONE: T.TOUCH.ROTATE, TWO: T.TOUCH.DOLLY_PAN };
+  controls.rotateSpeed = 0.7; controls.zoomSpeed = 1.1;
+
+  function fitDist(w, d, fov) { const a = camera.aspect, t = Math.tan(T.MathUtils.degToRad(fov / 2)); return Math.max(d / (2 * t), w / (2 * t * a)); }
+  function views() {
+    const ov = fitDist(27, 23, camera.fov) * (camera.aspect < 1 ? 1.45 : 1.2), dir = new T.Vector3(0.55, 0.78, 0.62).normalize();
+    return {
+      overview: { p: new T.Vector3(CX, 0, CZ + 0.6).addScaledVector(dir, ov), t: new T.Vector3(CX, 0, CZ + 0.6) },
+      top: { p: new T.Vector3(CX, fitDist(25, 21, camera.fov) * 1.06 + 3, CZ + 0.001), t: new T.Vector3(CX, 0, CZ) },
+      live: { p: new T.Vector3(9.6, 14.5, 13.8), t: new T.Vector3(6.4, 0.4, 4.2) },
+      control: { p: new T.Vector3(10.0, 2.3, 12.75), t: new T.Vector3(9.05, 0.85, 11.05) },
+      walk: { p: new T.Vector3(11.6, 1.6, 8.1), t: new T.Vector3(10.0, 1.5, 6.9) }
+    };
+  }
+  let tween = null, dirty = true;
+  function go(name, instant) {
+    const v = views()[name]; if (!v) return;
+    root.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+    controls.maxPolarAngle = name === 'top' ? Math.PI * 0.497 : Math.PI * 0.497;
+    if (instant || reduced) { camera.position.copy(v.p); controls.target.copy(v.t); controls.update(); tween = null; dirty = true; return; }
+    tween = { t0: performance.now(), d: 950, p0: camera.position.clone(), t0v: controls.target.clone(), p1: v.p, t1: v.t };
+    wake();
+  }
+  controls.addEventListener('start', () => { tween = null; root.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active')); hideTip(); });
+  controls.addEventListener('change', () => { dirty = true; });
+
+  /* ---------- picking ---------- */
+  const ray = new T.Raycaster(), ndc = new T.Vector2();
+  let hoverR = null, tipFixed = false;
+  function pickAt(cx, cy) {
+    const r = canvas.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera); const hit = ray.intersectObjects(pick, false)[0]; return hit ? hit.object.userData.room : null;
+  }
+  function showTip(R, cx, cy, fixed) {
+    if (!R) { hideTip(); return; }
+    tip.innerHTML = `<b>${R.name}</b><span>${R.dims}</span><span>Area ${R.area} · ceiling ${R.ceil}</span><em>Proposed</em>`;
+    tip.hidden = false; tip.classList.toggle('fixed', !!fixed);
+    if (!fixed) { const r = stage.getBoundingClientRect(); const x = Math.min(cx - r.left + 14, r.width - 250), y = Math.min(cy - r.top + 14, r.height - 110); tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px'; }
+    else { tip.style.left = ''; tip.style.top = ''; }
+    if (hoverR !== R) { hoverR = R; highlight(R); dirty = true; wake(); }
+  }
+  function hideTip() { tip.hidden = true; tipFixed = false; if (hoverR) { hoverR = null; highlight(null); dirty = true; wake(); } }
+  let down = null, hoverQ = null;
+  canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+  canvas.addEventListener('pointerup', e => {
+    if (!down) return; const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y); down = null;
+    if (moved < 6) { const R = pickAt(e.clientX, e.clientY); if (R) { tipFixed = e.pointerType !== 'mouse'; showTip(R, e.clientX, e.clientY, tipFixed); } else hideTip(); }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || e.buttons) return;
+    hoverQ = [e.clientX, e.clientY];
+    const R = pickAt(e.clientX, e.clientY); R ? showTip(R, e.clientX, e.clientY) : hideTip();
+  });
+  canvas.addEventListener('pointerleave', () => { if (!tipFixed) hideTip(); hoverQ = null; });
+
+  /* ---------- UI ---------- */
+  root.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+  $('[data-act="reset"]').addEventListener('click', () => go('overview'));
+  const cut = $('.f3d-cut input'), cutOut = $('.f3d-cut output');
+  function applyCut() {
+    const hc = +cut.value, full = hc >= 5.149; cutOut.textContent = full ? 'Full' : hc.toFixed(2) + ' m';
+    clip.constant = full ? 99 : hc;
+    wallPieces.forEach(({ m, y0, y1 }) => { const top = Math.min(y1, full ? 99 : hc); if (top <= y0 + 0.001) { m.visible = false; return; } m.visible = true; m.scale.y = top - y0; m.position.y = y0 + (top - y0) / 2; });
+    renderer.shadowMap.needsUpdate = true; dirty = true; wake();
+  }
+  cut.addEventListener('input', applyCut);
+  root.querySelectorAll('[data-tog]').forEach(b => b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+    if (b.dataset.tog === 'labels') showLabels = on;
+    if (b.dataset.tog === 'grid') gridG.visible = on;
+    if (b.dataset.tog === 'cables') cableG.visible = on;
+    dirty = true; wake();
+  }));
+
+  /* ---------- render loop with pausing ---------- */
+  let inView = false, active = opt.active !== false, running = false, raf = 0;
+  function size() {
+    const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); dirty = true;
+  }
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  function frame(now) {
+    raf = 0; if (!running) return;
+    if (tween) { const k = Math.min(1, (now - tween.t0) / tween.d), e = ease(k); camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0v, tween.t1, e); if (k >= 1) tween = null; dirty = true; }
+    if (controls.update()) dirty = true;
+    if (hoverQ && dirty) { const R = pickAt(hoverQ[0], hoverQ[1]); R ? showTip(R, hoverQ[0], hoverQ[1]) : hideTip(); }
+    if (dirty) {
+      const dist = camera.position.distanceTo(controls.target); camera.near = T.MathUtils.clamp(dist * 0.02, 0.02, 0.6); camera.updateProjectionMatrix();
+      renderer.render(scene, camera); placeLabels(); dirty = false; idle = 0;
+    } else idle++;
+    if (tween || idle < 30) raf = requestAnimationFrame(frame); else sleeping = true;
+  }
+  let idle = 0, sleeping = false;
+  function wake() { if (running && !raf) { sleeping = false; idle = 0; raf = requestAnimationFrame(frame); } }
+  controls.addEventListener('start', wake); controls.addEventListener('change', wake);
+  canvas.addEventListener('wheel', wake, { passive: true }); canvas.addEventListener('pointerdown', wake);
+  function update() {
+    const should = inView && active && !document.hidden;
+    if (should && !running) { running = true; size(); renderer.shadowMap.needsUpdate = true; dirty = true; wake(); }
+    else if (!should && running) { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+  }
+  new IntersectionObserver(es => { inView = es[0].isIntersecting; update(); }, { threshold: 0.01 }).observe(stage);
+  document.addEventListener('visibilitychange', update);
+  new ResizeObserver(() => { size(); wake(); }).observe(stage);
+  size(); go('overview', true); applyCut();
+  renderer.shadowMap.needsUpdate = true;
+  return {
+    setActive(b) { active = !!b; update(); },
+    resize() { size(); wake(); },
+    view: go, rooms: ROOMS,
+    _debug: () => ({ running, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geoms: renderer.info.memory.geometries })
+  };
+}
+window.Floor3D = Floor3D;
+})();
+</script>
+<script>
+/* First floor 3D model: built lazily when Suite page 3 is first shown; paused whenever hidden */
+(function () {
+  const host = document.getElementById('f3d'), pg = document.getElementById('sx-p3'), scr = document.getElementById('screen-suite');
+  if (!host || !pg || !window.Floor3D) return;
+  let f = null;
+  function check() {
+    const on = pg.classList.contains('active') && scr.classList.contains('active');
+    if (on && !f) { try { f = window.Floor3D(host); window.F3D = f; } catch (e) { console.warn(e); return; } }
+    if (f) f.setActive(on);
+  }
+  new MutationObserver(check).observe(pg, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(check).observe(scr, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('capc:screen', check);
+  check();
 })();
 </script>
 </body>
